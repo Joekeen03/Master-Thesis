@@ -1,0 +1,6 @@
+*.o
+*.llvm
+*.dat
+*.exe
+SNES Target/Test/Generate/*
+llvm-project/*

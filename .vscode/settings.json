@@ -1,0 +1,7 @@
+{
+    "git.ignoredRepositories": [
+        "llvm-project",
+        "llvm",
+        "LLVM"
+    ]
+}
