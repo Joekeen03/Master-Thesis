@@ -3,7 +3,6 @@
 #include "TargetInfo/SNESTargetInfo.h"
 
 extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeSNESTargetMC() {
-  // for (Target *T : {&getTheSNESTarget()}) {
   //   TargetRegistry::RegisterMCAsmInfo(*T, createRISCVMCAsmInfo);
   //   TargetRegistry::RegisterMCObjectFileInfo(*T, createRISCVMCObjectFileInfo);
   //   TargetRegistry::RegisterMCInstrInfo(*T, createRISCVMCInstrInfo);
@@ -22,5 +21,4 @@ extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeSNESTargetMC() {
   //   // Register the null target streamer.
   //   TargetRegistry::RegisterNullTargetStreamer(*T,
   //                                              createRISCVNullTargetStreamer);
-  // }
 }
