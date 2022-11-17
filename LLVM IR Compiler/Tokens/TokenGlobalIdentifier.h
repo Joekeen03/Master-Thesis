@@ -15,7 +15,7 @@ namespace Token {
 
     class TokenGlobalIdentifierConstructor : public TokenConstructor {
         public:
-            TokenizeResult tokenize(BasicArray::BasicCharArray* fileData, int currPos);
+            TokenizeResult tokenize(BasicArray::BasicCharArray* fileData, int startPos);
     };
 }
 #endif // LLVM_IR_COMPILER_TOKENGLOBALIDENTIFIER_H

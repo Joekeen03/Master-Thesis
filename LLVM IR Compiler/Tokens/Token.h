@@ -2,8 +2,9 @@
 #define LLVM_IR_COMPILER_TOKEN_H
 
 #include <memory>
+#include <iostream>
 
-#include "BasicCharArray.h"
+#include "../BasicCharArray.h" // FIXME Properly set up include path
 
 namespace Token {
     class Token {
@@ -18,15 +19,15 @@ namespace Token {
             const Token token;
             const int newPos;
             const bool success;
-            TokenizeResult& operator=(TokenizeResult& other) { // FIXME Does this work?
-                return other;
-            }
 
     };
 
     class TokenConstructor { // TODO: Should this be a singleton?
         public:
-            virtual TokenizeResult tokenize(BasicArray::BasicCharArray* fileData, int currPos);
+            virtual TokenizeResult tokenize(BasicArray::BasicCharArray* fileData, int startPos) {
+                std::cout << "Default tokenize method called.\n";
+                return TokenizeResult();
+            }
     };
 }
 
