@@ -7,6 +7,8 @@ namespace Tokenizer {
         int currPos = 0;
         while (currPos < fileLength) {
             switch ((*fileData)[currPos]) {
+                // FIXME Should I be tokenizing whitespace? Is LLVM IR at all whitespace sensitive? Kinda...it can have lists of
+                //  keywords (such as when defining functions - "define dso_local i32"). Is this an issue?
                 case ' ': // Skip whitespace
                 case '\n':
                 case '\t':

@@ -5,6 +5,10 @@ namespace {
         "source_filename",
         "target",
         "datalayout",
+        "triple",
+        "define",
+        "dso_local",
+        "i32",
     };
     const int nKeywords = sizeof(keywords)/sizeof(keywords[0]);
 }
@@ -18,7 +22,7 @@ namespace Token {
             bool buildString = true;
             do {
                 char currChar = (*fileData)[currPos++];
-                if (std::isalpha(currChar) || currChar == '_') {
+                if (std::isalpha(currChar) ||std::isdigit(currChar) || currChar == '_') {
                     word += currChar;
                 } else {
                     buildString = false;
