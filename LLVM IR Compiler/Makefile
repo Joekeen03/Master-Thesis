@@ -3,7 +3,7 @@ TOKEN_DIR = $(SRC_DIR)/Tokens
 BUILD_DIR = build
 OBJECT_DIR = $(BUILD_DIR)/objects
 
-TOKEN_OBJECTS = TokenComment.o TokenGlobalIdentifier.o TokenLibrary.o TokenKeyword.o TokenOperator.o
+TOKEN_OBJECTS = TokenComment.o TokenGlobalIdentifier.o TokenLibrary.o TokenKeyword.o TokenOperator.o TokenString.o
 OBJECTS = Tokenizer.o BasicCharArray.o main.o
 
 prepareDirectories:
