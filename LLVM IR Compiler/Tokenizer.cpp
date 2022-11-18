@@ -1,14 +1,15 @@
 #include "Tokenizer.h"
 
 namespace Tokenizer {
-    std::vector<Token::Token> Tokenizer::Tokenize(std::string fileName) {
+    std::vector<std::shared_ptr<const Token::Token>> Tokenizer::Tokenize(std::string fileName) {
         readFileData(fileName);
-        std::vector<Token::Token>* tokens = new std::vector<Token::Token>();
+        std::vector<std::shared_ptr<const Token::Token>>* tokens = new std::vector<std::shared_ptr<const Token::Token>>();
         int currPos = 0;
         while (currPos < fileLength) {
             switch ((*fileData)[currPos]) {
                 case ' ': // Skip whitespace
                 case '\n':
+                case '\t':
                     currPos++;
                     break;
                 default:
@@ -24,6 +25,7 @@ namespace Tokenizer {
                             currPos = result.newPos;
                             success = true;
                             i = TokenLibrary::nTokens;
+                            std::cout << "Token created: " << result.token->getName() << '\n';
                         }
                     }
                     if (!success) {

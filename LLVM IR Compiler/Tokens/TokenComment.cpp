@@ -8,9 +8,7 @@ namespace Token {
         bool succeeded = false;
         std::string comment = "";
         try {
-            std::cout << "Attempting to parse comment." << '\n';
             if ((*fileData)[currPos] == ';') {
-                std::cout << "Comment detected." << '\n';
                 try {
                     currPos++;
                     bool tokenize = true;
@@ -27,12 +25,10 @@ namespace Token {
                 }
                 // Either encountered a newline, or the end of the file.
                 succeeded = true;
-            } else {
-                std::cout << "Comment not detected." << '\n';
             }
         } catch (...) { // Out-of-bounds on array before reading a ';'
             std::cout << "[WARN] TokenComment exceeded fileData array bounds on first character." << '\n';
         }
-        return succeeded ? TokenizeResult(TokenComment(comment), currPos) : TokenizeResult();
+        return succeeded ? TokenizeResult(std::make_shared<TokenComment>(comment), currPos) : TokenizeResult();
     }
 }

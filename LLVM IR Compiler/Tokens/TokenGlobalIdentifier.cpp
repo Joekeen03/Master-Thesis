@@ -10,7 +10,6 @@ namespace {
 
 namespace Token {
     TokenizeResult TokenGlobalIdentifierConstructor::tokenize(BasicArray::BasicCharArray* fileData, int startPos) {
-        std::cout << "Attempting to create a global identifier token" << '\n';
         int currPos = startPos;
         bool succeeded = false;
         std::string identifier = "";
@@ -80,6 +79,6 @@ namespace Token {
         } catch (...) { // Went out of bounds on the array
         
         }
-        return succeeded ? TokenizeResult(TokenGlobalIdentifier(identifier), currPos) : TokenizeResult();
+        return succeeded ? TokenizeResult(std::make_shared<TokenGlobalIdentifier>(identifier), currPos) : TokenizeResult();
     }
 }

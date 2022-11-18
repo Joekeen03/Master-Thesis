@@ -8,6 +8,8 @@
 
 namespace Token {
     class Token {
+        public:
+            virtual std::string getName() const { return "Default Token"; }
         // Maybe store the token's minimum/maximum lengths, as well as the valid starting character(s)?
         //  To perhaps optimize how the tokenizer iterates through them.
     };
@@ -15,8 +17,8 @@ namespace Token {
     struct TokenizeResult {
         public:
             TokenizeResult() : token(), newPos(-1), success(false) {}
-            TokenizeResult(Token t, int p) : token(t), newPos(p), success(true) {}
-            const Token token;
+            TokenizeResult(std::shared_ptr<const Token> t, int p) : token(t), newPos(p), success(true) {}
+            const std::shared_ptr<const Token> token; // FIXME Is this actually equivalent to Token * const p (pointer that can't point to anything else)?
             const int newPos;
             const bool success;
 

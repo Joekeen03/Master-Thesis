@@ -10,6 +10,7 @@ namespace Token {
         public:
             std::string comment;
             TokenComment(std::string commentArg) : comment(commentArg) {}
+            std::string getName() const {return "Comment Token"; }
     };
 
     class TokenCommentConstructor : public TokenConstructor {

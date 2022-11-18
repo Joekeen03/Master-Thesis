@@ -11,6 +11,7 @@ namespace Token {
         public:
             std::string identifier;
             TokenGlobalIdentifier(std::string identifierArg) : identifier(identifierArg) {}
+            std::string getName() const {return "Global Identifier Token"; }
     };
 
     class TokenGlobalIdentifierConstructor : public TokenConstructor {

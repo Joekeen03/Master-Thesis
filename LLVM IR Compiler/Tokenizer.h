@@ -17,7 +17,7 @@ namespace Tokenizer {
     class Tokenizer {
         public:
             Tokenizer() : fileData(nullptr), fileLength(-1) {};
-            std::vector<Token::Token> Tokenize(std::string fileName);
+            std::vector<std::shared_ptr<const Token::Token>> Tokenize(std::string fileName);
             std::string test();
         private:
             void readFileData(std::string fileName);
