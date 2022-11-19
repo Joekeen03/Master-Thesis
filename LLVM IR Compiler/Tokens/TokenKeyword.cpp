@@ -8,6 +8,7 @@ namespace {
         "triple",
         "define",
         "dso_local",
+        "noundef",
         "i32",
     };
     const int nKeywords = sizeof(keywords)/sizeof(keywords[0]);

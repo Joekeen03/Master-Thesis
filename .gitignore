@@ -4,3 +4,4 @@
 *.exe
 SNES Target/Test/Generate/*
 llvm-project/*
+*.ll
