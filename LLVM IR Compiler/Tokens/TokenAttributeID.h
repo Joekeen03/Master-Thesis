@@ -1,0 +1,25 @@
+#ifndef LLVM_IR_COMPILER_TOKENATTRIBUTEID_H
+#define LLVM_IR_COMPILER_TOKENATTRIBUTEID_H
+
+#include <memory>
+#include <iostream>
+
+#include "Token.h"
+
+namespace Token {
+    class TokenAttributeID : public Token::Token {
+        public:
+            const int attributeID;
+            TokenAttributeID(int attributeIDArg) : attributeID(attributeIDArg) {}
+            std::string getName() const {return "AttributeID Token"; }
+            // Maybe store the token's minimum/maximum lengths, as well as the valid starting character(s)?
+            //  To perhaps optimize how the tokenizer iterates through them.
+    };
+
+    class TokenAttributeIDConstructor : public TokenConstructor { // TODO: Should this be a singleton?
+        public:
+            TokenizeResult tokenize(BasicArray::BasicCharArray* fileData, int startPos);
+    };
+}
+
+#endif // LLVM_IR_COMPILER_TOKENATTRIBUTEID_H
