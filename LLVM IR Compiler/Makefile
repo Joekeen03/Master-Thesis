@@ -7,7 +7,7 @@ TEMPLATE_RESULT_DIR = $(SRC_DIR)/TemplateResult
 TEST_DIR = $(SRC_DIR)/Test
 
 TOKEN_OBJECTS = TokenComment.o TokenGlobalIdentifier.o TokenLibrary.o TokenKeyword.o TokenOperator.o TokenString.o \
-				TokenParenthesis.o TokenAttributeID.o TokenCurlyBrace.o
+				TokenParenthesis.o TokenAttributeID.o TokenCurlyBrace.o TokenBaseIdentifier.o TokenLocalIdentifier.o
 OBJECTS = Tokenizer.o BasicCharArray.o main.o
 TEST_LL_FILES = mainOnly.ll
 

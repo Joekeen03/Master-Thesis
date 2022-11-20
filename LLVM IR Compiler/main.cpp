@@ -8,6 +8,8 @@ int main(int argv, char* argc[]) {
     std::string fileName = "Test/mainOnly.ll";
     try {
         tokenizer.Tokenize(fileName);
+    } catch (const Tokenizer::TokenizationException& e) {
+        std::cout << "Tokenization Exception:\n" << e.what() << '\n';
     } catch (const std::runtime_error& e) {
         std::cout << e.what() << '\n';
     } catch (const std::logic_error& e) {

@@ -44,16 +44,16 @@ namespace Tokenizer {
             std::ifstream file;
             file.exceptions(std::ios_base::failbit);
             file.open(fileName); // TODO: Catch any errors thrown?
-
+            
             file.seekg(0, file.end);
             int fileLength = file.tellg();
             char* fileData = new char[fileLength];
             
+            // FIXME Encountered some weird bug after a merge commit, where reading would crash unless I told it to read fileLength-20 characters, for some
+            //  reason. Regenerating the mainOnly.ll file (deleting it and calling 'make prepareTests') seemed to fix it. Some kind of weird corruption?
             file.seekg(file.beg);
             file.read(fileData, fileLength);
             file.close();
-
-
             this->fileLength = -1;
             this->fileData = new BasicArray::BasicCharArray(fileData, fileLength);
             this->fileLength = fileLength;
@@ -63,10 +63,6 @@ namespace Tokenizer {
             std::cout << "Error reading the input file." << '\n';
             throw e;
         }
-    }
-
-    std::string Tokenizer::test() {
-        return "asdf";
     }
 }
 
