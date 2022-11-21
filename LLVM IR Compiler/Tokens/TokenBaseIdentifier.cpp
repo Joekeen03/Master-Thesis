@@ -1,10 +1,6 @@
 #include "TokenBaseIdentifier.h"
 
-namespace {
-    inline bool isNamedIdentifierStartChar(char c) {
-        return std::isalpha(c) || c == '-' || c == '$' || c == '.' || c == '_';
-    }
-}
+#include "HelperFunctionsTokens.h"
 
 namespace Token {
     TokenizeResult TokenBaseIdentifierConstructor::tokenizeHelper(BasicArray::BasicCharArray* fileData, int startPos, char identiferStartChar,
@@ -43,13 +39,13 @@ namespace Token {
                     }
                 } else { // Unquoted identifier
                     char currChar = (*fileData)[currPos];
-                    if (isNamedIdentifierStartChar(currChar)) { // Named identifier?
+                    if (TokenLib::isNamedIdentifierStartChar(currChar)) { // Named identifier?
                         identifier += currChar;
                         currPos++;
                         bool tokenize = true;
                         while (tokenize) {
                             currChar = (*fileData)[currPos++];
-                            if (isNamedIdentifierStartChar(currChar) || std::isdigit(currChar)) {
+                            if (TokenLib::isNamedIdentifierStartChar(currChar) || std::isdigit(currChar)) {
                                 identifier += currChar;
                             } else {
                                 tokenize = false;
