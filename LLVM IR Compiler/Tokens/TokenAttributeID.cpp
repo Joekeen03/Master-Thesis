@@ -29,6 +29,5 @@ namespace Token {
         } else {
             return TokenizeResult();
         }
-        throw new std::runtime_error("TokenAttributeID not implemented.");
     }
 }

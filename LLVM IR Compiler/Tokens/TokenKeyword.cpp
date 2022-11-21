@@ -9,7 +9,19 @@ namespace {
         "define",
         "dso_local",
         "noundef",
+        "alloca",
+        "align",
+        "store",
+        "ptr",
+        "ret",
         "i32",
+        "attributes",
+        "noinline",
+        "mustprogress",
+        "norecurse",
+        "nounwind",
+        "optnone",
+        "uwtable",
     };
     const int nKeywords = sizeof(keywords)/sizeof(keywords[0]);
 }

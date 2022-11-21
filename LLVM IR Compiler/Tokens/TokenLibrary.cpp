@@ -9,6 +9,9 @@
 #include "TokenParenthesis.h"
 #include "TokenAttributeID.h"
 #include "TokenCurlyBrace.h"
+#include "TokenNamedMetadata.h"
+#include "TokenNumberLiteral.h"
+#include "TokenMetadataNodeStart.h"
 
 namespace TokenLibrary {
     std::unique_ptr<Token::TokenConstructor> tokenConstructors[] = {
@@ -21,6 +24,9 @@ namespace TokenLibrary {
         std::make_unique<Token::TokenParenthesisConstructor>(),
         std::make_unique<Token::TokenAttributeIDConstructor>(),
         std::make_unique<Token::TokenCurlyBraceConstructor>(),
+        std::make_unique<Token::TokenNamedMetadataConstructor>(),
+        std::make_unique<Token::TokenNumberLiteralConstructor>(),
+        std::make_unique<Token::TokenMetadataNodeStartConstructor>(),
     };
     const int nTokens = sizeof(tokenConstructors)/sizeof(tokenConstructors[0]);
 }
