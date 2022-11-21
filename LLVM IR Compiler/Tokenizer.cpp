@@ -5,7 +5,7 @@ namespace Tokenizer {
         readFileData(fileName);
         std::vector<std::shared_ptr<const Token::Token>>* tokens = new std::vector<std::shared_ptr<const Token::Token>>();
         int currPos = 0;
-        while (currPos < fileLength) {
+        while (fileData->positionInBounds(currPos)) {
             switch ((*fileData)[currPos]) {
                 // FIXME Should I be tokenizing whitespace? Is LLVM IR at all whitespace sensitive? Kinda...it can have lists of
                 //  keywords (such as when defining functions - "define dso_local i32"). Is this an issue?
@@ -15,11 +15,11 @@ namespace Tokenizer {
                     currPos++;
                     break;
                 default:
-                    std::cout << "Attempting to tokenize at position "<< currPos << ". Character is '"<< (*fileData)[currPos] << "'" << '\n';
+                    // std::cout << "Attempting to tokenize at position "<< currPos << ". Character is '"<< (*fileData)[currPos] << "'" << '\n';
                     bool success = false;
                     for (int i = 0; i < TokenLibrary::nTokens; i++)
                     {
-                        std::cout << "Trying token type #"<< i << '\n';
+                        // std::cout << "Trying token type #"<< i << '\n';
                         
                         Token::TokenizeResult result = TokenLibrary::tokenConstructors[i]->tokenize(fileData, currPos);
                         if (result.success) {
@@ -31,11 +31,12 @@ namespace Tokenizer {
                         }
                     }
                     if (!success) {
-                        throw TokenizationException("Failed to tokenize file at character "+currPos);
+                        throw TokenizationException(((std::string)"Failed to tokenize file at character "+std::to_string(currPos)).c_str());
                     }
                     break;
             }
         }
+        std::cout << "Tokenization successful."<<'\n';
     }
 
     void Tokenizer::readFileData(std::string fileName) {
@@ -58,7 +59,7 @@ namespace Tokenizer {
             this->fileData = new BasicArray::BasicCharArray(fileData, fileLength);
             this->fileLength = fileLength;
 
-            std::cout << "File \""<< fileName << "read. It was " << fileLength << " characters long." << '\n';
+            std::cout << "File \""<< fileName << "\" read. It was " << fileLength << " characters long." << '\n';
         } catch (std::runtime_error e) {
             std::cout << "Error reading the input file." << '\n';
             throw e;

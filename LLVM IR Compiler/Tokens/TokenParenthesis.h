@@ -11,7 +11,10 @@ namespace Token {
         public:
             const bool leftParen;
             TokenParenthesis(bool leftParenArg) : leftParen(leftParenArg) {}
-            std::string getName() const {return "Parenthesis Token"; }
+            std::string getName() const {
+                std::string paren = leftParen ? "(" : ")";
+                return "TokenParenthesis(\""+ paren +"\")";
+            }
             // Maybe store the token's minimum/maximum lengths, as well as the valid starting character(s)?
             //  To perhaps optimize how the tokenizer iterates through them.
     };

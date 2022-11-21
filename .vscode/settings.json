@@ -126,7 +126,8 @@
         "latch": "cpp",
         "semaphore": "cpp",
         "string_view": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "__tuple": "cpp"
     },
     "cmake.configureOnOpen": false
 }

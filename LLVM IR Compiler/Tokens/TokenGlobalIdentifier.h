@@ -10,7 +10,7 @@ namespace Token {
     class TokenGlobalIdentifier : public TokenBaseIdentifier {
         public:
             TokenGlobalIdentifier(std::string identifierArg) : TokenBaseIdentifier(identifierArg) {}
-            std::string getName() const {return "Global Identifier Token"; }
+            std::string getName() const {return "TokenGlobalIdentifier("+identifier+")"; }
     };
 
     class TokenGlobalIdentifierConstructor : public TokenBaseIdentifierConstructor {

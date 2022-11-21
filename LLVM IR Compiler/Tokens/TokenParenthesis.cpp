@@ -2,10 +2,9 @@
 
 namespace Token {
     TokenizeResult TokenParenthesisConstructor::tokenize(BasicArray::BasicCharArray* fileData, int startPos) {
-        int currPos = startPos;
         bool success = false;
         bool left = true;
-        char currChar = (*fileData)[currPos++];
+        char currChar = (*fileData)[startPos];
         switch (currChar) {
             case ')':
                 left = false;
@@ -17,6 +16,6 @@ namespace Token {
             default:
                 break;
         }
-        return success ? TokenizeResult(std::make_shared<TokenParenthesis>(left), currPos) : TokenizeResult();
+        return success ? TokenizeResult(std::make_shared<TokenParenthesis>(left), startPos+1) : TokenizeResult();
     }
 }

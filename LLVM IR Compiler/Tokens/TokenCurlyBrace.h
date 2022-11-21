@@ -11,7 +11,10 @@ namespace Token {
         public:
             const bool leftBrace;
             TokenCurlyBrace(bool leftBraceArg) : leftBrace(leftBraceArg) {}
-            std::string getName() const {return "CurlyBrace Token"; }
+            std::string getName() const {
+                std::string paren = leftBrace ? "{" : "}";
+                return "TokenCurlyBrace(\""+ paren +"\")";
+            }
             // Maybe store the token's minimum/maximum lengths, as well as the valid starting character(s)?
             //  To perhaps optimize how the tokenizer iterates through them.
     };

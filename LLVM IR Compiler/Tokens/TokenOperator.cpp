@@ -1,6 +1,6 @@
 #include "TokenOperator.h"
 
-namespace {
+namespace Operators {
     const std::string operators[] = {
         "=",
     };
@@ -9,16 +9,17 @@ namespace {
 
 namespace Token {
     TokenizeResult TokenOperatorConstructor::tokenize(BasicArray::BasicCharArray* fileData, int startPos) {
-        int currPos = startPos;
+        int nextPosAfterChar = startPos;
         int operatorID = -1;
         bool success = false;
-        for (int operatorID = 0; operatorID<nOperators && !success; operatorID++)
-        {
-            if (fileData->compareSubsectionToLiteral(startPos, operators[operatorID])) {
+        while (!success && operatorID < Operators::nOperators) {
+            if (fileData->compareSubsectionToLiteral(startPos, Operators::operators[operatorID])) {
                 success = true;
-                currPos += operators[operatorID].size();
+                nextPosAfterChar += Operators::operators[operatorID].size();
+            } else {
+                operatorID++;
             }
         }
-        return success ? TokenizeResult(std::make_shared<TokenOperator>(operatorID), currPos) : TokenizeResult();
+        return success ? TokenizeResult(std::make_shared<TokenOperator>(operatorID), nextPosAfterChar) : TokenizeResult();
     }
 }

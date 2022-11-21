@@ -1,11 +1,14 @@
 #include "TokenBaseIdentifier.h"
 
+#include <utility>
+
 #include "HelperFunctionsTokens.h"
 
 namespace Token {
     TokenizeResult TokenBaseIdentifierConstructor::tokenizeHelper(BasicArray::BasicCharArray* fileData, int startPos, char identiferStartChar,
                                                         std::shared_ptr<Token> (*tokenCtor)(std::string)) {
-                int currPos = startPos;
+        int currPos = startPos;
+        int firstCharAfterToken = currPos;
         bool succeeded = false;
         std::string identifier = "";
         /**
@@ -18,23 +21,10 @@ namespace Token {
             if ((*fileData)[currPos] == identiferStartChar) {
                 currPos++;
                 if ((*fileData)[currPos] == '"') { // Double-quoted named identifier
-                    currPos++;
-                    char currChar;
-                    bool tokenize = true, failed = false;
-                    while (tokenize) {
-                        currChar = (*fileData)[currPos++];
-                        if (currChar == '"') {
-                            tokenize = false;
-                        } else if (currChar == '\n') {
-                            tokenize = false;
-                            failed = true;
-                        } else {
-                            identifier += currChar;
-                        }
-                    }
-                    if (failed) {
-                        currPos = startPos;
-                    } else {
+                    TokenLib::stringParseResult result = TokenLib::extractQuotedString(fileData, currPos);
+                    if (result.second != -1) {
+                        identifier = result.first;
+                        firstCharAfterToken = result.second;
                         succeeded = true;
                     }
                 } else { // Unquoted identifier
@@ -42,38 +32,35 @@ namespace Token {
                     if (TokenLib::isNamedIdentifierStartChar(currChar)) { // Named identifier?
                         identifier += currChar;
                         currPos++;
+                        firstCharAfterToken = currPos;
                         bool tokenize = true;
                         while (tokenize) {
-                            currChar = (*fileData)[currPos++];
+                            currChar = (*fileData)[currPos];
                             if (TokenLib::isNamedIdentifierStartChar(currChar) || std::isdigit(currChar)) {
                                 identifier += currChar;
+                                currPos++;
+                                /** FIXME: Better way to handle this than selectively incrementing currPos, depending on
+                                 *          whether or not the most recent character was part of the string? Just, the main reason
+                                 *          I'm doing this is so, when I return a successful token, currPos is the location of the
+                                 *          first character after the keyword string. But, this feels a bit unclear.
+                                */
                             } else {
                                 tokenize = false;
+                                firstCharAfterToken = currPos;
                             }
                         }
                         succeeded = true;
                     } else if (std::isdigit(currChar)) {
-                        identifier += currChar;
-                        currPos++;
-                        bool tokenize = true;
-                        while (tokenize) {
-                            currChar = (*fileData)[currPos++];
-                            if (std::isdigit(currChar)) {
-                                identifier += currChar;
-                            } else {
-                                tokenize = false;
-                            }
-                        }
+                        TokenLib::numberParseResult result = TokenLib::extractNumber(fileData, currPos);
+                        identifier = std::to_string(result.first);
+                        firstCharAfterToken = result.second;
                         succeeded = true;
-                        // FIXME is it safe to assume it's a valid token regardless of what character terminated the tokenization? I.e. would encountering
-                        //  an 'a' immediately after the identifier not invalidate the tokenization itself?\
-                        result = TokenizeResult(TokenGlobalIdentifier(identifier), currPos);
                     }
                 }
             }
         } catch (...) { // Went out of bounds on the array
         
         }
-        return succeeded ? TokenizeResult(tokenCtor(identifier), currPos) : TokenizeResult();
+        return succeeded ? TokenizeResult(tokenCtor(identifier), firstCharAfterToken) : TokenizeResult();
     }
 }

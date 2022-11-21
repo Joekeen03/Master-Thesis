@@ -1,6 +1,6 @@
 #include "TokenKeyword.h"
 
-namespace {
+namespace ReservedWords {
     const std::string keywords[] = {
         "source_filename",
         "target",
@@ -34,9 +34,10 @@ namespace Token {
         try { // Extract a word
             bool buildString = true;
             do {
-                char currChar = (*fileData)[currPos++];
+                char currChar = (*fileData)[currPos];
                 if (std::isalpha(currChar) ||std::isdigit(currChar) || currChar == '_') {
                     word += currChar;
+                    currPos++;
                 } else {
                     buildString = false;
                 }
@@ -44,11 +45,12 @@ namespace Token {
         } catch (...) { // Out of bounds on array
 
         }
-        int wordID = -1;
-        for (wordID = 0; wordID<nKeywords && !success; wordID++)
-        {
-            if (keywords[wordID] == word) {
+        int wordID = 0;
+        while (!success && wordID<ReservedWords::nKeywords) {
+            if (ReservedWords::keywords[wordID] == word) {
                 success = true;
+            } else {
+                wordID++;
             }
         }
         

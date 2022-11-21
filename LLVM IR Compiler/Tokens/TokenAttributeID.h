@@ -11,7 +11,7 @@ namespace Token {
         public:
             const int attributeID;
             TokenAttributeID(int attributeIDArg) : attributeID(attributeIDArg) {}
-            std::string getName() const {return "AttributeID Token"; }
+            std::string getName() const {return "TokenAttributeID("+std::to_string(attributeID)+")"; }
             // Maybe store the token's minimum/maximum lengths, as well as the valid starting character(s)?
             //  To perhaps optimize how the tokenizer iterates through them.
     };

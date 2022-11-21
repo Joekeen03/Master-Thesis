@@ -3,10 +3,9 @@
 
 namespace Token {
     TokenizeResult TokenCurlyBraceConstructor::tokenize(BasicArray::BasicCharArray* fileData, int startPos) {
-        int currPos = startPos;
         bool success = false;
         bool left = true;
-        char currChar = (*fileData)[currPos++];
+        char currChar = (*fileData)[startPos];
         switch (currChar) {
             case '}':
                 left = false;
@@ -18,6 +17,6 @@ namespace Token {
             default:
                 break;
         }
-        return success ? TokenizeResult(std::make_shared<TokenCurlyBrace>(left), currPos) : TokenizeResult();
+        return success ? TokenizeResult(std::make_shared<TokenCurlyBrace>(left), startPos+1) : TokenizeResult();
     }
 }

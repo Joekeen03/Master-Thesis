@@ -1,4 +1,4 @@
-#include "TokenLibrary.h"
+#include "LibraryTokens.h"
 
 #include "TokenGlobalIdentifier.h"
 #include "TokenLocalIdentifier.h"
@@ -12,6 +12,8 @@
 #include "TokenNamedMetadata.h"
 #include "TokenNumberLiteral.h"
 #include "TokenMetadataNodeStart.h"
+#include "TokenMetadataString.h"
+#include "TokenComma.h"
 
 namespace TokenLibrary {
     std::unique_ptr<Token::TokenConstructor> tokenConstructors[] = {
@@ -27,6 +29,8 @@ namespace TokenLibrary {
         std::make_unique<Token::TokenNamedMetadataConstructor>(),
         std::make_unique<Token::TokenNumberLiteralConstructor>(),
         std::make_unique<Token::TokenMetadataNodeStartConstructor>(),
+        std::make_unique<Token::TokenMetadataStringConstructor>(),
+        std::make_unique<Token::TokenCommaConstructor>(),
     };
     const int nTokens = sizeof(tokenConstructors)/sizeof(tokenConstructors[0]);
 }

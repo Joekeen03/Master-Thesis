@@ -11,7 +11,7 @@ namespace Token {
         public:
             const int val;
             TokenNumberLiteral(int valArg) : val(valArg) {}
-            std::string getName() const {return "NumberLiteral Token"; }
+            std::string getName() const {return "TokenNumberLiteral("+std::to_string(val)+")"; }
             // Maybe store the token's minimum/maximum lengths, as well as the valid starting character(s)?
             //  To perhaps optimize how the tokenizer iterates through them.
     };

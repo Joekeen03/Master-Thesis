@@ -10,7 +10,7 @@
 #include <memory>
 
 #include "Tokens/Token.h"
-#include "Tokens/TokenLibrary.h"
+#include "Tokens/LibraryTokens.h"
 #include "BasicCharArray.h"
 
 namespace Tokenizer {
