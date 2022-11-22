@@ -1,5 +1,9 @@
 #include "Tokenizer.h"
 
+#include <typeinfo>
+
+#include "Tokens/TokenComment.h"
+
 namespace Tokenizer {
     std::vector<std::shared_ptr<const Token::Token>> Tokenizer::Tokenize(std::string fileName) {
         readFileData(fileName);
@@ -23,11 +27,15 @@ namespace Tokenizer {
                         
                         Token::TokenizeResult result = TokenLibrary::tokenConstructors[i]->tokenize(fileData, currPos);
                         if (result.success) {
-                            tokens->push_back(result.token);
+                            std::cout << "Token created: " << result.token->getName() << '\n';
+                            if (typeid(*result.token) != typeid(Token::TokenComment)) {
+                                tokens->push_back(result.token);
+                            } else {
+                                std::cout << "Didn't add comment token to tokens array." << '\n';
+                            }
                             currPos = result.newPos;
                             success = true;
                             i = TokenLibrary::nTokens;
-                            std::cout << "Token created: " << result.token->getName() << '\n';
                         }
                     }
                     if (!success) {
