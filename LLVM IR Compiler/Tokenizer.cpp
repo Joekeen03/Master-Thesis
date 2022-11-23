@@ -5,9 +5,9 @@
 #include "Tokens/TokenComment.h"
 
 namespace Tokenizer {
-    std::vector<std::shared_ptr<const Token::Token>> Tokenizer::Tokenize(std::string fileName) {
+    std::shared_ptr<tokensArray> Tokenizer::tokenize(std::string fileName) {
         readFileData(fileName);
-        std::vector<std::shared_ptr<const Token::Token>>* tokens = new std::vector<std::shared_ptr<const Token::Token>>();
+        std::shared_ptr<tokensArray> tokens = std::make_shared<std::vector<std::shared_ptr<const Token::Token>>>();
         int currPos = 0;
         while (fileData->positionInBounds(currPos)) {
             switch ((*fileData)[currPos]) {
@@ -39,12 +39,19 @@ namespace Tokenizer {
                         }
                     }
                     if (!success) {
-                        throw TokenizationException(((std::string)"Failed to tokenize file at character "+std::to_string(currPos)).c_str());
+                        std::string charsAtPosition = "";
+                        for (int i = 0; i < 10 && fileData->positionInBounds(currPos+i); i++)
+                        {
+                            charsAtPosition += (*fileData)[currPos+i];
+                        }
+                        throw TokenizationException(((std::string)"Failed to tokenize file at character "+std::to_string(currPos)\
+                                                    +". Characters at position: "+charsAtPosition).c_str());
                     }
                     break;
             }
         }
         std::cout << "Tokenization successful."<<'\n';
+        return tokens;
     }
 
     void Tokenizer::readFileData(std::string fileName) {

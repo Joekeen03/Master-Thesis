@@ -1,3 +1,6 @@
+#ifndef LLVM_IR_COMPILER_HELPERFUNCTIONSTOKENS_H
+#define LLVM_IR_COMPILER_HELPERFUNCTIONSTOKENS_H
+
 #include <utility>
 
 #include "../BasicCharArray.h"
@@ -24,3 +27,5 @@ namespace TokenLib{
     //   terminated (no '"', or a newline before the ending '"')
     stringParseResult extractQuotedString(BasicArray::BasicCharArray *fileData, int startPos);
 }
+
+#endif // LLVM_IR_COMPILER_HELPERFUNCTIONSTOKENS_H

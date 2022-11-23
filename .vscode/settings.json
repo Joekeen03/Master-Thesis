@@ -127,7 +127,8 @@
         "semaphore": "cpp",
         "string_view": "cpp",
         "*.ipp": "cpp",
-        "__tuple": "cpp"
+        "__tuple": "cpp",
+        "version": "cpp"
     },
     "cmake.configureOnOpen": false
 }

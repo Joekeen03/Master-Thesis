@@ -6,19 +6,40 @@
 #include <cctype>
 
 #include "Token.h"
+#include "../EnumRegistry.h"
 
 namespace ReservedWords {
-    const extern std::string keywords[];
+    extern const std::shared_ptr<EnumRegistry::EnumRegistry> keywordRegistry;
+    extern const EnumRegistry::RegistryItem source_filename;
+    extern const EnumRegistry::RegistryItem target;
+    extern const EnumRegistry::RegistryItem datalayout;
+    extern const EnumRegistry::RegistryItem triple;
+    extern const EnumRegistry::RegistryItem define;
+    extern const EnumRegistry::RegistryItem dso_local;
+    extern const EnumRegistry::RegistryItem noundef;
+    extern const EnumRegistry::RegistryItem alloca;
+    extern const EnumRegistry::RegistryItem align;
+    extern const EnumRegistry::RegistryItem store;
+    extern const EnumRegistry::RegistryItem ptr;
+    extern const EnumRegistry::RegistryItem ret;
+    extern const EnumRegistry::RegistryItem i32;
+    extern const EnumRegistry::RegistryItem attributes;
+    extern const EnumRegistry::RegistryItem noinline;
+    extern const EnumRegistry::RegistryItem mustprogress;
+    extern const EnumRegistry::RegistryItem norecurse;
+    extern const EnumRegistry::RegistryItem nounwind;
+    extern const EnumRegistry::RegistryItem optnone;
+    extern const EnumRegistry::RegistryItem uwtable;
     extern const int nKeywords;
 }
 
 namespace Token {
     class TokenKeyword : public Token::Token {
         public:
-            const int keywordID;
-            TokenKeyword(int keywordIDArg) : keywordID(keywordIDArg) {}
-            std::string getName() const {return "TokenKeyword(id:"+std::to_string(keywordID)
-                                                +"; keyword:"+ReservedWords::keywords[keywordID]+")"; }
+            const EnumRegistry::RegistryItem registryItem;
+            TokenKeyword(EnumRegistry::RegistryItem registryItemArg) : registryItem(registryItemArg) {}
+            std::string getName() const {return "TokenKeyword(id:"+std::to_string(registryItem.ID)
+                                                +"; keyword:"+registryItem.str+")"; }
             // Maybe store the token's minimum/maximum lengths, as well as the valid starting character(s)?
             //  To perhaps optimize how the tokenizer iterates through them.
     };

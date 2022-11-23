@@ -5,19 +5,21 @@
 #include <iostream>
 
 #include "Token.h"
+#include "../EnumRegistry.h"
 
 namespace Operators {
-    extern const std::string operators[];
+    extern const std::shared_ptr<EnumRegistry::EnumRegistry> operatorRegistry;
+    extern const EnumRegistry::RegistryItem equals;
     extern const int nOperators;
 }
 
 namespace Token {
     class TokenOperator : public Token::Token {
         public:
-            const int operatorID;
-            TokenOperator(int operandIDArg) : operatorID(operandIDArg) {}
-            std::string getName() const {return "Operator Token(ID:"+std::to_string(operatorID)
-                                                +"; operand:\""+Operators::operators[operatorID]+"\")"; }
+            const EnumRegistry::RegistryItem registryItem;
+            TokenOperator(EnumRegistry::RegistryItem registryItemArg) : registryItem(registryItemArg) {}
+            std::string getName() const {return "Operator Token(ID:"+std::to_string(registryItem.ID)
+                                                +"; operand:\""+registryItem.str+"\")"; }
             // Maybe store the token's minimum/maximum lengths, as well as the valid starting character(s)?
             //  To perhaps optimize how the tokenizer iterates through them.
     };

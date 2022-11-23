@@ -10,7 +10,7 @@ TOKEN_OBJECTS = TokenComment.o TokenGlobalIdentifier.o LibraryTokens.o TokenKeyw
 				TokenParenthesis.o TokenAttributeID.o TokenCurlyBrace.o TokenBaseIdentifier.o TokenLocalIdentifier.o \
 				TokenNamedMetadata.o HelperFunctionsTokens.o TokenNumberLiteral.o TokenMetadataNodeStart.o \
 				TokenMetadataString.o TokenComma.o
-OBJECTS = Tokenizer.o BasicCharArray.o main.o
+OBJECTS = Tokenizer.o BasicCharArray.o main.o ParseResultSourceFile.o EnumRegistry.o
 TEST_LL_FILES = mainOnly.ll
 
 TEMPLATE_H_FILE := $(TEMPLATE_DIR)/TokenTEMPLATE.h
