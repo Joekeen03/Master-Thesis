@@ -15,8 +15,9 @@ EXPRESSION_OBJECTS =
 OBJECTS = Tokenizer.o BasicCharArray.o main.o ParseResultSourceFile.o EnumRegistry.o Parser.o
 TEST_LL_FILES = mainOnly.ll
 
-TEMPLATE_H_FILE := $(TEMPLATE_DIR)/TokenTEMPLATE.h
-TEMPLATE_CPP_FILE := $(TEMPLATE_DIR)/TokenTEMPLATE.cpp
+TEMPLATE_TOKEN_H_FILE := $(TEMPLATE_DIR)/TokenTEMPLATE.h
+TEMPLATE_TOKEN_CPP_FILE := $(TEMPLATE_DIR)/TokenTEMPLATE.cpp
+TEMPLATE_EXPRESSION_H_FILE := $(TEMPLATE_DIR)/ExpressionTEMPLATE.h
 
 prepareDirectories:
 	- mkdir $(subst /,\\,$(OBJECT_DIR))
@@ -31,12 +32,15 @@ tokenizer: prepareDirectories $(patsubst %,$(SRC_DIR)/%,$(OBJECTS)) $(patsubst %
 	$(LDFLAGS) -o $(BUILD_DIR)/$@
 	./$(BUILD_DIR)/$@
 
-NewToken%: token_dir := $(subst /,\\,$(TOKEN_DIR)/)
-NewToken%: h_data := $(file <$(subst /,\\,$(TEMPLATE_H_FILE)))
-NewToken%: cpp_data := $(file <$(subst /,\\,$(TEMPLATE_CPP_FILE)))
+NewToken%: h_data := $(file <$(subst /,\\,$(TEMPLATE_TOKEN_H_FILE)))
+NewToken%: cpp_data := $(file <$(subst /,\\,$(TEMPLATE_TOKEN_CPP_FILE)))
 NewToken%: prepareDirectories
 	$(file >$(subst /,\\,$(TEMPLATE_RESULT_DIR)/$(subst NewToken,Token,$@).h),$(subst TEMPLATE,$(subst NewToken,,$@),$(h_data)))
 	$(file >$(subst /,\\,$(TEMPLATE_RESULT_DIR)/$(subst NewToken,Token,$@).cpp),$(subst TEMPLATE,$(subst NewToken,,$@),$(cpp_data)))
+
+NewExpression%: h_data := $(file <$(subst /,\\,$(TEMPLATE_EXPRESSION_H_FILE)))
+NewExpression%: prepareDirectories
+	$(file >$(subst /,\\,$(TEMPLATE_RESULT_DIR)/$(subst NewExpression,Expression,$@).h),$(subst TEMPLATE,$(subst NewExpression,,$@),$(h_data)))
 
 %.ll : %.cpp ; $(CXX) $(CFLAGS) -c $< -o $(TEST_DIR)/$(subst .cpp,.ll,$(<F)) -S -emit-llvm
 
