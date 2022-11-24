@@ -10,14 +10,10 @@
 #include "ParseExpressions/ExpressionDataLayout.h"
 
 namespace Parser {
-    bool Parser::checkKeyword(std::shared_ptr<const Token::Token> token, EnumRegistry::RegistryItem keyword) {
-        return ((typeid(*token) == typeid(Token::TokenKeyword))
-                && (std::dynamic_pointer_cast<const Token::TokenKeyword>(token)->registryItem == keyword));
-    }
-
-    bool Parser::checkOperand(std::shared_ptr<const Token::Token> token, EnumRegistry::RegistryItem op) {
-        return ((typeid(*token) == typeid(Token::TokenOperator))
-                && (std::dynamic_pointer_cast<const Token::TokenOperator>(token)->registryItem == op));
+    template <typename T>
+    bool Parser::checkReserved(tokenPointer token, EnumRegistry::RegistryItem reserved) {
+        return ((typeid(*token) == typeid(T))
+                && (std::dynamic_pointer_cast<const T>(token)->registryItem == reserved));
     }
 
     stringExtractResult Parser::attemptExtractString(tokenPointer token) {
@@ -31,9 +27,9 @@ namespace Parser {
         int nextTokenAfterExpr = currPos;
         std::string str = "";
         bool success = false;
-        if (checkKeyword((*tokens)[currPos], ReservedWords::source_filename)) {
+        if (checkReserved<Token::TokenKeyword>((*tokens)[currPos], ReservedWords::source_filename)) {
             currPos++;
-            if (checkOperand((*tokens)[currPos], Operators::equals)) {
+            if (checkReserved<Token::TokenOperator>((*tokens)[currPos], Operators::equals)) {
                 currPos++;
                 stringExtractResult result = attemptExtractString((*tokens)[currPos]);
                 if (result.second) {
@@ -51,11 +47,11 @@ namespace Parser {
         int nextTokenAfterExpr = currPos;
         std::string str = "";
         bool success = false;
-        if (checkKeyword((*tokens)[currPos], ReservedWords::target)) {
+        if (checkReserved<Token::TokenKeyword>((*tokens)[currPos], ReservedWords::target)) {
             currPos++;
-            if (checkKeyword((*tokens)[currPos], ReservedWords::datalayout)) {
+            if (checkReserved<Token::TokenKeyword>((*tokens)[currPos], ReservedWords::datalayout)) {
                 currPos++;
-                if (checkOperand((*tokens)[currPos], Operators::equals)) {
+                if (checkReserved<Token::TokenOperator>((*tokens)[currPos], Operators::equals)) {
                     currPos++;
                     stringExtractResult result = attemptExtractString((*tokens)[currPos]);
                     if (result.second) {

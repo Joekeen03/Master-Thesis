@@ -17,17 +17,19 @@ namespace Parser {
 
     class Parser {
         private:
-            // FIXME: Combine these methods into one templated method
+            // FIXME Should I make this description more generic - remove mentions of checking if 'token' is
+            //      a <T> type token?
+            //      E.g. '<T> type token' -> '<T> type'
 
-            // Returns whether or not the provided token is a TokenKeyword for the provided keyword.
-            // Returns false if '*token' is not a TokenKeyword, or the token's keyword (registryItem) isn't the same as
-            // the provided keyword; otherwise returns true.
-            static bool checkKeyword(tokenPointer token, EnumRegistry::RegistryItem keyword);
-
-            // Returns whether or not the provided token is a TokenOperator for the provided operator.
-            // Returns false if '*token' is not a TokenOperator, or the token's operator (registryItem) isn't the same as
-            // the provided operator; otherwise returns true.
-            static bool checkOperand(tokenPointer token, EnumRegistry::RegistryItem op);
+            // Returns whether or not the provided token is a <T> type token for the provided reserved string.
+            // Returns false if '*token' is not a <T> type token, or the token's registryItem (reserved word, operator, etc.)
+            // isn't the same as the provided RegistryItem; otherwise returns true.
+            //
+            // Note: Generically, this checks that '*token' can be dynamically cast to type <T>,
+            //      and that (T)(*token).registryItem == reserved
+            //      So, objects of type T must have a RegistryItem registryItem member.
+            template<typename T>
+            static bool checkReserved(tokenPointer token, EnumRegistry::RegistryItem reserved);
 
             static stringExtractResult attemptExtractString(tokenPointer token);
         public:
