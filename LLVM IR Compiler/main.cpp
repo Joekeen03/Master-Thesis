@@ -4,6 +4,7 @@
 #include "Tokenizer.h"
 #include "Parser.h"
 #include "EnumRegistry.h"
+#include "ParseExpressions/ExpressionFile.h"
 
 int main(int argv, char* argc[]) {
     Tokenizer::Tokenizer tokenizer;
@@ -16,8 +17,11 @@ int main(int argv, char* argc[]) {
         Parser::ParsingResult parseResult2 = parser.parseDataLayout(tokens, parseResult.newPos);
         std::cout << std::boolalpha << "Success: " << parseResult2.success << '\n'
                   << std::resetiosflags(std::ios_base::boolalpha);
+        std::shared_ptr<const Expression::ExpressionFile> fileExpression = parser.parse(tokens);
     } catch (const Tokenizer::TokenizationException& e) {
         std::cout << "Tokenization Exception:\n" << e.what() << '\n';
+    } catch (const Parser::ParsingException& e) {
+        std::cout << "Parser Exception:\n" << e.what() << '\n';
     } catch (const EnumRegistry::RegistryException& e) {
         std::cout << "Registry Exception:\n" << e.what() << '\n';
     } catch (const std::runtime_error& e) {

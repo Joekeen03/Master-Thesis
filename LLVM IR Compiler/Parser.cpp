@@ -65,4 +65,20 @@ namespace Parser {
         }
         return success ? ParsingResult(std::make_shared<Expression::ExpressionDataLayout>(str), nextTokenAfterExpr): ParsingResult();
     }
+
+    std::shared_ptr<const Expression::ExpressionFile> Parser::parse(tokensArrayPointer tokens) {
+        std::shared_ptr<const Expression::ExpressionFile> result;
+        bool success = false;
+        ParsingResult srcResult = parseSourceFile(tokens, 0);
+        if (srcResult.success) {
+            ParsingResult dataLayoutResult = parseDataLayout(tokens, srcResult.newPos);
+            if (dataLayoutResult.success) {
+                result = std::make_shared<Expression::ExpressionFile>(std::dynamic_pointer_cast<const Expression::ExpressionSourceFile>(srcResult.expression),
+                                                    std::dynamic_pointer_cast<const Expression::ExpressionDataLayout>(dataLayoutResult.expression));
+                success = true;
+            }
+        }
+        if (success) return result;
+        throw ParsingException("Couldn't parse the provided tokens.");
+    }
 }

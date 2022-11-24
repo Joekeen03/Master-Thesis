@@ -5,6 +5,7 @@
 #include <utility>
 
 #include "ParseExpressions/Expression.h"
+#include "ParseExpressions/ExpressionFile.h"
 #include "Tokenizer.h"
 #include "EnumRegistry.h"
 
@@ -14,6 +15,7 @@ namespace Parser {
     using tokensArrayPointer = std::shared_ptr<Tokenizer::tokensArray>;
     using stringExtractResult = std::pair<std::string, bool>;
     using tokenPointer = std::shared_ptr<const Token::Token>;
+    using expressionPointer = std::shared_ptr<const Expression::Expression>;
 
     class Parser {
         private:
@@ -35,16 +37,22 @@ namespace Parser {
         public:
             ParsingResult parseSourceFile(tokensArrayPointer tokens, int startPos);
             ParsingResult parseDataLayout(tokensArrayPointer tokens, int startPos);
+            std::shared_ptr<const Expression::ExpressionFile> parse(tokensArrayPointer tokens);
     };
 
     using newTokenPos = int;
-    struct ParsingResult {
-        const std::shared_ptr<const Expression::Expression> expression;
+    struct ParsingResult { // FIXME Merge this and TokenizeResult into one templated class.
+        const expressionPointer expression;
         const newTokenPos newPos;
         const bool success;
         ParsingResult() : expression(), newPos(-1), success(false) {}
-        ParsingResult(std::shared_ptr<const Expression::Expression> expressionArg, newTokenPos newPosArg)
+        ParsingResult(expressionPointer expressionArg, newTokenPos newPosArg)
                         : expression(expressionArg), newPos(newPosArg), success(true) {}
+    };
+
+    class ParsingException : public std::runtime_error {
+        public:
+            ParsingException(std::string msg) : runtime_error(msg.c_str()) {}
     };
 }
 
