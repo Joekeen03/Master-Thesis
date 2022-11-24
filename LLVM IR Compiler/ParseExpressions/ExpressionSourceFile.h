@@ -10,6 +10,7 @@ namespace Expression {
         public:
             const std::string fileName;
             ExpressionSourceFile(std::string fileNameArg) : fileName(fileNameArg) {}
+            std::string getName() { return "ExpressionSourceFile("+fileName+")"; }
     };
 }
 

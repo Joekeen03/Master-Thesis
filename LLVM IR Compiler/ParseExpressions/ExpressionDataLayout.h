@@ -8,8 +8,10 @@
 namespace Expression {
     class ExpressionDataLayout : public Expression {
         public:
-            const std::string dataLayout; // FIXME: Should it store the data layout components?
+            // FIXME: Should it store the data layout components?
+            const std::string dataLayout;
             ExpressionDataLayout(std::string dataLayoutArg) : dataLayout(dataLayoutArg) {}
+            std::string getName() { return "ExpressionDataLayout("+dataLayout+")"; }
     };
 }
 
