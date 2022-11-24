@@ -1,5 +1,6 @@
 SRC_DIR = .
 TOKEN_DIR = $(SRC_DIR)/Tokens
+EXPRESSION_DIR = $(SRC_DIR)/ParseExpressions
 BUILD_DIR = build
 OBJECT_DIR = $(BUILD_DIR)/objects
 TEMPLATE_DIR = $(SRC_DIR)/Templates
@@ -10,7 +11,8 @@ TOKEN_OBJECTS = TokenComment.o TokenGlobalIdentifier.o LibraryTokens.o TokenKeyw
 				TokenParenthesis.o TokenAttributeID.o TokenCurlyBrace.o TokenBaseIdentifier.o TokenLocalIdentifier.o \
 				TokenNamedMetadata.o HelperFunctionsTokens.o TokenNumberLiteral.o TokenMetadataNodeStart.o \
 				TokenMetadataString.o TokenComma.o
-OBJECTS = Tokenizer.o BasicCharArray.o main.o ParseResultSourceFile.o EnumRegistry.o
+EXPRESSION_OBJECTS = 
+OBJECTS = Tokenizer.o BasicCharArray.o main.o ParseResultSourceFile.o EnumRegistry.o Parser.o
 TEST_LL_FILES = mainOnly.ll
 
 TEMPLATE_H_FILE := $(TEMPLATE_DIR)/TokenTEMPLATE.h
@@ -23,8 +25,9 @@ prepareDirectories:
 clean:
 	-del $(subst /,\\,$(OBJECT_DIR))\\*.o
 
-tokenizer: prepareDirectories $(patsubst %,$(SRC_DIR)/%,$(OBJECTS)) $(patsubst %,$(TOKEN_DIR)/%,$(TOKEN_OBJECTS))
-	$(CXX) $(CFLAGS) $(patsubst %,$(OBJECT_DIR)/%,$(OBJECTS) $(TOKEN_OBJECTS)) \
+tokenizer: prepareDirectories $(patsubst %,$(SRC_DIR)/%,$(OBJECTS)) $(patsubst %,$(TOKEN_DIR)/%,$(TOKEN_OBJECTS)) \
+		   $(patsubst %,$(EXPRESSION_DIR)/%,$(EXPRESSION_OBJECTS))
+	$(CXX) $(CFLAGS) $(patsubst %,$(OBJECT_DIR)/%,$(OBJECTS) $(TOKEN_OBJECTS) $(EXPRESSION_OBJECTS)) \
 	$(LDFLAGS) -o $(BUILD_DIR)/$@
 	./$(BUILD_DIR)/$@
 

@@ -2,17 +2,19 @@
 #include <iostream>
 
 #include "Tokenizer.h"
-#include "ParseResultSourceFile.h"
+#include "Parser.h"
 #include "EnumRegistry.h"
 
 int main(int argv, char* argc[]) {
     Tokenizer::Tokenizer tokenizer;
+    Parser::Parser parser;
     std::string fileName = "Test/mainOnly.ll";
     try {
         std::shared_ptr<Tokenizer::tokensArray> tokens = tokenizer.tokenize(fileName);
         std::cout << "Attempting to parse source_filename." << '\n';
-        ParseResult::ParsingResult parseResult = ParseResult::ParseResultSourceFile::attemptToParse(tokens, 0);
-        std::cout << std::boolalpha << "Success: " << parseResult.success << '\n'
+        Parser::ParsingResult parseResult = parser.parseSourceFile(tokens, 0);
+        Parser::ParsingResult parseResult2 = parser.parseDataLayout(tokens, parseResult.newPos);
+        std::cout << std::boolalpha << "Success: " << parseResult2.success << '\n'
                   << std::resetiosflags(std::ios_base::boolalpha);
     } catch (const Tokenizer::TokenizationException& e) {
         std::cout << "Tokenization Exception:\n" << e.what() << '\n';
