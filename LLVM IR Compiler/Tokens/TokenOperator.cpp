@@ -20,6 +20,6 @@ namespace Token {
                 operatorID++;
             }
         }
-        return success ? TokenizeResult(std::make_shared<TokenOperator>(Operators::operatorRegistry->getItem(operatorID)), nextPosAfterChar) : TokenizeResult();
+        return success ? TokenizeResult(std::make_shared<TokenOperator>(Operators::operatorRegistry->getItem(operatorID), startPos), nextPosAfterChar) : TokenizeResult();
     }
 }

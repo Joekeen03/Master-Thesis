@@ -37,7 +37,7 @@ namespace Token {
     class TokenKeyword : public Token::Token {
         public:
             const EnumRegistry::RegistryItem registryItem;
-            TokenKeyword(EnumRegistry::RegistryItem registryItemArg) : registryItem(registryItemArg) {}
+            TokenKeyword(EnumRegistry::RegistryItem registryItemArg, int srcPosArg) : registryItem(registryItemArg), Token(srcPosArg) {}
             std::string getName() const {return "TokenKeyword(id:"+std::to_string(registryItem.ID)
                                                 +"; keyword:"+registryItem.str+")"; }
             // Maybe store the token's minimum/maximum lengths, as well as the valid starting character(s)?

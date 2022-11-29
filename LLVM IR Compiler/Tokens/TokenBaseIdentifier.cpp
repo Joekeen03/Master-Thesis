@@ -6,7 +6,7 @@
 
 namespace Token {
     TokenizeResult TokenBaseIdentifierConstructor::tokenizeHelper(BasicArray::BasicCharArray* fileData, int startPos, char identiferStartChar,
-                                                        std::shared_ptr<Token> (*tokenCtor)(std::string)) {
+                                                        std::shared_ptr<Token> (*tokenCtor)(std::string, int)) {
         int currPos = startPos;
         int firstCharAfterToken = currPos;
         bool succeeded = false;
@@ -61,6 +61,6 @@ namespace Token {
         } catch (...) { // Went out of bounds on the array
         
         }
-        return succeeded ? TokenizeResult(tokenCtor(identifier), firstCharAfterToken) : TokenizeResult();
+        return succeeded ? TokenizeResult(tokenCtor(identifier, startPos), firstCharAfterToken) : TokenizeResult();
     }
 }

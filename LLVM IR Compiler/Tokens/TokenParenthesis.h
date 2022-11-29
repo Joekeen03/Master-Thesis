@@ -10,7 +10,7 @@ namespace Token {
     class TokenParenthesis : public Token::Token {
         public:
             const bool leftParen;
-            TokenParenthesis(bool leftParenArg) : leftParen(leftParenArg) {}
+            TokenParenthesis(bool leftParenArg, int srcPosArg) : leftParen(leftParenArg), Token(srcPosArg) {}
             std::string getName() const {
                 std::string paren = leftParen ? "(" : ")";
                 return "TokenParenthesis(\""+ paren +"\")";

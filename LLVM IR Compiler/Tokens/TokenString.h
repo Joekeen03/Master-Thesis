@@ -10,7 +10,7 @@ namespace Token {
     class TokenString : public Token::Token {
         public:
             const std::string str;
-            TokenString(std::string strArg) : str(strArg) {}
+            TokenString(std::string strArg, int srcPosArg) : str(strArg), Token(srcPosArg) {}
             std::string getName() const {return "TokenString("+str+")"; }
             // Maybe store the token's minimum/maximum lengths, as well as the valid starting character(s)?
             //  To perhaps optimize how the tokenizer iterates through them.

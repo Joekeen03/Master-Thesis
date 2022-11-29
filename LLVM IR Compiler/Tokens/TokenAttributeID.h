@@ -10,7 +10,7 @@ namespace Token {
     class TokenAttributeID : public Token::Token {
         public:
             const int attributeID;
-            TokenAttributeID(int attributeIDArg) : attributeID(attributeIDArg) {}
+            TokenAttributeID(int attributeIDArg, int srcPosArg) : attributeID(attributeIDArg), Token(srcPosArg) {}
             std::string getName() const {return "TokenAttributeID("+std::to_string(attributeID)+")"; }
             // Maybe store the token's minimum/maximum lengths, as well as the valid starting character(s)?
             //  To perhaps optimize how the tokenizer iterates through them.

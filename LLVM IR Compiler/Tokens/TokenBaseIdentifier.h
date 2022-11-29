@@ -10,7 +10,7 @@ namespace Token {
     class TokenBaseIdentifier : public Token::Token {
         public:
             const std::string identifier;
-            TokenBaseIdentifier(std::string identifierArg) : identifier(identifierArg) {}
+            TokenBaseIdentifier(std::string identifierArg, int srcPosArg) : identifier(identifierArg), Token(srcPosArg) {}
             std::string getName() const { return "Generic Identifier Token"; }
             // Maybe store the token's minimum/maximum lengths, as well as the valid starting character(s)?
             //  To perhaps optimize how the tokenizer iterates through them.
@@ -20,7 +20,7 @@ namespace Token {
         protected:
             // For whatever reason, this is inaccessible in subclasses if it's named tokenize (overloading the tokenize method)
             TokenizeResult tokenizeHelper(BasicArray::BasicCharArray* fileData, int startPos, char identiferStartChar,
-                                        std::shared_ptr<Token> (*tokenCtor)(std::string));
+                                        std::shared_ptr<Token> (*tokenCtor)(std::string, int));
     };
 }
 

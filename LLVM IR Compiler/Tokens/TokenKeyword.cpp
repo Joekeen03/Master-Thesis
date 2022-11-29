@@ -54,6 +54,6 @@ namespace Token {
             }
         }
         
-        return success ? TokenizeResult(std::make_shared<TokenKeyword>(ReservedWords::keywordRegistry->getItem(wordID)), currPos) : TokenizeResult();
+        return success ? TokenizeResult(std::make_shared<TokenKeyword>(ReservedWords::keywordRegistry->getItem(wordID), startPos), currPos) : TokenizeResult();
     }
 }

@@ -29,6 +29,6 @@ namespace Token {
         } catch (...) { // Out-of-bounds on array before reading a ';'
             std::cout << "[WARN] TokenComment exceeded fileData array bounds on first character." << '\n';
         }
-        return succeeded ? TokenizeResult(std::make_shared<TokenComment>(comment), currPos) : TokenizeResult();
+        return succeeded ? TokenizeResult(std::make_shared<TokenComment>(comment, startPos), currPos) : TokenizeResult();
     }
 }

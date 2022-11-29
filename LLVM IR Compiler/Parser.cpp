@@ -26,7 +26,7 @@ namespace Parser {
         if (typeid(*(*tokens)[pos]) == typeid(Token::TokenString)) {
             return std::dynamic_pointer_cast<const Token::TokenString>((*tokens)[pos])->str;
         } else {
-            throw ParsingException("Expected TokenString at token position "+std::to_string(pos)+", instead received: "+(*tokens)[pos]->getName());
+            throw ParsingException("Expected TokenString at token position "+std::to_string(pos)+", instead received: "+(*tokens)[pos]->getName(), pos);
         }
     }
 
@@ -93,17 +93,20 @@ namespace Parser {
 
     std::shared_ptr<const Expression::ExpressionFile> Parser::parse(tokensArrayPointer tokens) {
         bool success = false;
-        ParsingResult srcResult = parseSourceFile(tokens, 0);
+        int pos = 0;
+        ParsingResult srcResult = parseSourceFile(tokens, pos);
         if (!srcResult.success) {
-            throw ParsingException("Missing source filename at start of file.");
+            throw ParsingException("Missing source filename at start of file.", pos);
         }
         // The datalayout and target triples are optional.
         //  Should I have their parse methods throw ParsingExceptions?
         //  Maybe the different parse...(...) methods should throw ParsingExceptions if they can't successfully parse their intended
         //  expression, and the function that calls them is responsible for determining whether or not to ignore them?
         // Are these required to be at the start of the file?
-        ParsingResult dataLayoutResult = parseDataLayout(tokens, srcResult.newPos);
-        ParsingResult targetTripleResult = parseTargetTriple(tokens, dataLayoutResult.newPos);
+        pos = srcResult.newPos;
+        ParsingResult dataLayoutResult = parseDataLayout(tokens, pos);
+        pos = dataLayoutResult.newPos;
+        ParsingResult targetTripleResult = parseTargetTriple(tokens, pos);
         std::shared_ptr<const Expression::ExpressionFile> result
                     = std::make_shared<Expression::ExpressionFile>(std::dynamic_pointer_cast<const Expression::ExpressionSourceFile>(srcResult.expression),
                                                                     std::dynamic_pointer_cast<const Expression::ExpressionDataLayout>(dataLayoutResult.expression));

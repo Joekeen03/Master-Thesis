@@ -16,6 +16,6 @@ namespace Token {
             default:
                 break;
         }
-        return success ? TokenizeResult(std::make_shared<TokenParenthesis>(left), startPos+1) : TokenizeResult();
+        return success ? TokenizeResult(std::make_shared<TokenParenthesis>(left, startPos), startPos+1) : TokenizeResult();
     }
 }

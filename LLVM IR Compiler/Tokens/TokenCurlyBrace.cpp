@@ -17,6 +17,6 @@ namespace Token {
             default:
                 break;
         }
-        return success ? TokenizeResult(std::make_shared<TokenCurlyBrace>(left), startPos+1) : TokenizeResult();
+        return success ? TokenizeResult(std::make_shared<TokenCurlyBrace>(left, startPos), startPos+1) : TokenizeResult();
     }
 }

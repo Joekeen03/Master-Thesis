@@ -9,7 +9,7 @@ namespace Token {
     class TokenComment : public Token::Token {
         public:
             std::string comment;
-            TokenComment(std::string commentArg) : comment(commentArg) {}
+            TokenComment(std::string commentArg, int srcPosArg) : comment(commentArg), Token(srcPosArg) {}
             std::string getName() const {return "TokenComment("+comment+")"; }
     };
 

@@ -17,7 +17,7 @@ namespace Token {
     class TokenOperator : public Token::Token {
         public:
             const EnumRegistry::RegistryItem registryItem;
-            TokenOperator(EnumRegistry::RegistryItem registryItemArg) : registryItem(registryItemArg) {}
+            TokenOperator(EnumRegistry::RegistryItem registryItemArg, int srcPosArg) : registryItem(registryItemArg), Token(srcPosArg) {}
             std::string getName() const {return "Operator Token(ID:"+std::to_string(registryItem.ID)
                                                 +"; operand:\""+registryItem.str+"\")"; }
             // Maybe store the token's minimum/maximum lengths, as well as the valid starting character(s)?

@@ -10,6 +10,6 @@ namespace Token {
         } catch (...) { // Out of bounds on fileData
 
         }
-        return success ? TokenizeResult(std::make_shared<TokenMetadataNodeStart>(), currPos) : TokenizeResult();
+        return success ? TokenizeResult(std::make_shared<TokenMetadataNodeStart>(startPos), currPos) : TokenizeResult();
     }
 }

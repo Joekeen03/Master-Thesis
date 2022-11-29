@@ -9,7 +9,7 @@
 namespace Token {
     class TokenComma : public Token::Token {
         public:
-            TokenComma() {}
+            explicit TokenComma(int srcPosArg) : Token(srcPosArg) {}
             std::string getName() const {return "TokenComma"; }
             // Maybe store the token's minimum/maximum lengths, as well as the valid starting character(s)?
             //  To perhaps optimize how the tokenizer iterates through them.

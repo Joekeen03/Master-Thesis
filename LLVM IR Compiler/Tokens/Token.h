@@ -9,6 +9,8 @@
 namespace Token {
     class Token {
         public:
+            const int srcPos;
+            explicit Token(int srcPosArg) : srcPos(srcPosArg) {}
             virtual std::string getName() const { return "Default Token"; }
         // Maybe store the token's minimum/maximum lengths, as well as the valid starting character(s)?
         //  To perhaps optimize how the tokenizer iterates through them.

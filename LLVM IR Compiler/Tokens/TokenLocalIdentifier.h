@@ -9,7 +9,7 @@
 namespace Token {
     class TokenLocalIdentifier : public TokenBaseIdentifier {
         public:
-            TokenLocalIdentifier(std::string identifierArg) : TokenBaseIdentifier(identifierArg) {}
+            TokenLocalIdentifier(std::string identifierArg, int srcPosArg) : TokenBaseIdentifier(identifierArg, srcPosArg) {}
             std::string getName() const {return "TokenLocalIdentifier("+identifier+")"; }
             // Maybe store the token's minimum/maximum lengths, as well as the valid starting character(s)?
             //  To perhaps optimize how the tokenizer iterates through them.

@@ -9,7 +9,7 @@
 namespace Token {
     class TokenMetadataNodeStart : public Token::Token {
         public:
-            TokenMetadataNodeStart() {}
+            explicit TokenMetadataNodeStart(int srcPosArg) : Token(srcPosArg) {}
             std::string getName() const {return "MetadataNodeStart Token"; }
             // Maybe store the token's minimum/maximum lengths, as well as the valid starting character(s)?
             //  To perhaps optimize how the tokenizer iterates through them.

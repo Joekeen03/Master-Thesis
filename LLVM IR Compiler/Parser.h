@@ -62,7 +62,8 @@ namespace Parser {
     // Indicates if the parser has encountered a issue and cannot progress.
     class ParsingException : public std::runtime_error {
         public:
-            ParsingException(std::string msg) : runtime_error(msg.c_str()) {}
+            const int tokenPos;
+            ParsingException(std::string msg, int tokenPosArg) : tokenPos(tokenPosArg), runtime_error(msg.c_str()) {}
     };
 }
 

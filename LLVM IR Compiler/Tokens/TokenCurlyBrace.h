@@ -10,7 +10,7 @@ namespace Token {
     class TokenCurlyBrace : public Token::Token {
         public:
             const bool leftBrace;
-            TokenCurlyBrace(bool leftBraceArg) : leftBrace(leftBraceArg) {}
+            TokenCurlyBrace(bool leftBraceArg, int srcPosArg) : leftBrace(leftBraceArg), Token(srcPosArg) {}
             std::string getName() const {
                 std::string paren = leftBrace ? "{" : "}";
                 return "TokenCurlyBrace(\""+ paren +"\")";
