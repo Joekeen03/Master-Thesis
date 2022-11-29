@@ -8,7 +8,6 @@
 namespace Expression {
     class ExpressionTEMPLATE : public Expression {
         public:
-            // FIXME: Should it store the data layout components?
             ExpressionTEMPLATE() {}
             std::string getName() { return "ExpressionTEMPLATE"; }
     };

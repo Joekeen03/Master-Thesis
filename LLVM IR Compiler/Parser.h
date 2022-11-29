@@ -33,10 +33,19 @@ namespace Parser {
             template<typename T>
             static bool checkReserved(tokenPointer token, EnumRegistry::RegistryItem reserved);
 
+            // Attempts to extract a string from the provided token, returns a Pair<string, bool> with the result.
+            // The bool indicates if the extraction was successful, and the string will contain the token's string if successful,
+            //      an emtpy string otherwise.
             static stringExtractResult attemptExtractString(tokenPointer token);
+            
+            // Extracts a string from the token at the specified position in 'tokens', or throws a ParseException if it can't.
+            //  Specifically, if the token at 'pos' is a TokenString, it returns the string from it; otherwise it throws a ParseException.
+            //  For cases where a string is syntactically required (are there any cases where it isn't?).
+            static std::string extractString(tokensArrayPointer tokens, int pos);
         public:
             ParsingResult parseSourceFile(tokensArrayPointer tokens, int startPos);
             ParsingResult parseDataLayout(tokensArrayPointer tokens, int startPos);
+            ParsingResult parseTargetTriple(tokensArrayPointer tokens, int startPos);
             std::shared_ptr<const Expression::ExpressionFile> parse(tokensArrayPointer tokens);
     };
 
@@ -50,6 +59,7 @@ namespace Parser {
                         : expression(expressionArg), newPos(newPosArg), success(true) {}
     };
 
+    // Indicates if the parser has encountered a issue and cannot progress.
     class ParsingException : public std::runtime_error {
         public:
             ParsingException(std::string msg) : runtime_error(msg.c_str()) {}
