@@ -15,11 +15,12 @@
 
 namespace Tokenizer {
     using tokensArray = std::vector<std::shared_ptr<const Token::Token>>;
+    using tokensArrayPointer = std::shared_ptr<tokensArray>;
 
     class Tokenizer {
         public:
             Tokenizer() : fileData(nullptr), fileLength(-1) {};
-            std::shared_ptr<tokensArray> tokenize(std::string fileName);
+            tokensArrayPointer tokenize(std::string fileName);
         private:
             void readFileData(std::string fileName);
             BasicArray::BasicCharArray* fileData;

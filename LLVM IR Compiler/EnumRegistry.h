@@ -36,7 +36,17 @@ corresponding integer ID, and a reference to the master registry. -Can iterate o
             const int registryID;
             const std::string registryName;
 
+            /* FIXME: Should be protected, and each place you need a registry, you define a class that inherits from this,
+                passing the name to its parent. It would also need to define a static "singleton" member. RegistryItem would
+                then be a template class, which takes the registry class they're part of as a type argument.
+                A slightly weaker version of this would be to make the EnumRegistry and RegistryItem template classes which
+                take a type T; the EnumRegistry would return RegistryItems which use the same type T. This wouldn't prevent
+                defining multiple registries with a given type T, and therefore RegistryItem<T> objects of different registries
+                which are interchangeably assignable (for variable assignment, compiler will not distinguish between RegistryItem<T>
+                from different instances of EnumRegistry<T>).
+            */
             EnumRegistry(std::string registryNameArg) : registryName(registryNameArg), registryID(nextRegistryID++) {}
+
             /* Register a string in the registry.
                 If the string is unique (not already w/in th registry), returns a const RegistryItem containing the string,
                 a unique ID (the RegistryItem's index w/in the internal vector<>), and a reference to the registry.

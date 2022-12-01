@@ -5,20 +5,34 @@
 #include <utility>
 
 #include "ParseExpressions/Expression.h"
+#include "ParseExpressions/ExpressionFunctionDefinition.h"
+#include "ParseExpressions/ExpressionReturnType.h"
+#include "ParseExpressions/ExpressionSourceFile.h"
+#include "ParseExpressions/ExpressionTargetTriple.h"
+#include "ParseExpressions/ExpressionFunctionHeaderPreName.h"
+#include "ParseExpressions/ExpressionFunctionHeaderPostName.h"
+#include "ParseExpressions/ExpressionArgumentList.h"
 #include "ParseExpressions/ExpressionFile.h"
+#include "ParseExpressions/ExpressionDataLayout.h"
+
 #include "Tokenizer.h"
+#include "AttributeIDProcessor.h"
 #include "EnumRegistry.h"
 
 namespace Parser {
+    template <typename T>
     struct ParsingResult;
 
-    using tokensArrayPointer = std::shared_ptr<Tokenizer::tokensArray>;
+    using Tokenizer::tokensArrayPointer;
     using stringExtractResult = std::pair<std::string, bool>;
     using tokenPointer = std::shared_ptr<const Token::Token>;
     using expressionPointer = std::shared_ptr<const Expression::Expression>;
 
     class Parser {
         private:
+            const Tokenizer::tokensArrayPointer tokens;
+            const std::shared_ptr<std::vector<int>> mappings;
+            const std::shared_ptr<const std::vector<const Tokenizer::tokensArray>> attributeGroups;
             // FIXME Should I make this description more generic - remove mentions of checking if 'token' is
             //      a <T> type token?
             //      E.g. '<T> type token' -> '<T> type'
@@ -31,31 +45,48 @@ namespace Parser {
             //      and that (T)(*token).registryItem == reserved
             //      So, objects of type T must have a RegistryItem registryItem member.
             template<typename T>
-            static bool checkReserved(tokenPointer token, EnumRegistry::RegistryItem reserved);
+            bool checkReserved(tokenPointer token, EnumRegistry::RegistryItem reserved);
+
+            // Checks if the provided token is a <T> type identifier token.
+            // Returns false if *token is not a <T> type token.
+            // Note: <T> must be a sub-type of TokenBaseIdentifier.
+            template<typename T>
+            std::string extractIdentifier(int pos);
 
             // Attempts to extract a string from the provided token, returns a Pair<string, bool> with the result.
             // The bool indicates if the extraction was successful, and the string will contain the token's string if successful,
             //      an emtpy string otherwise.
-            static stringExtractResult attemptExtractString(tokenPointer token);
+            stringExtractResult attemptExtractString(tokenPointer token);
             
             // Extracts a string from the token at the specified position in 'tokens', or throws a ParseException if it can't.
             //  Specifically, if the token at 'pos' is a TokenString, it returns the string from it; otherwise it throws a ParseException.
             //  For cases where a string is syntactically required (are there any cases where it isn't?).
-            static std::string extractString(tokensArrayPointer tokens, int pos);
+            std::string extractString(int pos);
         public:
-            ParsingResult parseSourceFile(tokensArrayPointer tokens, int startPos);
-            ParsingResult parseDataLayout(tokensArrayPointer tokens, int startPos);
-            ParsingResult parseTargetTriple(tokensArrayPointer tokens, int startPos);
-            std::shared_ptr<const Expression::ExpressionFile> parse(tokensArrayPointer tokens);
+            ParsingResult<Expression::ExpressionSourceFile> parseSourceFile(int startPos);
+            ParsingResult<Expression::ExpressionDataLayout> parseDataLayout(int startPos);
+            ParsingResult<Expression::ExpressionTargetTriple> parseTargetTriple(int startPos);
+            ParsingResult<Expression::ExpressionFunctionHeaderPreName> parseFunctionHeaderPreName(int startPos);
+            ParsingResult<Expression::ExpressionReturnType> parseFunctionReturnType(int startPos);
+            ParsingResult<Expression::ExpressionArgumentList> parseFunctionArgumentList(int startPos);
+            ParsingResult<Expression::ExpressionFunctionHeaderPostName> parseFunctionHeaderPostName(int startPos);
+            // ParsingResult<Expression::ExpressionFunctionHeaderPostName> parseFunctionHeaderPostName(int startPos);
+            ParsingResult<Expression::ExpressionFunctionDefinition> parseFunctionDefinition(int startPos);
+
+            std::shared_ptr<const Expression::ExpressionFile> parse();
+            Parser(AttributeIDProcessor::SubstitutedTokens substitutedTokens)
+                : tokens(substitutedTokens.tokens), mappings(substitutedTokens.mappings), attributeGroups(substitutedTokens.attributeGroups) {}
     };
 
     using newTokenPos = int;
-    struct ParsingResult { // FIXME Merge this and TokenizeResult into one templated class.
-        const expressionPointer expression;
+
+    template <typename T>
+    struct ParsingResult {
+        const std::shared_ptr<T> expression;
         const newTokenPos newPos;
         const bool success;
         ParsingResult() : expression(), newPos(-1), success(false) {}
-        ParsingResult(expressionPointer expressionArg, newTokenPos newPosArg)
+        ParsingResult(std::shared_ptr<T> expressionArg, newTokenPos newPosArg)
                         : expression(expressionArg), newPos(newPosArg), success(true) {}
     };
 

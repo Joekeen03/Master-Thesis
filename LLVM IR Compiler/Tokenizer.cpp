@@ -7,7 +7,7 @@
 namespace Tokenizer {
     std::shared_ptr<tokensArray> Tokenizer::tokenize(std::string fileName) {
         readFileData(fileName);
-        std::shared_ptr<tokensArray> tokens = std::make_shared<std::vector<std::shared_ptr<const Token::Token>>>();
+        tokensArrayPointer tokens = std::make_shared<std::vector<std::shared_ptr<const Token::Token>>>();
         int currPos = 0;
         while (fileData->positionInBounds(currPos)) {
             switch ((*fileData)[currPos]) {
