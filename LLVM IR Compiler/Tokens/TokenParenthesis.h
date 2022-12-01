@@ -9,10 +9,10 @@
 namespace Token {
     class TokenParenthesis : public Token::Token {
         public:
-            const bool leftParen;
-            TokenParenthesis(bool leftParenArg, int srcPosArg) : leftParen(leftParenArg), Token(srcPosArg) {}
+            const bool left;
+            TokenParenthesis(bool leftArg, int srcPosArg) : left(leftArg), Token(srcPosArg) {}
             std::string getName() const {
-                std::string paren = leftParen ? "(" : ")";
+                std::string paren = left ? "(" : ")";
                 return "TokenParenthesis(\""+ paren +"\")";
             }
             // Maybe store the token's minimum/maximum lengths, as well as the valid starting character(s)?

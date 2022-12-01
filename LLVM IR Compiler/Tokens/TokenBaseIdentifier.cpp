@@ -50,11 +50,6 @@ namespace Token {
                             }
                         }
                         succeeded = true;
-                    } else if (std::isdigit(currChar)) {
-                        TokenLib::numberParseResult result = TokenLib::extractNumber(fileData, currPos);
-                        identifier = std::to_string(result.first);
-                        firstCharAfterToken = result.second;
-                        succeeded = true;
                     }
                 }
             }

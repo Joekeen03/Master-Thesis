@@ -45,11 +45,11 @@ namespace AttributeIDProcessor {
                     } else {
                         processedTokens->push_back(tokenPointer);
                         if (typeid(*tokenPointer) == typeid(Token::TokenCurlyBrace)) {
-                            nestedCurly += std::dynamic_pointer_cast<const Token::TokenCurlyBrace>(tokenPointer)->leftBrace ? 1 : -1;
+                            nestedCurly += std::dynamic_pointer_cast<const Token::TokenCurlyBrace>(tokenPointer)->left ? 1 : -1;
                         } else if (typeid(*tokenPointer) == typeid(Token::TokenMetadataNodeStart)) {
                             nestedCurly += 1;
                         } else if (typeid(*tokenPointer) == typeid(Token::TokenParenthesis)) {
-                            nestedParen += std::dynamic_pointer_cast<const Token::TokenParenthesis>(tokenPointer)->leftParen ? 1 : -1;
+                            nestedParen += std::dynamic_pointer_cast<const Token::TokenParenthesis>(tokenPointer)->left ? 1 : -1;
                         } 
                     }
                     break;
@@ -88,7 +88,7 @@ namespace AttributeIDProcessor {
                 }
                 case leftCurly: {
                     if (typeid(*tokenPointer) == typeid(Token::TokenCurlyBrace)
-                        && std::dynamic_pointer_cast<const Token::TokenCurlyBrace>(tokenPointer)->leftBrace) {
+                        && std::dynamic_pointer_cast<const Token::TokenCurlyBrace>(tokenPointer)->left) {
                             buildState = rightCurly;
                     } else {
                         throw AttributeIDException("Expected left curly brace at source position "+std::to_string(tokenPointer->srcPos)+", received "+tokenPointer->getName());
@@ -97,7 +97,7 @@ namespace AttributeIDProcessor {
                 }
                 case rightCurly: { // Just add the tokens and let the parser figure out if they're valid.
                     if (typeid(*tokenPointer) == typeid(Token::TokenCurlyBrace)
-                        && !std::dynamic_pointer_cast<const Token::TokenCurlyBrace>(tokenPointer)->leftBrace) {
+                        && !std::dynamic_pointer_cast<const Token::TokenCurlyBrace>(tokenPointer)->left) {
                             buildState = notBuilding;
                     } else if (typeid(*tokenPointer) == typeid(Token::TokenAttributeID)) {
                         // FIXME Can attribute groups include other attribute groups?
