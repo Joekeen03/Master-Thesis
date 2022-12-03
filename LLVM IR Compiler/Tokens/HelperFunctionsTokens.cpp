@@ -40,6 +40,14 @@ namespace TokenLib {
                             : numberParseFAILED;
     }
 
+    numberParseResult extractPrefixedNumber(BasicArray::BasicCharArray *fileData, int startPos, char prefix) {
+        numberParseResult result = numberParseFAILED;
+        if (fileData->positionInBounds(startPos) && (*fileData)[startPos] == prefix) {
+            result = TokenLib::extractNumber(fileData, startPos+1);
+        }
+        return result;
+    }
+
     stringParseResult extractQuotedString(BasicArray::BasicCharArray *fileData, int startPos) {
         int currPos = startPos;
         int nextPosAfterString;

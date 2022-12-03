@@ -5,15 +5,15 @@
 
 #include "Expression.h"
 #include "../Tokens/TokenKeyword.h"
+#include "../Types/Type.h"
 
 namespace Expression {
     class ExpressionReturnType : public Expression {
         using keywordsVector = const std::shared_ptr<std::vector<std::shared_ptr<const Token::TokenKeyword>>>;
-        using keywordPointer = const std::shared_ptr<const Token::TokenKeyword>;
         public:
-            keywordsVector attributes;
-            keywordPointer returnType;
-            ExpressionReturnType(keywordsVector attributesArg, keywordPointer returnTypeArg) : attributes(attributesArg), returnType(returnTypeArg) {}
+            const keywordsVector attributes;
+            const std::shared_ptr<const Types::Type> returnType;
+            ExpressionReturnType(keywordsVector attributesArg, const std::shared_ptr<const Types::Type> returnTypeArg) : attributes(attributesArg), returnType(returnTypeArg) {}
             std::string getName() { return "ExpressionReturnType"; }
     };
 }

@@ -20,6 +20,8 @@
 #include "Tokenizer.h"
 #include "AttributeIDProcessor.h"
 #include "EnumRegistry.h"
+#include "Types/Type.h"
+#include "Lib/Result.h"
 
 namespace Parser {
     template <typename T>
@@ -80,6 +82,7 @@ namespace Parser {
             template<typename T>
             bool isRightToken(int pos);
         public:
+            Lib::ResultPointer<Types::Type> parseType(int startPos);
             ParsingResult<Expression::ExpressionSourceFile> parseSourceFile(int startPos);
             ParsingResult<Expression::ExpressionDataLayout> parseDataLayout(int startPos);
             ParsingResult<Expression::ExpressionTargetTriple> parseTargetTriple(int startPos);

@@ -14,6 +14,9 @@
 #include "Tokens/TokenLocalUnnamedIdentifier.h"
 #include "Tokens/TokenParenthesis.h"
 #include "Tokens/TokenCurlyBrace.h"
+#include "Tokens/TokenTypeInteger.h"
+
+#include "Types/TypeInteger.h"
 
 #include "ParseExpressions/ExpressionSourceFile.h"
 #include "ParseExpressions/ExpressionDataLayout.h"
@@ -68,6 +71,19 @@ namespace Parser {
     }
 
     /*** PARSE METHODS ***/
+
+    Lib::ResultPointer<Types::Type> Parser::parseType(int startPos) {
+        int nextPosition=-1;
+        std::shared_ptr<const Token::Token> firstToken = (*tokens)[startPos];
+        std::shared_ptr<const Types::Type> determinedType;
+        bool success = false;
+        if (typeid(firstToken) == typeid(Token::TokenTypeInteger)) {
+            determinedType = std::make_shared<const Types::TypeInteger>(std::dynamic_pointer_cast<const Token::TokenTypeInteger>(firstToken)->bitWidth);
+            success = true;
+            nextPosition = startPos+1;
+        }
+        return success ? Lib::ResultPointer<Types::Type>(determinedType, nextPosition) : Lib::ResultPointer<Types::Type>();
+    }
 
     ParsingResult<Expression::ExpressionSourceFile> Parser::parseSourceFile(int startPos) {
         
@@ -162,18 +178,17 @@ namespace Parser {
         bool success = false;
         std::shared_ptr<std::vector<std::shared_ptr<const Token::TokenKeyword>>> attributes
             = std::make_shared<std::vector<std::shared_ptr<const Token::TokenKeyword>>>();
-        std::shared_ptr<const Token::TokenKeyword> returnType;
         if (checkReserved<Token::TokenKeyword>(currPos, ReservedWords::noundef)) {
             attributes->push_back(std::dynamic_pointer_cast<const Token::TokenKeyword>((*tokens)[currPos]));
             currPos++;
         }
-        if (checkReserved<Token::TokenKeyword>(currPos, ReservedWords::i32)) {
-            returnType = std::dynamic_pointer_cast<const Token::TokenKeyword>((*tokens)[currPos]);
-            currPos++;
+        auto typeResult = parseType(currPos);
+        if (typeResult.success) {
+            currPos = typeResult.newPos;
             success = true;
         }
         
-        return success ? ParsingResult<Expression::ExpressionReturnType>(std::make_shared<Expression::ExpressionReturnType>(attributes, returnType), currPos)
+        return success ? ParsingResult<Expression::ExpressionReturnType>(std::make_shared<Expression::ExpressionReturnType>(attributes, typeResult.result), currPos)
                         : ParsingResult<Expression::ExpressionReturnType>();
     }
 

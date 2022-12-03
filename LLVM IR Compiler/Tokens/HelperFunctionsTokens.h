@@ -21,6 +21,11 @@ namespace TokenLib{
     // Only fails if there was no number starting at the specified position.
     numberParseResult extractNumber(BasicArray::BasicCharArray *fileData, int startPos);
     
+    // Attempts to extract a number literal from fileData, starting at startPos.
+    // Returns the number literal and the position immediately after it if successful; returns -1 for the position otherwise.
+    // Only fails if there was no number starting at the specified position.
+    numberParseResult extractPrefixedNumber(BasicArray::BasicCharArray *fileData, int startPos, char prefix);
+
     // Attempts to extract a double-quoted string from fileData, starting at startPos.
     // Returns the string and the position immediately after it if successful; returns -1 for the position otherwise.
     // Fails if there was no string starting at the specified position, or if the string was improperly

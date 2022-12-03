@@ -11,7 +11,7 @@ TOKEN_OBJECTS = TokenComment.o TokenGlobalIdentifier.o LibraryTokens.o TokenKeyw
 				TokenParenthesis.o TokenAttributeID.o TokenCurlyBrace.o TokenBaseIdentifier.o TokenLocalIdentifier.o \
 				TokenNamedMetadata.o HelperFunctionsTokens.o TokenNumberLiteral.o TokenMetadataNodeStart.o \
 				TokenMetadataString.o TokenComma.o TokenBaseUnnamedIdentifier.o TokenLocalUnnamedIdentifier.o \
-				TokenGlobalUnnamedIdentifier.o
+				TokenGlobalUnnamedIdentifier.o TokenTypeInteger.o TokenTypeReservedWord.o
 EXPRESSION_OBJECTS = 
 OBJECTS = Tokenizer.o BasicCharArray.o main.o ParseResultSourceFile.o EnumRegistry.o Parser.o AttributeIDProcessor.o
 TEST_LL_FILES = mainOnly.ll
@@ -19,6 +19,7 @@ TEST_LL_FILES = mainOnly.ll
 TEMPLATE_TOKEN_H_FILE := $(TEMPLATE_DIR)/TokenTEMPLATE.h
 TEMPLATE_TOKEN_CPP_FILE := $(TEMPLATE_DIR)/TokenTEMPLATE.cpp
 TEMPLATE_EXPRESSION_H_FILE := $(TEMPLATE_DIR)/ExpressionTEMPLATE.h
+TEMPLATE_GENERIC_H_FILE := $(TEMPLATE_DIR)/HeaderTEMPLATE.h
 
 prepareDirectories:
 	- mkdir $(subst /,\\,$(OBJECT_DIR))
@@ -42,6 +43,10 @@ NewToken%: prepareDirectories
 NewExpression%: h_data := $(file <$(subst /,\\,$(TEMPLATE_EXPRESSION_H_FILE)))
 NewExpression%: prepareDirectories
 	$(file >$(subst /,\\,$(TEMPLATE_RESULT_DIR)/$(subst NewExpression,Expression,$@).h),$(subst TEMPLATE,$(subst NewExpression,,$@),$(h_data)))
+
+NewHeader%: h_data := $(file <$(subst /,\\,$(TEMPLATE_GENERIC_H_FILE)))
+NewHeader%: prepareDirectories
+	$(file >$(subst /,\\,$(TEMPLATE_RESULT_DIR)/$(subst NewHeader,,$@).h),$(subst TEMPLATE,$(subst NewHeader,,$@),$(h_data)))
 
 %.ll : %.cpp ; $(CXX) $(CFLAGS) -c $< -o $(TEST_DIR)/$(subst .cpp,.ll,$(<F)) -S -emit-llvm
 

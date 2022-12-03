@@ -14,7 +14,6 @@ namespace ReservedWords {
     const EnumRegistry::RegistryItem store = keywordRegistry->registerItem("store");
     const EnumRegistry::RegistryItem ptr = keywordRegistry->registerItem("ptr");
     const EnumRegistry::RegistryItem ret = keywordRegistry->registerItem("ret");
-    const EnumRegistry::RegistryItem i32 = keywordRegistry->registerItem("i32");
     const EnumRegistry::RegistryItem attributes = keywordRegistry->registerItem("attributes");
     const EnumRegistry::RegistryItem noinline = keywordRegistry->registerItem("noinline");
     const EnumRegistry::RegistryItem mustprogress = keywordRegistry->registerItem("mustprogress");
@@ -34,7 +33,7 @@ namespace Token {
             bool buildString = true;
             do {
                 char currChar = (*fileData)[currPos];
-                if (std::isalpha(currChar) ||std::isdigit(currChar) || currChar == '_') {
+                if (std::isalpha(currChar) || currChar == '_') {
                     word += currChar;
                     currPos++;
                 } else {

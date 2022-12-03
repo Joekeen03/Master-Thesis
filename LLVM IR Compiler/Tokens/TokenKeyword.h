@@ -22,7 +22,6 @@ namespace ReservedWords {
     extern const EnumRegistry::RegistryItem store;
     extern const EnumRegistry::RegistryItem ptr;
     extern const EnumRegistry::RegistryItem ret;
-    extern const EnumRegistry::RegistryItem i32;
     extern const EnumRegistry::RegistryItem attributes;
     extern const EnumRegistry::RegistryItem noinline;
     extern const EnumRegistry::RegistryItem mustprogress;
