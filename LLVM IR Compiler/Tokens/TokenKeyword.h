@@ -20,7 +20,6 @@ namespace ReservedWords {
     extern const EnumRegistry::RegistryItem alloca;
     extern const EnumRegistry::RegistryItem align;
     extern const EnumRegistry::RegistryItem store;
-    extern const EnumRegistry::RegistryItem ptr;
     extern const EnumRegistry::RegistryItem ret;
     extern const EnumRegistry::RegistryItem attributes;
     extern const EnumRegistry::RegistryItem noinline;

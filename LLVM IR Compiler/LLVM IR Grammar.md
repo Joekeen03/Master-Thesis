@@ -43,11 +43,14 @@ yieldVoidInstruction ::= store // To be extended
 terminator ::= ret
 ret ::= 
 alloca ::= 'alloca' ['inalloca'] sizeType [, <ty> <NumElements>] [, 'align' alignment] [, addrspace(<num>)]
+store ::= 'store' ['volatile'] <ty> operand, ptrType pointerOperand [, 'align' <alignment>]
+       [, !nontemporal !<nontemp_node>][, !invariant.group !<empty_node>]
 
 // Types
 resultType ::= intType | // To be extended
 sizeType ::= intType | // To be extended
 intType ::= 'i' integer
+ptrType ::= 'ptr'
 
 // Attribute Groups
 attributeGroup ::= 'attributes' attrID '=' '{' fnAttr* '}' // What are the actual limits on what an attribute group can have?
@@ -65,3 +68,5 @@ boolean ::= 'true' | 'false'
 
 // Misc
 comment ::= ';' .* '\n'
+operand ::= integer | boolean | globalIdentifier | localIdentifier // To be extended?
+pointerOperand ::= globalIdentifier | localIdentifier // Can this also be an integer?

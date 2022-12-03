@@ -17,6 +17,8 @@
 #include "Expressions/ExpressionDataLayout.h"
 #include "Expressions/ExpressionFunctionCodeBlock.h"
 #include "Expressions/ExpressionIdentifier.h"
+#include "Expressions/ExpressionLocalIdentifier.h"
+#include "Expressions/ExpressionOperand.h"
 
 #include "Expressions/Instructions/Instruction.h"
 
@@ -28,6 +30,8 @@
 #include "Types/Type.h"
 #include "Lib/Result.h"
 
+#define DEFAULT_ALIGNMENT 1
+
 namespace Parser {
     template <typename T>
     struct ParsingResult;
@@ -35,8 +39,10 @@ namespace Parser {
 
     using Tokenizer::tokensArrayPointer;
     using stringExtractResult = std::pair<std::string, bool>;
+    using numberExtractResult = std::pair<int, bool>;
     using tokenPointer = std::shared_ptr<const Token::Token>;
     using expressionPointer = std::shared_ptr<const Expressions::Expression>;
+    using newTokenPos = int;
 
     class Parser {
         private:
@@ -45,8 +51,15 @@ namespace Parser {
             const std::shared_ptr<const std::vector<const Tokenizer::tokensArray>> attributeGroups;
 
             inline tokenPointer getToken(int pos) const { return (*tokens)[pos]; }
-            template<typename T>
-            inline bool isType(tokenPointer token) const { return typeid(*token) == typeid(T); }
+            
+            // FIXME Is it sufficiently clear that it expects a shared_ptr, and compares the dereferenced object's type to <T>?
+
+            // Determines if the provided pointer points to an object of type <T>
+            template<typename T, typename Y>
+            inline bool isType(std::shared_ptr<Y> ptr) const { return typeid(*ptr) == typeid(T); }
+
+            // template<typename T>
+            // inline bool isType<tokenPointer>(tokenPointer token) const { return typeid(*token) == typeid(T); }
 
             // FIXME Should I make this description more generic - remove mentions of checking if 'token' is
             //      a <T> type token?
@@ -72,6 +85,11 @@ namespace Parser {
             // The bool indicates if the extraction was successful, and the string will contain the token's string if successful,
             //      an emtpy string otherwise.
             stringExtractResult attemptExtractString(int pos);
+
+            // Attempts to extract an integer from the token at the specified position, returns a Pair<integer, bool> with the result.
+            // The bool indicates if the extraction was successful, and the int will contain the token's integer if successful,
+            //      -1 otherwise.
+            numberExtractResult attemptExtractInteger(int pos);
             
             // Extracts a string from the TokenString at the specified position in 'tokens', or throws a ParseException if it can't.
             //  Specifically, if the token at 'pos' is a TokenString, it returns the string from it; otherwise it throws a ParseException.
@@ -97,15 +115,23 @@ namespace Parser {
             template<typename T>
             bool isRightToken(int pos);
         public:
-            //Instruction parsing
+            // Parsing for instructions that yield void
 
-            Instructions::InstructionParseResult parseInstructionAlloca(int startPos);
+            Instructions::InstructionParseResult parseInstructionStore(int startPos);
+
+            // Parsing for instructions that yield a value
+
+            Instructions::InstructionParseResult parseInstructionAlloca(int startPos, std::shared_ptr<const Expressions::ExpressionLocalIdentifier> assignee);
 
             // General parsing
 
             Lib::ResultPointer<Expressions::ExpressionIdentifier> parseIdentifier(int startPos);
+            Lib::ResultPointer<Expressions::ExpressionLocalIdentifier> parseLocalIdentifier(int startPos);
             Lib::ResultPointer<Types::Type> parseType(int startPos);
             Lib::ResultPointer<Types::TypeSized> parseSizedType(int startPos);
+            Lib::ResultPointer<Types::TypeSized> parseFirstClassKnownSizeType(int startPos);
+            Lib::ResultPointer<Expressions::ExpressionOperand> parseOperand(int startPos);
+
             ParsingResult<Expressions::ExpressionSourceFile> parseSourceFile(int startPos);
             ParsingResult<Expressions::ExpressionDataLayout> parseDataLayout(int startPos);
             ParsingResult<Expressions::ExpressionTargetTriple> parseTargetTriple(int startPos);
@@ -113,6 +139,7 @@ namespace Parser {
             ParsingResult<Expressions::ExpressionReturnType> parseFunctionReturnType(int startPos);
             ParsingResult<Expressions::ExpressionArgumentList> parseFunctionArgumentList(int startPos);
             ParsingResult<Expressions::ExpressionFunctionHeaderPostName> parseFunctionHeaderPostName(int startPos);
+            Instructions::InstructionParseResult parseInstruction(int startPos);
             CodeBlockParsingResult parseFunctionCodeBlock(int startPos, int startUnnamedLocal, std::shared_ptr<std::set<std::string>> localNameSet);
             ParsingResult<std::vector<std::shared_ptr<Expressions::ExpressionFunctionCodeBlock>>> parseFunctionCodeBlocks(int startPos);
             ParsingResult<Expressions::ExpressionFunctionDefinition> parseFunctionDefinition(int startPos);
@@ -121,8 +148,6 @@ namespace Parser {
             Parser(AttributeIDProcessor::SubstitutedTokens substitutedTokens)
                 : tokens(substitutedTokens.tokens), mappings(substitutedTokens.mappings), attributeGroups(substitutedTokens.attributeGroups) {}
     };
-
-    using newTokenPos = int;
 
     template <typename T>
     struct ParsingResult {
@@ -149,6 +174,13 @@ namespace Parser {
             const int tokenPos;
             ParsingException(std::string msg, int tokenPosArg) : tokenPos(tokenPosArg), runtime_error(msg.c_str()) {}
     };
+
+    using instructionYieldsVoidParser = Instructions::InstructionParseResult(Parser::*)(int);
+    using instructionYieldsValueParser = Instructions::InstructionParseResult(Parser::*)(int, std::shared_ptr<const Expressions::ExpressionLocalIdentifier>);
+    extern const instructionYieldsVoidParser instructionsYieldVoid[];
+    extern const int nInstructionsYieldVoid;
+    extern const instructionYieldsValueParser instructionsYieldValue[];
+    extern const int nInstructionsYieldValue;
 }
 
 #endif // LLVM_IR_COMPILER_PARSER_H

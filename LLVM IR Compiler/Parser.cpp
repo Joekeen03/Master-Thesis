@@ -16,6 +16,7 @@
 #include "Tokens/TokenParenthesis.h"
 #include "Tokens/TokenCurlyBrace.h"
 #include "Tokens/TokenTypeInteger.h"
+#include "Tokens/TokenTypeReservedWord.h"
 #include "Tokens/TokenNumberLiteral.h"
 
 #include "Types/TypeInteger.h"
@@ -25,8 +26,11 @@
 #include "Expressions/ExpressionFunctionHeaderPreName.h"
 #include "Expressions/ExpressionLocalNamedIdentifier.h"
 #include "Expressions/ExpressionLocalUnnamedIdentifier.h"
+#include "Expressions/ExpressionOperandIdentifier.h"
+#include "Expressions/ExpressionOperandLiteralInteger.h"
 
 #include "Expressions/Instructions/InstructionAlloca.h"
+#include "Expressions/Instructions/InstructionStore.h"
 
 namespace Parser {
     template <typename T>
@@ -48,10 +52,17 @@ namespace Parser {
     }
 
     stringExtractResult Parser::attemptExtractString(int pos) {
-        auto token = (*tokens)[pos];
-        bool isString = (typeid(*token) == typeid(Token::TokenString));
+        auto token = getToken(pos);
+        bool isString = isType<Token::TokenString>(token);
         return isString ? stringExtractResult(std::dynamic_pointer_cast<const Token::TokenString>(token)->str, true)
                         : stringExtractResult("", false);
+    }
+
+    numberExtractResult Parser::attemptExtractInteger(int pos) {
+        auto token = getToken(pos);
+        bool isInt = isType<Token::TokenNumberLiteral>(token);
+        return isInt ? numberExtractResult(std::dynamic_pointer_cast<const Token::TokenNumberLiteral>(token)->val, true)
+                        : numberExtractResult(-1, false);
     }
 
     std::string Parser::extractString(int pos) {
@@ -90,55 +101,115 @@ namespace Parser {
     
     /** INSTRUCTION PARSE METHODS **/
 
-    Instructions::InstructionParseResult Parser::parseInstructionAlloca(int startPos) {
+    // Instructions that yield void
+
+    Instructions::InstructionParseResult Parser::parseInstructionStore(int startPos) {
         int currPos = startPos;
         bool success = false;
-        Lib::ResultPointer<Expressions::ExpressionIdentifier> identifierResult = parseIdentifier(currPos);
-        std::shared_ptr<const Types::TypeSized> allocationType;
-        bool inalloca = false;
+        std::shared_ptr<const Types::TypeSized> valueType; // FIXME should be some kind of TypeFirstClass
+        std::shared_ptr<const Expressions::ExpressionOperand> valueOperand;
+        std::shared_ptr<const Expressions::ExpressionIdentifier> pointerOperand;
         int alignment = -1;
-        if (identifierResult.success) {
-            currPos = identifierResult.newPos;
-            if (checkReserved<Token::TokenOperator>(currPos, Operators::equals)) {
-                currPos++;
-                if (checkReserved<Token::TokenKeyword>(currPos, ReservedWords::alloca)) {
-                    currPos++;
-                    // Try parsing an 'inalloca' token
-                    // TODO
-
-                    Lib::ResultPointer<Types::TypeSized> typeResult = parseSizedType(currPos);
-                    if (typeResult.success) {
+        if (checkReserved<Token::TokenKeyword>(currPos, ReservedWords::store)) {
+            currPos++;
+            // Try parsing volatile
+            // TODO
+            
+            auto typeResult = parseFirstClassKnownSizeType(currPos);
+            if (typeResult.success) {
+                valueType = typeResult.result;
+                currPos = typeResult.newPos;
+                auto valueOperandResult = parseOperand(currPos);
+                if (valueOperandResult.success) {
+                    valueOperand = valueOperandResult.result;
+                    currPos = valueOperandResult.newPos;
+                    if (checkReserved<Token::TokenTypeReservedWord>(currPos, TypeReservedWords::typePtr)) {
                         currPos++;
-                        allocationType = typeResult.result;
-                        // Try parsing the <ty> section
-                        // TODO
+                        auto pointerOperandResult = parseIdentifier(currPos);
+                        if (pointerOperandResult.success) {
+                            pointerOperand = pointerOperandResult.result;
+                            currPos = pointerOperandResult.newPos;
+                            // Try to parse alignment:
+                            if (checkReserved<Token::TokenKeyword>(currPos, ReservedWords::align)) {
+                                currPos++;
+                                alignment = extractInteger(currPos);
+                                currPos++;
+                            }
+                            
+                            // Try to parse nontemporal metadata:
+                            // TODO
 
-                        // Try parsing the alignment section
-                        if (checkReserved<Token::TokenKeyword>(currPos, ReservedWords::align)) {
-                            currPos++;
-                            alignment = extractInteger(currPos);
-                            currPos++;
+                            //Try to parse invariant group metadata:
+                            // TODO
+                            success = true;
                         }
-
-                        // Try parsing the address space section.
-                        // TODO
-                        success = true;
                     }
                 }
             }
         }
+        return success ? Instructions::InstructionParseResult(std::make_shared<const Instructions::InstructionStore>
+                                                                (valueType, valueOperand, pointerOperand, alignment), currPos)
+                        : Instructions::InstructionParseResult();
+    }
+
+    // Instructions that yield values
+
+    Instructions::InstructionParseResult Parser::parseInstructionAlloca(int startPos, std::shared_ptr<const Expressions::ExpressionLocalIdentifier> assignee) {
+        int currPos = startPos;
+        bool success = false;
+        std::shared_ptr<const Types::TypeSized> allocationType;
+        bool inalloca = false;
+        int alignment = -1;
+        if (checkReserved<Token::TokenKeyword>(currPos, ReservedWords::alloca)) {
+            currPos++;
+            // Try parsing an 'inalloca' token
+            // TODO
+
+            Lib::ResultPointer<Types::TypeSized> typeResult = parseSizedType(currPos);
+            if (typeResult.success) {
+                currPos++;
+                allocationType = typeResult.result;
+                // Try parsing the <ty> section
+                // TODO
+
+                // Try parsing the alignment section
+                if (checkReserved<Token::TokenKeyword>(currPos, ReservedWords::align)) {
+                    currPos++;
+                    alignment = extractInteger(currPos);
+                    currPos++;
+                }
+
+                // Try parsing the address space section.
+                // TODO
+                success = true;
+            }
+        }
         return success ? Instructions::InstructionParseResult(std::make_shared<Instructions::InstructionAlloca>
-                                                                (identifierResult.result, inalloca, allocationType, alignment), currPos)
+                                                                (assignee, inalloca, allocationType, alignment), currPos)
                         : Instructions::InstructionParseResult();
     }
 
     /** GENERAL PARSE METHODS **/
 
     Lib::ResultPointer<Expressions::ExpressionIdentifier> Parser::parseIdentifier(int startPos) {
+        bool success = false;
+        std::shared_ptr<const Expressions::ExpressionIdentifier> identifier;
+        int nextPos;
+        auto localIdentifierResult = parseLocalIdentifier(startPos);
+        if (localIdentifierResult.success) {
+            identifier = localIdentifierResult.result;
+            nextPos = localIdentifierResult.newPos;
+            success = true;
+        }
+        return success ? Lib::ResultPointer<Expressions::ExpressionIdentifier>(identifier, nextPos)
+                        : Lib::ResultPointer<Expressions::ExpressionIdentifier>();
+    }
+
+    Lib::ResultPointer<Expressions::ExpressionLocalIdentifier> Parser::parseLocalIdentifier(int startPos) {
         tokenPointer token = getToken(startPos);
         int nextPos = startPos+1;
         bool success = false;
-        std::shared_ptr<const Expressions::ExpressionIdentifier> identifier;
+        std::shared_ptr<const Expressions::ExpressionLocalIdentifier> identifier;
         // FIXME Implement proper hierarchy for identifiers
         if (isType<Token::TokenLocalUnnamedIdentifier>(token)) {
             identifier = std::make_shared<const Expressions::ExpressionLocalUnnamedIdentifier>(std::dynamic_pointer_cast<const Token::TokenLocalUnnamedIdentifier>(token)->ID);
@@ -147,13 +218,13 @@ namespace Parser {
             identifier = std::make_shared<const Expressions::ExpressionLocalNamedIdentifier>(std::dynamic_pointer_cast<const Token::TokenLocalIdentifier>(token)->identifier);
             success = true;
         }
-        return success ? Lib::ResultPointer<Expressions::ExpressionIdentifier>(identifier, nextPos)
-                        : Lib::ResultPointer<Expressions::ExpressionIdentifier>();
+        return success ? Lib::ResultPointer<Expressions::ExpressionLocalIdentifier>(identifier, nextPos)
+                        : Lib::ResultPointer<Expressions::ExpressionLocalIdentifier>();
     }
 
     Lib::ResultPointer<Types::Type> Parser::parseType(int startPos) {
         int nextPosition=-1;
-        std::shared_ptr<const Token::Token> firstToken = (*tokens)[startPos];
+        std::shared_ptr<const Token::Token> firstToken = getToken(startPos);
         std::shared_ptr<const Types::Type> determinedType;
         bool success = false;
         if (typeid(firstToken) == typeid(Token::TokenTypeInteger)) {
@@ -166,7 +237,7 @@ namespace Parser {
 
     Lib::ResultPointer<Types::TypeSized> Parser::parseSizedType(int startPos) {
         int nextPosition=-1;
-        std::shared_ptr<const Token::Token> firstToken = (*tokens)[startPos];
+        std::shared_ptr<const Token::Token> firstToken = getToken(startPos);
         std::shared_ptr<const Types::TypeSized> determinedType;
         bool success = false;
         if (typeid(firstToken) == typeid(Token::TokenTypeInteger)) {
@@ -175,6 +246,41 @@ namespace Parser {
             nextPosition = startPos+1;
         }
         return success ? Lib::ResultPointer<Types::TypeSized>(determinedType, nextPosition) : Lib::ResultPointer<Types::TypeSized>();
+    }
+
+    Lib::ResultPointer<Types::TypeSized> Parser::parseFirstClassKnownSizeType(int startPos) {
+        int nextPosition=-1;
+        std::shared_ptr<const Token::Token> firstToken = getToken(startPos);
+        std::shared_ptr<const Types::TypeSized> determinedType;
+        bool success = false;
+        if (typeid(firstToken) == typeid(Token::TokenTypeInteger)) {
+            determinedType = std::make_shared<const Types::TypeInteger>(std::dynamic_pointer_cast<const Token::TokenTypeInteger>(firstToken)->bitWidth);
+            success = true;
+            nextPosition = startPos+1;
+        }
+        return success ? Lib::ResultPointer<Types::TypeSized>(determinedType, nextPosition) : Lib::ResultPointer<Types::TypeSized>();
+    }
+
+    Lib::ResultPointer<Expressions::ExpressionOperand> Parser::parseOperand(int startPos) {
+        int currPos = startPos;
+        int nextPos = -1;
+        bool success = false;
+        std::shared_ptr<const Expressions::ExpressionOperand> operand;
+        auto numberResult = attemptExtractInteger(currPos);
+        if (numberResult.second) {
+            success = true;
+            operand = std::make_shared<const Expressions::ExpressionOperandLiteralInteger>(numberResult.first);
+            nextPos = currPos+1;
+        } else {
+            auto identifierResult = parseIdentifier(currPos);
+            if (identifierResult.success) {
+                success = true;
+                operand = std::make_shared<const Expressions::ExpressionOperandIdentifier>(identifierResult.result);
+                nextPos = identifierResult.newPos;
+            }
+        }
+        return success ? Lib::ResultPointer<Expressions::ExpressionOperand>(operand, currPos)
+                        : Lib::ResultPointer<Expressions::ExpressionOperand>();
     }
 
     ParsingResult<Expressions::ExpressionSourceFile> Parser::parseSourceFile(int startPos) {
@@ -353,12 +459,42 @@ namespace Parser {
         return ParsingResult<Expressions::ExpressionFunctionHeaderPostName>(std::make_shared<Expressions::ExpressionFunctionHeaderPostName>(keywords, strKeywords), currPos);
     }
 
+    Instructions::InstructionParseResult Parser::parseInstruction(int startPos) {
+        auto localIdentifierResult = parseLocalIdentifier(startPos);
+        int currPos = startPos;
+        if (localIdentifierResult.success) {
+            currPos = localIdentifierResult.newPos;
+            if (checkReserved<Token::TokenOperator>(currPos, Operators::equals)) {
+                currPos++;
+                for (int i = 0; i < nInstructionsYieldValue; i++)
+                {
+                    auto valueInstructionParser = instructionsYieldValue[i];
+                    auto result = (this->*valueInstructionParser)(startPos, localIdentifierResult.result);
+                    if (result.success) return result;
+                }
+            } else {    
+                auto currToken = getToken(currPos);
+                throw ParsingException("Expected TokenOperator(equals) at source position "+std::to_string(currToken->srcPos)
+                                        +", received "+currToken->getNameAndPos()+".", currPos);
+            }
+        } else {
+            for (int i = 0; i < nInstructionsYieldVoid; i++)
+            {
+                auto voidInstructionParser = instructionsYieldVoid[i];
+                auto result = (this->*voidInstructionParser)(startPos);
+                if (result.success) return result;
+            }
+        }
+        return Instructions::InstructionParseResult();
+    }
+
     CodeBlockParsingResult Parser::parseFunctionCodeBlock(int startPos, int startUnnamedLocal, std::shared_ptr<std::set<std::string>> localNameSet) {
         int nextUnnamedLocal = startUnnamedLocal;
         int currPos = startPos;
         std::string label;
         auto newLocalNameSet = std::make_shared<std::set<std::string>>();
         std::copy(newLocalNameSet->begin(), newLocalNameSet->end(), std::inserter(*localNameSet, localNameSet->begin()));
+        auto instructions = std::make_shared<std::vector<std::shared_ptr<const Instructions::Instruction>>>();
         
         if (false) {
 
@@ -368,38 +504,41 @@ namespace Parser {
         }
         
         // Parse code
-        bool foundTerminator = false;
         bool parseInstructions = true;
         do {
-            auto tokenPointer = (*tokens)[currPos];
-            stringExtractResult result = stringExtractResult("", false);
-            if (typeid(tokenPointer) == typeid(Token::TokenLocalUnnamedIdentifier)) {
-                int id = std::dynamic_pointer_cast<const Token::TokenLocalUnnamedIdentifier>(tokenPointer)->ID;
-                if (id != nextUnnamedLocal) {
-                    throw ParsingException("LLVM IR is a single-assignment language. Duplicate assignment at source position "
-                                            +std::to_string(tokenPointer->srcPos)+".", currPos);
+            auto instructionResult = parseInstruction(currPos);
+            if (instructionResult.success) {
+                if (isType<Instructions::InstructionYieldsValue>(instructionResult.result)) {
+                    // Ensure the local assigned to isn't a duplicate assignment (violating SSA), and if it's an unnamed local,
+                    //  that it matches with the next unnamed local ID (local ID definitions must be monotonically increasing, as
+                    //      in %0=, %1=, %2=, %3=, ...)
+                    auto valInstruction = std::dynamic_pointer_cast<const Instructions::InstructionYieldsValue>(instructionResult.result);
+                    if (isType<Expressions::ExpressionLocalUnnamedIdentifier>(valInstruction->assignee)) {
+                        auto identifier = std::dynamic_pointer_cast<const Expressions::ExpressionLocalUnnamedIdentifier>(valInstruction->assignee);
+                        if (identifier->ID < nextUnnamedLocal) {
+                            throw ParsingException("LLVM IR is a single-assignment language. Duplicate unnamed local assignment at source position "
+                                                    +std::to_string(getToken(currPos)->srcPos)+".", currPos);
+                        } else if (identifier->ID > nextUnnamedLocal) {
+                            throw ParsingException("Unnamed locals must be defined consecutively - 1, 2, 3...; local definition at sourcePosition"
+                                                    +std::to_string(getToken(currPos)->srcPos)+" was not the expected ID, "
+                                                    +std::to_string(nextUnnamedLocal)+".", currPos);
+                        }
+                        newLocalNameSet->insert(std::to_string(identifier->ID));
+                    } else if (isType<Expressions::ExpressionLocalNamedIdentifier>(valInstruction->assignee)) {
+                        auto identifier = std::dynamic_pointer_cast<const Expressions::ExpressionLocalNamedIdentifier>(valInstruction->assignee);
+                        if (newLocalNameSet->count(identifier->identifier)) {
+                            throw ParsingException("LLVM IR is a single-assignment language. Duplicate named local assignment at source position "
+                                                    +std::to_string(getToken(currPos)->srcPos)+".", currPos);
+                        }
+                        newLocalNameSet->insert(identifier->identifier);
+                    }
                 }
-                nextUnnamedLocal++;
-                currPos++;
-                result = stringExtractResult(std::to_string(id), true);
-                localNameSet->insert(result.first);
-            } else if (typeid(tokenPointer) == typeid(Token::TokenLocalIdentifier)) {
-                std::string identifier = std::dynamic_pointer_cast<const Token::TokenLocalIdentifier>(tokenPointer)->identifier;
-                if (localNameSet->count(identifier)) {
-                    throw ParsingException("LLVM IR is a single-assignment language. Duplicate assignment at source position "
-                                            +std::to_string(tokenPointer->srcPos)+".", currPos);
-                }
-                currPos++;
-                result = stringExtractResult(identifier, true);
-                localNameSet->insert(identifier);
-            }
-            if (result.second) { // Instruction that returns a value.
-                if (checkReserved<Token::TokenOperator>(currPos , Operators::equals)) {
-
-                }
+                instructions->push_back(instructionResult.result);
+                currPos = instructionResult.newPos;
             } else {
-
+                parseInstructions = false;
             }
+            std::cout << getToken(currPos)->getNameAndPos() << '\n';
 
         } while (parseInstructions);
         // Parse terminator
@@ -492,4 +631,13 @@ namespace Parser {
         
         return result;
     }
+
+    const instructionYieldsVoidParser instructionsYieldVoid[] = {
+        &Parser::parseInstructionStore,
+    };
+    const int nInstructionsYieldVoid = sizeof(instructionsYieldVoid)/sizeof(instructionYieldsVoidParser);
+    const instructionYieldsValueParser instructionsYieldValue[] = {
+        &Parser::parseInstructionAlloca,
+    };
+    const int nInstructionsYieldValue = sizeof(instructionsYieldValue)/sizeof(instructionYieldsValueParser);
 }

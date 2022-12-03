@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include "Instructions/InstructionYieldsVoid.h"
+#include "InstructionYieldsVoid.h"
 
 namespace Instructions {
     class InstructionTEMPLATE : public InstructionYieldsVoid {

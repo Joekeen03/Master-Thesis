@@ -3,6 +3,7 @@
 namespace TypeReservedWords {
     std::shared_ptr<EnumRegistry::EnumRegistry> typeReservedWordRegistry = std::make_shared<EnumRegistry::EnumRegistry>("types");
     const EnumRegistry::RegistryItem typeVoid = typeReservedWordRegistry->registerItem("void");
+    const EnumRegistry::RegistryItem typePtr = typeReservedWordRegistry->registerItem("ptr");
     extern const int nTypeReservedWords = typeReservedWordRegistry->finalize();
 }
 

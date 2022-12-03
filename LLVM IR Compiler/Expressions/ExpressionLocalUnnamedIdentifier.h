@@ -7,7 +7,7 @@
 #include "ExpressionUnnamedIdentifier.h"
 
 namespace Expressions {
-    class ExpressionLocalUnnamedIdentifier : public ExpressionLocalIdentifier, ExpressionUnnamedIdentifier {
+    class ExpressionLocalUnnamedIdentifier : public ExpressionLocalIdentifier, public ExpressionUnnamedIdentifier {
         public:
             ExpressionLocalUnnamedIdentifier(int IDArg) : ExpressionUnnamedIdentifier(IDArg) {}
             std::string getName() { return "ExpressionLocalUnnamedIdentifier"; }
