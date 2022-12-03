@@ -123,6 +123,10 @@ namespace Parser {
 
             Instructions::InstructionParseResult parseInstructionAlloca(int startPos, std::shared_ptr<const Expressions::ExpressionLocalIdentifier> assignee);
 
+            // Parsing for termintaor instructions
+
+            Instructions::InstructionParseResult parseInstructinRetValue(int startPos);
+
             // General parsing
 
             Lib::ResultPointer<Expressions::ExpressionIdentifier> parseIdentifier(int startPos);

@@ -31,6 +31,8 @@
 
 #include "Expressions/Instructions/InstructionAlloca.h"
 #include "Expressions/Instructions/InstructionStore.h"
+#include "Expressions/Instructions/InstructionRetValue.h"
+#include "Expressions/Instructions/YieldsValue.h"
 
 namespace Parser {
     template <typename T>
@@ -186,6 +188,33 @@ namespace Parser {
         }
         return success ? Instructions::InstructionParseResult(std::make_shared<Instructions::InstructionAlloca>
                                                                 (assignee, inalloca, allocationType, alignment), currPos)
+                        : Instructions::InstructionParseResult();
+    }
+
+    // Terminator Instructions
+
+    Instructions::InstructionParseResult Parser::parseInstructinRetValue(int startPos) {
+        bool success = false;
+        int currPos = startPos;
+        int nextPos = -1;
+        std::shared_ptr<const Types::Type> retType;
+        std::shared_ptr<const Expressions::ExpressionOperand> retVal;
+
+        if (checkReserved<Token::TokenKeyword>(currPos, ReservedWords::ret)) {
+            currPos++;
+            auto typeParseResult = parseType(currPos); // FIXME Should be restricted to valid return types
+            if (typeParseResult.success) {
+                retType = typeParseResult.result;
+                currPos = typeParseResult.newPos;
+                auto valueParseResult = parseOperand(currPos);
+                if (valueParseResult.success) {
+                    retVal = valueParseResult.result;
+                    nextPos = valueParseResult.newPos;
+                    success = true;
+                }
+            }
+        }
+        return success ? Instructions::InstructionParseResult(std::make_shared<const Instructions::InstructionRetValue>(retType, retVal), nextPos)
                         : Instructions::InstructionParseResult();
     }
 
@@ -508,13 +537,13 @@ namespace Parser {
         do {
             auto instructionResult = parseInstruction(currPos);
             if (instructionResult.success) {
-                if (isType<Instructions::InstructionYieldsValue>(instructionResult.result)) {
+                if (isType<Instructions::YieldsValue>(instructionResult.result)) {
                     // Ensure the local assigned to isn't a duplicate assignment (violating SSA), and if it's an unnamed local,
                     //  that it matches with the next unnamed local ID (local ID definitions must be monotonically increasing, as
                     //      in %0=, %1=, %2=, %3=, ...)
-                    auto valInstruction = std::dynamic_pointer_cast<const Instructions::InstructionYieldsValue>(instructionResult.result);
-                    if (isType<Expressions::ExpressionLocalUnnamedIdentifier>(valInstruction->assignee)) {
-                        auto identifier = std::dynamic_pointer_cast<const Expressions::ExpressionLocalUnnamedIdentifier>(valInstruction->assignee);
+                    auto assignedIdentifier = std::dynamic_pointer_cast<const Instructions::YieldsValue>(instructionResult.result)->assignee;
+                    if (isType<Expressions::ExpressionLocalUnnamedIdentifier>(assignedIdentifier)) {
+                        auto identifier = std::dynamic_pointer_cast<const Expressions::ExpressionLocalUnnamedIdentifier>(assignedIdentifier);
                         if (identifier->ID < nextUnnamedLocal) {
                             throw ParsingException("LLVM IR is a single-assignment language. Duplicate unnamed local assignment at source position "
                                                     +std::to_string(getToken(currPos)->srcPos)+".", currPos);
@@ -524,8 +553,8 @@ namespace Parser {
                                                     +std::to_string(nextUnnamedLocal)+".", currPos);
                         }
                         newLocalNameSet->insert(std::to_string(identifier->ID));
-                    } else if (isType<Expressions::ExpressionLocalNamedIdentifier>(valInstruction->assignee)) {
-                        auto identifier = std::dynamic_pointer_cast<const Expressions::ExpressionLocalNamedIdentifier>(valInstruction->assignee);
+                    } else if (isType<Expressions::ExpressionLocalNamedIdentifier>(assignedIdentifier)) {
+                        auto identifier = std::dynamic_pointer_cast<const Expressions::ExpressionLocalNamedIdentifier>(assignedIdentifier);
                         if (newLocalNameSet->count(identifier->identifier)) {
                             throw ParsingException("LLVM IR is a single-assignment language. Duplicate named local assignment at source position "
                                                     +std::to_string(getToken(currPos)->srcPos)+".", currPos);
@@ -633,6 +662,10 @@ namespace Parser {
     }
 
     const instructionYieldsVoidParser instructionsYieldVoid[] = {
+        // Terminator Instructions:
+        &Parser::parseInstructinRetValue,
+
+        // Normal Instructions:
         &Parser::parseInstructionStore,
     };
     const int nInstructionsYieldVoid = sizeof(instructionsYieldVoid)/sizeof(instructionYieldsVoidParser);

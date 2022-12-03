@@ -3,12 +3,12 @@
 
 #include <string>
 
-#include "InstructionYieldsValue.h"
+#include "InstructionNonTerminatorYieldsValue.h"
 
 namespace Instructions {
-    class InstructionTEMPLATE : public InstructionYieldsValue {
+    class InstructionTEMPLATE : public InstructionNonTerminatorYieldsValue {
         public:
-            InstructionTEMPLATE(std::shared_ptr<const Expressions::ExpressionIdentifier> assigneeArg) : InstructionYieldsValue(assigneeArg) {}
+            InstructionTEMPLATE(std::shared_ptr<const Expressions::ExpressionIdentifier> assigneeArg) : InstructionNonTerminatorYieldsValue(assigneeArg) {}
             std::string getName() { return "InstructionTEMPLATE"; }
     };
 }

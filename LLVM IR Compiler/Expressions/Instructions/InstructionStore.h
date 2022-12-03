@@ -3,11 +3,11 @@
 
 #include <string>
 
-#include "InstructionYieldsVoid.h"
+#include "InstructionNonTerminatorYieldsVoid.h"
 #include "../../Types/TypeSized.h"
 
 namespace Instructions {
-    class InstructionStore : public InstructionYieldsVoid {
+    class InstructionStore : public InstructionNonTerminatorYieldsVoid {
         public:
             const std::shared_ptr<const Types::TypeSized> valueType;
             const std::shared_ptr<const Expressions::ExpressionOperand> valueOperand;

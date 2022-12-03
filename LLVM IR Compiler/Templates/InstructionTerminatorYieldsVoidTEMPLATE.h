@@ -3,10 +3,10 @@
 
 #include <string>
 
-#include "InstructionYieldsVoid.h"
+#include "InstructionTerminatorYieldsVoid.h"
 
 namespace Instructions {
-    class InstructionTEMPLATE : public InstructionYieldsVoid {
+    class InstructionTEMPLATE : public InstructionTerminatorYieldsVoid {
         public:
             InstructionTEMPLATE() {}
             std::string getName() { return "InstructionTEMPLATE"; }
