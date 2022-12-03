@@ -5,7 +5,7 @@
 
 #include "Expression.h"
 
-namespace Expression {
+namespace Expressions {
     class ExpressionTEMPLATE : public Expression {
         public:
             ExpressionTEMPLATE() {}

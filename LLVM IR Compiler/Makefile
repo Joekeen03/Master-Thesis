@@ -19,6 +19,8 @@ TEST_LL_FILES = mainOnly.ll
 TEMPLATE_TOKEN_H_FILE := $(TEMPLATE_DIR)/TokenTEMPLATE.h
 TEMPLATE_TOKEN_CPP_FILE := $(TEMPLATE_DIR)/TokenTEMPLATE.cpp
 TEMPLATE_EXPRESSION_H_FILE := $(TEMPLATE_DIR)/ExpressionTEMPLATE.h
+TEMPLATE_INSTRUCTION_YIELDS_VALUE_H_FILE := $(TEMPLATE_DIR)/InstructionYieldsValueTEMPLATE.h
+TEMPLATE_INSTRUCTION_YIELDS_VOID_H_FILE := $(TEMPLATE_DIR)/InstructionYieldsVoidTEMPLATE.h
 TEMPLATE_GENERIC_H_FILE := $(TEMPLATE_DIR)/HeaderTEMPLATE.h
 
 prepareDirectories:
@@ -43,6 +45,14 @@ NewToken%: prepareDirectories
 NewExpression%: h_data := $(file <$(subst /,\\,$(TEMPLATE_EXPRESSION_H_FILE)))
 NewExpression%: prepareDirectories
 	$(file >$(subst /,\\,$(TEMPLATE_RESULT_DIR)/$(subst NewExpression,Expression,$@).h),$(subst TEMPLATE,$(subst NewExpression,,$@),$(h_data)))
+
+NewInstructionYieldsValue%: h_data := $(file <$(subst /,\\,$(TEMPLATE_INSTRUCTION_YIELDS_VALUE_H_FILE)))
+NewInstructionYieldsValue%: prepareDirectories
+	$(file >$(subst /,\\,$(TEMPLATE_RESULT_DIR)/$(subst NewInstructionYieldsValue,Instruction,$@).h),$(subst TEMPLATE,$(subst NewInstructionYieldsValue,,$@),$(h_data)))
+
+NewInstructionYieldsVoid%: h_data := $(file <$(subst /,\\,$(TEMPLATE_INSTRUCTION_YIELDS_VOID_H_FILE)))
+NewInstructionYieldsVoid%: prepareDirectories
+	$(file >$(subst /,\\,$(TEMPLATE_RESULT_DIR)/$(subst NewInstructionYieldsVoid,Instruction,$@).h),$(subst TEMPLATE,$(subst NewInstructionYieldsVoid,,$@),$(h_data)))
 
 NewHeader%: h_data := $(file <$(subst /,\\,$(TEMPLATE_GENERIC_H_FILE)))
 NewHeader%: prepareDirectories

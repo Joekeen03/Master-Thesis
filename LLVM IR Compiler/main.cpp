@@ -5,7 +5,7 @@
 #include "AttributeIDProcessor.h"
 #include "Parser.h"
 #include "EnumRegistry.h"
-#include "ParseExpressions/ExpressionFile.h"
+#include "Expressions/ExpressionFile.h"
 
 int main(int argv, char* argc[]) {
     Tokenizer::Tokenizer tokenizer;
@@ -20,7 +20,7 @@ int main(int argv, char* argc[]) {
         auto parseResult2 = parser.parseDataLayout(parseResult.newPos);
         std::cout << std::boolalpha << "Success: " << parseResult2.success << '\n'
                   << std::resetiosflags(std::ios_base::boolalpha);
-        std::shared_ptr<const Expression::ExpressionFile> fileExpression = parser.parse();
+        std::shared_ptr<const Expressions::ExpressionFile> fileExpression = parser.parse();
     } catch (const Tokenizer::TokenizationException& e) {
         std::cout << "Tokenization Exception:\n" << e.what() << '\n';
     } catch (const Parser::ParsingException& e) {

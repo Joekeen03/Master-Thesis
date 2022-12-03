@@ -7,7 +7,7 @@
 #include "../Tokens/TokenKeyword.h"
 #include "../Types/Type.h"
 
-namespace Expression {
+namespace Expressions {
     class ExpressionReturnType : public Expression {
         using keywordsVector = const std::shared_ptr<std::vector<std::shared_ptr<const Token::TokenKeyword>>>;
         public:

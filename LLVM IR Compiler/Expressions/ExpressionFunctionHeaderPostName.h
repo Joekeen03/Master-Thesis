@@ -7,7 +7,7 @@
 #include "Expression.h"
 #include "../Tokens/TokenKeyword.h"
 
-namespace Expression {
+namespace Expressions {
     class ExpressionFunctionHeaderPostName : public Expression {
         public:
             const std::shared_ptr<std::vector<std::shared_ptr<const Token::TokenKeyword>>> keywords;

@@ -7,7 +7,7 @@
 #include "ExpressionSourceFile.h"
 #include "ExpressionDataLayout.h"
 
-namespace Expression {
+namespace Expressions {
     class ExpressionFile : public Expression {
         public:
             const std::shared_ptr<const ExpressionSourceFile> sourceFile; // FIXME: Should it store the data layout components?

@@ -128,7 +128,9 @@
         "string_view": "cpp",
         "*.ipp": "cpp",
         "__tuple": "cpp",
-        "version": "cpp"
+        "version": "cpp",
+        "__memory": "cpp",
+        "memory_resource": "cpp"
     },
     "cmake.configureOnOpen": false
 }

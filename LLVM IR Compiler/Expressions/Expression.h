@@ -3,7 +3,7 @@
 
 #include <string>
 
-namespace Expression {
+namespace Expressions {
     class Expression {
         public:
             virtual std::string getName() { return "Expression"; }

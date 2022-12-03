@@ -6,7 +6,7 @@
 #include "Expression.h"
 #include "../Tokens/TokenKeyword.h"
 
-namespace Expression {
+namespace Expressions {
     // Temporary expression
     class ExpressionFunctionHeaderPreName : public Expression {
         public:

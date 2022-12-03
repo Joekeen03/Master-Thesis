@@ -5,7 +5,7 @@
 
 #include "Expression.h"
 
-namespace Expression {
+namespace Expressions {
     class ExpressionSourceFile : public Expression {
         public:
             const std::string fileName;
