@@ -10,7 +10,7 @@ namespace Expressions {
         public:
             const int ID;
             ExpressionUnnamedIdentifier(int IDArg) : ID(IDArg) {}
-            std::string getName() { return "ExpressionUnnamedIdentifier"; }
+            std::string getName() const { return "ExpressionUnnamedIdentifier"; }
     };
 }
 

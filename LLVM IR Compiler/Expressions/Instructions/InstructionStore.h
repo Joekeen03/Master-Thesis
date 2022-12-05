@@ -18,7 +18,7 @@ namespace Instructions {
                                 std::shared_ptr<const Expressions::ExpressionIdentifier> pointerOperandArg, int alignmentArg)
                                 : valueType(valueTypeArg), valueOperand(valueOperandArg),
                                     pointerOperand(pointerOperandArg), alignment(alignmentArg) {}
-            std::string getName() { return "InstructionStore"; }
+            std::string getName() const { return "InstructionStore"; }
     };
 }
 

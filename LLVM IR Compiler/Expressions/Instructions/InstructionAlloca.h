@@ -16,6 +16,7 @@ namespace Instructions {
                               std::shared_ptr<const Types::TypeSized> allocationTypeArg, int alignmentArg)
                                   : inalloca(inallocaArg), allocationType(allocationTypeArg), alignment(alignmentArg),
                                     InstructionNonTerminatorYieldsValue(assigneeArg) {}
+            std::string getName() const { return "InstructionAlloca"; }
     };
 }
 

@@ -6,7 +6,7 @@
 namespace Expressions {
     class Expression {
         public:
-            virtual std::string getName() { return "Expression"; }
+            virtual std::string getName() const { return "Expression"; }
     };
 }
 

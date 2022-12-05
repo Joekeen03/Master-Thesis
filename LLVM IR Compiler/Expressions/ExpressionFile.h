@@ -14,7 +14,7 @@ namespace Expressions {
             const std::shared_ptr<const ExpressionDataLayout> dataLayout; // FIXME: Should it store the data layout components?
             ExpressionFile(std::shared_ptr<const ExpressionSourceFile> sourceFileArg, std::shared_ptr<const ExpressionDataLayout> dataLayoutArg)
                                     : sourceFile(sourceFileArg), dataLayout(dataLayoutArg) {}
-            std::string getName() { return "ExpressionFile"; }
+            std::string getName() const { return "ExpressionFile"; }
     };
 }
 

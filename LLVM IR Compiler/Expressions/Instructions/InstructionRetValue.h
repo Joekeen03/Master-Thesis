@@ -14,7 +14,7 @@ namespace Instructions {
             const std::shared_ptr<const Expressions::ExpressionOperand> value; // FIXME Should only allow valid return values (?)
             InstructionRetValue(std::shared_ptr<const Types::Type> returnTypeArg, std::shared_ptr<const Expressions::ExpressionOperand> valueArg)
                                 : returnType(returnTypeArg), value(valueArg) {}
-            std::string getName() { return "InstructionRetValue"; }
+            std::string getName() const { return "InstructionRetValue"; }
     };
 }
 

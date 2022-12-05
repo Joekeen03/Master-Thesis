@@ -15,7 +15,7 @@ namespace Expressions {
             ExpressionFunctionHeaderPostName(std::shared_ptr<std::vector<std::shared_ptr<const Token::TokenKeyword>>> keywordsArg,
                                              std::shared_ptr<std::map<std::string, std::string>> strKeywordsArg)
                                              : keywords(keywordsArg), strKeywords(strKeywordsArg) {}
-            std::string getName() { return "ExpressionFunctionHeaderPostName"; }
+            std::string getName() const { return "ExpressionFunctionHeaderPostName"; }
     };
 }
 

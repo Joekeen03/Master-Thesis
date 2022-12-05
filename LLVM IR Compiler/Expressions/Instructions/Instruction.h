@@ -9,7 +9,7 @@
 namespace Instructions {
     class Instruction : public Expressions::Expression {
         public:
-            virtual std::string getName() { return "Base Instruction"; }
+            virtual std::string getName() const { return "Base Instruction"; }
     };
     
     using InstructionParseResult = Lib::ResultPointer<Instruction>;

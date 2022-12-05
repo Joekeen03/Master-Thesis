@@ -11,7 +11,7 @@ namespace Expressions {
             // FIXME: Should it store the triple components?
             const std::string triple;
             ExpressionTargetTriple(std::string tripleArg) : triple(tripleArg) {}
-            std::string getName() { return "ExpressionTargetTriple("+triple+")"; }
+            std::string getName() const { return "ExpressionTargetTriple("+triple+")"; }
     };
 }
 

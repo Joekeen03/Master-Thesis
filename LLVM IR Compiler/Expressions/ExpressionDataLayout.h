@@ -11,7 +11,7 @@ namespace Expressions {
             // FIXME: Should it store the data layout components?
             const std::string dataLayout;
             ExpressionDataLayout(std::string dataLayoutArg) : dataLayout(dataLayoutArg) {}
-            std::string getName() { return "ExpressionDataLayout("+dataLayout+")"; }
+            std::string getName() const { return "ExpressionDataLayout("+dataLayout+")"; }
     };
 }
 

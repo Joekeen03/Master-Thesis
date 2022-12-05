@@ -10,7 +10,7 @@ namespace Expressions {
         public:
             const int val;
             ExpressionOperandLiteralInteger(int valArg) : val(valArg) {}
-            std::string getName() { return "ExpressionOperandLiteralInteger"; }
+            std::string getName() const { return "ExpressionOperandLiteralInteger"; }
     };
 }
 

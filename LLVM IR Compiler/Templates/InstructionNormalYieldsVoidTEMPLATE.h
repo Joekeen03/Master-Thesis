@@ -9,7 +9,7 @@ namespace Instructions {
     class InstructionTEMPLATE : public InstructionNonTerminatorYieldsVoid {
         public:
             InstructionTEMPLATE() {}
-            std::string getName() { return "InstructionTEMPLATE"; }
+            std::string getName() const { return "InstructionTEMPLATE"; }
     };
 }
 

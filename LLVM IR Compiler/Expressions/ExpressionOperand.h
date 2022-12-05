@@ -9,7 +9,7 @@ namespace Expressions {
     class ExpressionOperand : public Expression {
         public:
             ExpressionOperand() {}
-            std::string getName() { return "ExpressionOperand"; }
+            std::string getName() const { return "ExpressionOperand"; }
     };
 }
 

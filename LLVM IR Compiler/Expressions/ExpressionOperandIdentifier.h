@@ -12,7 +12,7 @@ namespace Expressions {
             const std::shared_ptr<const ExpressionIdentifier> identifier;
             ExpressionOperandIdentifier(std::shared_ptr<const ExpressionIdentifier> identifierArg)
                                         : identifier(identifierArg) {}
-            std::string getName() { return "ExpressionOperandIdentifier"; }
+            std::string getName() const { return "ExpressionOperandIdentifier"; }
     };
 }
 

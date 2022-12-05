@@ -14,7 +14,7 @@ namespace Expressions {
             const keywordsVector attributes;
             const std::shared_ptr<const Types::Type> returnType;
             ExpressionReturnType(keywordsVector attributesArg, const std::shared_ptr<const Types::Type> returnTypeArg) : attributes(attributesArg), returnType(returnTypeArg) {}
-            std::string getName() { return "ExpressionReturnType"; }
+            std::string getName() const { return "ExpressionReturnType"; }
     };
 }
 

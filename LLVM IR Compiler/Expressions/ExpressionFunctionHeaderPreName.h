@@ -12,7 +12,7 @@ namespace Expressions {
         public:
             const std::shared_ptr<std::vector<std::shared_ptr<const Token::TokenKeyword>>> keywords;
             ExpressionFunctionHeaderPreName(std::shared_ptr<std::vector<std::shared_ptr<const Token::TokenKeyword>>> keywordsArg) : keywords(keywordsArg) {}
-            std::string getName() { return "ExpressionFunctionHeaderPreName"; }
+            std::string getName() const { return "ExpressionFunctionHeaderPreName"; }
     };
 }
 

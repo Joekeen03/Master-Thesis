@@ -9,7 +9,7 @@ namespace Expressions {
     class ExpressionLocalIdentifier : public ExpressionIdentifier {
         public:
             ExpressionLocalIdentifier() {}
-            std::string getName() { return "ExpressionLocalIdentifier"; }
+            std::string getName() const { return "ExpressionLocalIdentifier"; }
     };
 }
 

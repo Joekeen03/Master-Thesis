@@ -9,7 +9,7 @@ namespace Expressions {
     class ExpressionArgumentList : public Expression {
         public:
             ExpressionArgumentList() {}
-            std::string getName() { return "ExpressionArgumentList"; }
+            std::string getName() const { return "ExpressionArgumentList"; }
     };
 }
 
