@@ -11,7 +11,7 @@ namespace Token {
         public:
             const int bitWidth;
             explicit TokenTypeInteger(int bitWidthArg, int srcPosArg) : bitWidth(bitWidthArg), TokenType(srcPosArg) {}
-            std::string getName() const {return "TokenTypeInteger"; }
+            std::string getName() const {return "TokenTypeInteger("+std::to_string(bitWidth)+")"; }
             // Maybe store the token's minimum/maximum lengths, as well as the valid starting character(s)?
             //  To perhaps optimize how the tokenizer iterates through them.
     };
