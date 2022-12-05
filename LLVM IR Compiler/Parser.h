@@ -51,12 +51,21 @@ namespace Parser {
             const std::shared_ptr<const std::vector<const Tokenizer::tokensArray>> attributeGroups;
 
             inline tokenPointer getToken(int pos) const { return (*tokens)[pos]; }
+            inline void outputToken(int pos) const { std::cout << getToken(pos)->getNameAndPos() << '\n'; }
             
             // FIXME Is it sufficiently clear that it expects a shared_ptr, and compares the dereferenced object's type to <T>?
 
             // Determines if the provided pointer points to an object of type <T>
             template<typename T, typename Y>
             inline bool isType(std::shared_ptr<Y> ptr) const { return typeid(*ptr) == typeid(T); }
+
+            // Determines if the provided pointer points to an instance of a subclass of class <T>
+            // Specifically, it dynamically casts the pointer w/in the shared_ptr to const T*, and checks if that is not equal to
+            //  nullptr. If the pointed-to-instance can be cast to type T successfully, dynamic_cast returns something other than
+            //  nullptr, and this returns true; Otherwise (if the instance isn't an instance of a subclass of class <T>, or the
+            //  pointer == nullptr), dynamic_cast returns nullptr, and this returns false.
+            template<typename T, typename Y>
+            inline bool isDerivedType(std::shared_ptr<Y> ptr) const { return dynamic_cast<const T*>(ptr.get())!=nullptr; }
 
             // template<typename T>
             // inline bool isType<tokenPointer>(tokenPointer token) const { return typeid(*token) == typeid(T); }
@@ -139,14 +148,20 @@ namespace Parser {
             ParsingResult<Expressions::ExpressionSourceFile> parseSourceFile(int startPos);
             ParsingResult<Expressions::ExpressionDataLayout> parseDataLayout(int startPos);
             ParsingResult<Expressions::ExpressionTargetTriple> parseTargetTriple(int startPos);
+
+            // Function Parsing Methods
+
             ParsingResult<Expressions::ExpressionFunctionHeaderPreName> parseFunctionHeaderPreName(int startPos);
             ParsingResult<Expressions::ExpressionReturnType> parseFunctionReturnType(int startPos);
             ParsingResult<Expressions::ExpressionArgumentList> parseFunctionArgumentList(int startPos);
             ParsingResult<Expressions::ExpressionFunctionHeaderPostName> parseFunctionHeaderPostName(int startPos);
             Instructions::InstructionParseResult parseInstruction(int startPos);
             CodeBlockParsingResult parseFunctionCodeBlock(int startPos, int startUnnamedLocal, std::shared_ptr<std::set<std::string>> localNameSet);
-            ParsingResult<std::vector<std::shared_ptr<Expressions::ExpressionFunctionCodeBlock>>> parseFunctionCodeBlocks(int startPos);
-            ParsingResult<Expressions::ExpressionFunctionDefinition> parseFunctionDefinition(int startPos);
+            Lib::ResultPointer<std::vector<const std::shared_ptr<const Expressions::ExpressionFunctionCodeBlock>>> parseFunctionCodeBlocks(int startPos);
+            Lib::ResultPointer<Expressions::ExpressionFunctionDefinition> parseFunctionDefinition(int startPos);
+
+            // Metadata Parsing Methods
+            // parseMetdataDefinition(int startPos);
 
             std::shared_ptr<const Expressions::ExpressionFile> parse();
             Parser(AttributeIDProcessor::SubstitutedTokens substitutedTokens)
@@ -163,13 +178,13 @@ namespace Parser {
                         : expression(expressionArg), newPos(newPosArg), success(true) {}
     };
 
-    struct CodeBlockParsingResult : public ParsingResult<Expressions::ExpressionFunctionCodeBlock> {
+    struct CodeBlockParsingResult : public Lib::ResultPointer<Expressions::ExpressionFunctionCodeBlock> {
         const int nextUnnamedLocal;
         const std::shared_ptr<std::set<std::string>> localNameSet;
-        CodeBlockParsingResult() : nextUnnamedLocal(-1), ParsingResult() {}
+        CodeBlockParsingResult() : nextUnnamedLocal(-1), Result() {}
         CodeBlockParsingResult(std::shared_ptr<Expressions::ExpressionFunctionCodeBlock> expressionArg, newTokenPos newPosArg,
                                 int nextUnnamedLocalArg, std::shared_ptr<std::set<std::string>> localNameSetArg)
-                                : nextUnnamedLocal(nextUnnamedLocalArg), localNameSet(localNameSetArg), ParsingResult(expressionArg, newPosArg) {}
+                                : nextUnnamedLocal(nextUnnamedLocalArg), localNameSet(localNameSetArg), Result(expressionArg, newPosArg) {}
     };
 
     // Indicates if the parser has encountered a issue and cannot progress.
