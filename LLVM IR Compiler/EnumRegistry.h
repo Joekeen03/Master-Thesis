@@ -45,7 +45,7 @@ corresponding integer ID, and a reference to the master registry. -Can iterate o
                 which are interchangeably assignable (for variable assignment, compiler will not distinguish between RegistryItem<T>
                 from different instances of EnumRegistry<T>).
             */
-            EnumRegistry(std::string registryNameArg) : registryName(registryNameArg), registryID(nextRegistryID++) {}
+            EnumRegistry(std::string registryNameArg) : registryName(registryNameArg), registryID(nextRegistryID++), nextID(0) {}
 
             /* Register a string in the registry.
                 If the string is unique (not already w/in th registry), returns a const RegistryItem containing the string,
