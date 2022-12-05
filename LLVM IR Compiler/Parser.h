@@ -33,8 +33,6 @@
 #define DEFAULT_ALIGNMENT 1
 
 namespace Parser {
-    template <typename T>
-    struct ParsingResult;
     struct CodeBlockParsingResult;
 
     using Tokenizer::tokensArrayPointer;
@@ -43,6 +41,9 @@ namespace Parser {
     using tokenPointer = std::shared_ptr<const Token::Token>;
     using expressionPointer = std::shared_ptr<const Expressions::Expression>;
     using newTokenPos = int;
+
+    template <typename T>
+    using ParsingResult = Lib::ResultPointer<T>;
 
     class Parser {
         private:
@@ -138,12 +139,12 @@ namespace Parser {
 
             // General parsing
 
-            Lib::ResultPointer<Expressions::ExpressionIdentifier> parseIdentifier(int startPos);
-            Lib::ResultPointer<Expressions::ExpressionLocalIdentifier> parseLocalIdentifier(int startPos);
-            Lib::ResultPointer<Types::Type> parseType(int startPos);
-            Lib::ResultPointer<Types::TypeSized> parseSizedType(int startPos);
-            Lib::ResultPointer<Types::TypeSized> parseFirstClassKnownSizeType(int startPos);
-            Lib::ResultPointer<Expressions::ExpressionOperand> parseOperand(int startPos);
+            ParsingResult<Expressions::ExpressionIdentifier> parseIdentifier(int startPos);
+            ParsingResult<Expressions::ExpressionLocalIdentifier> parseLocalIdentifier(int startPos);
+            ParsingResult<Types::Type> parseType(int startPos);
+            ParsingResult<Types::TypeSized> parseSizedType(int startPos);
+            ParsingResult<Types::TypeSized> parseFirstClassKnownSizeType(int startPos);
+            ParsingResult<Expressions::ExpressionOperand> parseOperand(int startPos);
 
             ParsingResult<Expressions::ExpressionSourceFile> parseSourceFile(int startPos);
             ParsingResult<Expressions::ExpressionDataLayout> parseDataLayout(int startPos);
@@ -157,8 +158,8 @@ namespace Parser {
             ParsingResult<Expressions::ExpressionFunctionHeaderPostName> parseFunctionHeaderPostName(int startPos);
             Instructions::InstructionParseResult parseInstruction(int startPos);
             CodeBlockParsingResult parseFunctionCodeBlock(int startPos, int startUnnamedLocal, std::shared_ptr<std::set<std::string>> localNameSet);
-            Lib::ResultPointer<std::vector<const std::shared_ptr<const Expressions::ExpressionFunctionCodeBlock>>> parseFunctionCodeBlocks(int startPos);
-            Lib::ResultPointer<Expressions::ExpressionFunctionDefinition> parseFunctionDefinition(int startPos);
+            ParsingResult<std::vector<const std::shared_ptr<const Expressions::ExpressionFunctionCodeBlock>>> parseFunctionCodeBlocks(int startPos);
+            ParsingResult<Expressions::ExpressionFunctionDefinition> parseFunctionDefinition(int startPos);
 
             // Metadata Parsing Methods
             // parseMetdataDefinition(int startPos);
@@ -168,17 +169,17 @@ namespace Parser {
                 : tokens(substitutedTokens.tokens), mappings(substitutedTokens.mappings), attributeGroups(substitutedTokens.attributeGroups) {}
     };
 
-    template <typename T>
-    struct ParsingResult {
-        const std::shared_ptr<T> expression;
-        const newTokenPos newPos;
-        const bool success;
-        ParsingResult() : expression(), newPos(-1), success(false) {}
-        ParsingResult(std::shared_ptr<T> expressionArg, newTokenPos newPosArg)
-                        : expression(expressionArg), newPos(newPosArg), success(true) {}
-    };
+    // template <typename T>
+    // struct ParsingResult {
+    //     const std::shared_ptr<T> expression;
+    //     const newTokenPos newPos;
+    //     const bool success;
+    //     ParsingResult() : expression(), newPos(-1), success(false) {}
+    //     ParsingResult(std::shared_ptr<T> expressionArg, newTokenPos newPosArg)
+    //                     : expression(expressionArg), newPos(newPosArg), success(true) {}
+    // };
 
-    struct CodeBlockParsingResult : public Lib::ResultPointer<Expressions::ExpressionFunctionCodeBlock> {
+    struct CodeBlockParsingResult : public ParsingResult<Expressions::ExpressionFunctionCodeBlock> {
         const int nextUnnamedLocal;
         const std::shared_ptr<std::set<std::string>> localNameSet;
         CodeBlockParsingResult() : nextUnnamedLocal(-1), Result() {}

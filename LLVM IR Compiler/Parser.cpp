@@ -638,21 +638,21 @@ namespace Parser {
             currPos++;
             auto headerPreNameResult = parseFunctionHeaderPreName(currPos);
             if (headerPreNameResult.success) {
-                headerPreName = headerPreNameResult.expression;
+                headerPreName = headerPreNameResult.result;
                 currPos = headerPreNameResult.newPos;
                 auto returnTypeResult = parseFunctionReturnType(currPos);
                 if (returnTypeResult.success) {
-                    returnType = returnTypeResult.expression;
+                    returnType = returnTypeResult.result;
                     currPos = returnTypeResult.newPos;
                     std::string functionName = extractNamedIdentifier<Token::TokenGlobalIdentifier>(currPos);
                     currPos++;
                     auto parameterListResult = parseFunctionArgumentList(currPos);
                     if (parameterListResult.success) {
-                        parameterList = parameterListResult.expression;
+                        parameterList = parameterListResult.result;
                         currPos = parameterListResult.newPos;
                         auto headerPostNameResult = parseFunctionHeaderPostName(currPos);
                         if (headerPostNameResult.success) {
-                            headerPostName = headerPostNameResult.expression;
+                            headerPostName = headerPostNameResult.result;
                             currPos = headerPostNameResult.newPos;
                             auto codeBlocksResult = parseFunctionCodeBlocks(currPos);
                             if (codeBlocksResult.success) {
@@ -691,8 +691,8 @@ namespace Parser {
         auto functionResult = parseFunctionDefinition(pos);
         
         std::shared_ptr<const Expressions::ExpressionFile> result
-                    = std::make_shared<Expressions::ExpressionFile>(std::dynamic_pointer_cast<const Expressions::ExpressionSourceFile>(srcResult.expression),
-                                                                    std::dynamic_pointer_cast<const Expressions::ExpressionDataLayout>(dataLayoutResult.expression));
+                    = std::make_shared<Expressions::ExpressionFile>(std::dynamic_pointer_cast<const Expressions::ExpressionSourceFile>(srcResult.result),
+                                                                    std::dynamic_pointer_cast<const Expressions::ExpressionDataLayout>(dataLayoutResult.result));
         
         return result;
     }
