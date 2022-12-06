@@ -40,14 +40,6 @@ namespace Token {
                     } while (buildName);
                     success = !failed;
 
-                } else if (std::isdigit(currChar)) {
-                    TokenLib::numberParseResult result = TokenLib::extractNumber(fileData, currPos);
-                    nextPosAfterToken = result.second;
-                    name = std::to_string(result.first);
-                    success = true;
-                    // FIXME is it safe to assume it's a valid token regardless of what character terminated the tokenization?
-                    // I.e. would encountering an 'a' immediately after the identifier not invalidate the tokenization itself?
-                    // result = TokenizeResult(TokenGlobalIdentifier(identifier), currPos);
                 }
             }
         } catch (...) { // Out of bounds on fileData

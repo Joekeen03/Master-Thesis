@@ -11,7 +11,8 @@ TOKEN_OBJECTS = TokenComment.o TokenGlobalIdentifier.o LibraryTokens.o TokenKeyw
 				TokenParenthesis.o TokenAttributeID.o TokenCurlyBrace.o TokenBaseIdentifier.o TokenLocalIdentifier.o \
 				TokenNamedMetadata.o HelperFunctionsTokens.o TokenNumberLiteral.o TokenMetadataNodeStart.o \
 				TokenMetadataString.o TokenComma.o TokenBaseUnnamedIdentifier.o TokenLocalUnnamedIdentifier.o \
-				TokenGlobalUnnamedIdentifier.o TokenTypeInteger.o TokenTypeReservedWord.o
+				TokenGlobalUnnamedIdentifier.o TokenTypeInteger.o TokenTypeReservedWord.o TokenMetadataIdentifier.o \
+				TokenUnnamedMetadata.o
 EXPRESSION_OBJECTS = 
 OBJECTS = Tokenizer.o BasicCharArray.o main.o ParseResultSourceFile.o EnumRegistry.o Parser.o AttributeIDProcessor.o
 TEST_LL_FILES = mainOnly.ll

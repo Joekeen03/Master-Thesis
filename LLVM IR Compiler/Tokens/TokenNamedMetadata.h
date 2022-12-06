@@ -4,19 +4,19 @@
 #include <memory>
 #include <iostream>
 
-#include "Token.h"
+#include "TokenMetadataIdentifier.h"
 
 namespace Token {
-    class TokenNamedMetadata : public Token::Token {
+    class TokenNamedMetadata : public TokenMetadataIdentifier {
         public:
             const std::string name;
-            TokenNamedMetadata(std::string nameArg, int srcPosArg) : name(nameArg), Token(srcPosArg) {}
+            TokenNamedMetadata(std::string nameArg, int srcPosArg) : name(nameArg), TokenMetadataIdentifier(srcPosArg) {}
             std::string getName() const {return "TokenNamedMetadata("+name+")"; }
             // Maybe store the token's minimum/maximum lengths, as well as the valid starting character(s)?
             //  To perhaps optimize how the tokenizer iterates through them.
     };
 
-    class TokenNamedMetadataConstructor : public TokenConstructor { // TODO: Should this be a singleton?
+    class TokenNamedMetadataConstructor : public TokenMetadataIdentifierConstructor { // TODO: Should this be a singleton?
         public:
             TokenizeResult tokenize(BasicArray::BasicCharArray* fileData, int startPos);
     };

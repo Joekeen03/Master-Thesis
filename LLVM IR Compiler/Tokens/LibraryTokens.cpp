@@ -18,6 +18,7 @@
 #include "TokenComma.h"
 #include "TokenTypeInteger.h"
 #include "TokenTypeReservedWord.h"
+#include "TokenUnnamedMetadata.h"
 
 namespace TokenLibrary {
     std::unique_ptr<Token::TokenConstructor> tokenConstructors[] = {
@@ -39,6 +40,7 @@ namespace TokenLibrary {
         std::make_unique<Token::TokenCommaConstructor>(),
         std::make_unique<Token::TokenTypeIntegerConstructor>(),
         std::make_unique<Token::TokenTypeReservedWordConstructor>(),
+        std::make_unique<Token::TokenUnnamedMetadataConstructor>(),
     };
     const int nTokens = sizeof(tokenConstructors)/sizeof(tokenConstructors[0]);
 }
