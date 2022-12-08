@@ -27,9 +27,9 @@ namespace Tokenizer {
                         
                         Tokens::TokenizeResult result = TokenLibrary::tokenConstructors[i]->tokenize(fileData, currPos);
                         if (result.success) {
-                            std::cout << "Token created: " << result.token->getName() << '\n';
-                            if (typeid(*result.token) != typeid(Tokens::TokenComment)) {
-                                tokens->push_back(result.token);
+                            std::cout << "Token created: " << result.result->getName() << '\n';
+                            if (typeid(*result.result) != typeid(Tokens::TokenComment)) {
+                                tokens->push_back(result.result);
                             } else {
                                 std::cout << "Didn't add comment token to tokens array." << '\n';
                             }
