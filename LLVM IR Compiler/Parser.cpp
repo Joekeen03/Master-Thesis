@@ -8,9 +8,8 @@
 #include "Tokens/TokenKeyword.h"
 #include "Tokens/TokenOperator.h"
 #include "Tokens/TokenString.h"
-#include "Tokens/TokenBaseIdentifier.h"
-#include "Tokens/TokenGlobalIdentifier.h"
-#include "Tokens/TokenLocalIdentifier.h"
+#include "Tokens/TokenGlobalNamedIdentifier.h"
+#include "Tokens/TokenLocalNamedIdentifier.h"
 #include "Tokens/TokenLocalUnnamedIdentifier.h"
 #include "Tokens/TokenLocalIdentifier.h"
 #include "Tokens/TokenParenthesis.h"
@@ -47,10 +46,9 @@ namespace Parser {
     
     template<typename T>
     std::string Parser::extractNamedIdentifier(int pos) {
-        static_assert(std::is_base_of<Tokens::TokenBaseIdentifier, T>(), "Type <T> must be a derivative of TokenBaseIdentifier");
         tokenPointer token = (*tokens)[pos];
         if (typeid(*token) == typeid(T)) {
-            return std::dynamic_pointer_cast<const T>(token)->identifier;
+            return std::dynamic_pointer_cast<const T>(token)->name;
         } else {
             throw ParsingException("Received incorrect identifier type at source position "+std::to_string(token->srcPos)+".", pos);
         }
@@ -249,8 +247,8 @@ namespace Parser {
         if (isType<Tokens::TokenLocalUnnamedIdentifier>(token)) {
             identifier = std::make_shared<const Expressions::ExpressionLocalUnnamedIdentifier>(std::dynamic_pointer_cast<const Tokens::TokenLocalUnnamedIdentifier>(token)->ID);
             success = true;
-        } else if (isType<Tokens::TokenLocalIdentifier>(token)) {
-            identifier = std::make_shared<const Expressions::ExpressionLocalNamedIdentifier>(std::dynamic_pointer_cast<const Tokens::TokenLocalIdentifier>(token)->identifier);
+        } else if (isType<Tokens::TokenLocalNamedIdentifier>(token)) {
+            identifier = std::make_shared<const Expressions::ExpressionLocalNamedIdentifier>(std::dynamic_pointer_cast<const Tokens::TokenLocalNamedIdentifier>(token)->name);
             success = true;
         }
         return success ? Lib::ResultPointer<Expressions::ExpressionLocalIdentifier>(identifier, nextPos)
@@ -565,11 +563,11 @@ namespace Parser {
                         newLocalNameSet->insert(std::to_string(identifier->ID));
                     } else if (isType<Expressions::ExpressionLocalNamedIdentifier>(assignedIdentifier)) {
                         auto identifier = std::dynamic_pointer_cast<const Expressions::ExpressionLocalNamedIdentifier>(assignedIdentifier);
-                        if (newLocalNameSet->count(identifier->identifier)) {
+                        if (newLocalNameSet->count(identifier->name)) {
                             throw ParsingException("LLVM IR is a single-assignment language. Duplicate named local assignment at source position "
                                                     +std::to_string(getToken(currPos)->srcPos)+".", currPos);
                         }
-                        newLocalNameSet->insert(identifier->identifier);
+                        newLocalNameSet->insert(identifier->name);
                     }
                 }
                 if (isDerivedType<Instructions::InstructionTerminator>(instructionResult.result)) {
@@ -646,7 +644,7 @@ namespace Parser {
                 if (returnTypeResult.success) {
                     returnType = returnTypeResult.result;
                     currPos = returnTypeResult.newPos;
-                    std::string functionName = extractNamedIdentifier<Tokens::TokenGlobalIdentifier>(currPos);
+                    std::string functionName = extractNamedIdentifier<Tokens::TokenGlobalNamedIdentifier>(currPos);
                     currPos++;
                     auto parameterListResult = parseFunctionArgumentList(currPos);
                     if (parameterListResult.success) {

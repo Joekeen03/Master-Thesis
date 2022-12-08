@@ -4,18 +4,16 @@
 #include <string>
 #include <string>
 
-#include "TokenBaseIdentifier.h"
+#include "TokenIdentifier.h"
 
 namespace Tokens {
-    class TokenGlobalIdentifier : public TokenBaseIdentifier {
+    class TokenGlobalIdentifier : public TokenIdentifier {
         public:
-            TokenGlobalIdentifier(std::string identifierArg, int srcPosArg) : TokenBaseIdentifier(identifierArg, srcPosArg) {}
-            std::string getName() const {return "TokenGlobalIdentifier("+identifier+")"; }
+            TokenGlobalIdentifier(int srcPosArg) : TokenIdentifier(srcPosArg) {}
+            std::string getName() const {return "TokenGlobalIdentifier"; }
     };
 
-    class TokenGlobalIdentifierConstructor : public TokenBaseIdentifierConstructor {
-        public:
-            TokenizeResult tokenize(BasicArray::BasicCharArray* fileData, int startPos);
+    class TokenGlobalIdentifierConstructor : public TokenIdentifierConstructor {
     };
 }
 #endif // LLVM_IR_COMPILER_TOKENGLOBALIDENTIFIER_H

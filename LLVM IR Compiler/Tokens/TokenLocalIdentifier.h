@@ -4,20 +4,18 @@
 #include <memory>
 #include <iostream>
 
-#include "TokenBaseIdentifier.h"
+#include "TokenIdentifier.h"
 
 namespace Tokens {
-    class TokenLocalIdentifier : public TokenBaseIdentifier {
+    class TokenLocalIdentifier : public TokenIdentifier {
         public:
-            TokenLocalIdentifier(std::string identifierArg, int srcPosArg) : TokenBaseIdentifier(identifierArg, srcPosArg) {}
-            std::string getName() const {return "TokenLocalIdentifier("+identifier+")"; }
+            TokenLocalIdentifier(int srcPosArg) : TokenIdentifier(srcPosArg) {}
+            std::string getName() const {return "TokenLocalIdentifier"; }
             // Maybe store the token's minimum/maximum lengths, as well as the valid starting character(s)?
             //  To perhaps optimize how the tokenizer iterates through them.
     };
 
-    class TokenLocalIdentifierConstructor : public TokenBaseIdentifierConstructor { // TODO: Should this be a singleton?
-        public:
-            TokenizeResult tokenize(BasicArray::BasicCharArray* fileData, int startPos);
+    class TokenLocalIdentifierConstructor : public TokenIdentifierConstructor { // TODO: Should this be a singleton?
     };
 }
 

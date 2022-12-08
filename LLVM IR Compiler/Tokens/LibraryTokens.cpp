@@ -1,7 +1,7 @@
 #include "LibraryTokens.h"
 
-#include "TokenGlobalIdentifier.h"
-#include "TokenLocalIdentifier.h"
+#include "TokenGlobalNamedIdentifier.h"
+#include "TokenLocalNamedIdentifier.h"
 #include "TokenLocalUnnamedIdentifier.h"
 #include "TokenGlobalUnnamedIdentifier.h"
 #include "TokenComment.h"
@@ -22,8 +22,8 @@
 
 namespace TokenLibrary {
     std::unique_ptr<Tokens::TokenConstructor> tokenConstructors[] = {
-        std::make_unique<Tokens::TokenGlobalIdentifierConstructor>(),
-        std::make_unique<Tokens::TokenLocalIdentifierConstructor>(),
+        std::make_unique<Tokens::TokenGlobalNamedIdentifierConstructor>(),
+        std::make_unique<Tokens::TokenLocalNamedIdentifierConstructor>(),
         std::make_unique<Tokens::TokenLocalUnnamedIdentifierConstructor>(),
         std::make_unique<Tokens::TokenGlobalUnnamedIdentifierConstructor>(),
         std::make_unique<Tokens::TokenCommentConstructor>(),

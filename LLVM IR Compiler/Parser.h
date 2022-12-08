@@ -87,7 +87,7 @@ namespace Parser {
 
             // Checks if the provided token is a <T> type identifier token.
             // throws a ParsingException if *token is not a <T> type token.
-            // Note: <T> must be a sub-type of TokenBaseIdentifier.
+            // Note: <T> must have an "std::string name" member.
             template<typename T>
             std::string extractNamedIdentifier(int pos);
 

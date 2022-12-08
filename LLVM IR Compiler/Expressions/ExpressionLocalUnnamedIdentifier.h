@@ -4,12 +4,12 @@
 #include <string>
 
 #include "ExpressionLocalIdentifier.h"
-#include "ExpressionUnnamedIdentifier.h"
 
 namespace Expressions {
-    class ExpressionLocalUnnamedIdentifier : public ExpressionLocalIdentifier, public ExpressionUnnamedIdentifier {
+    class ExpressionLocalUnnamedIdentifier : public ExpressionLocalIdentifier {
         public:
-            ExpressionLocalUnnamedIdentifier(int IDArg) : ExpressionUnnamedIdentifier(IDArg) {}
+            const int ID;
+            ExpressionLocalUnnamedIdentifier(int IDArg) : ID(IDArg) {}
             std::string getName() const { return "ExpressionLocalUnnamedIdentifier"; }
     };
 }

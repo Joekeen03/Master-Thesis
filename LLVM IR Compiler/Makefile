@@ -7,8 +7,8 @@ TEMPLATE_DIR = $(SRC_DIR)/Templates
 TEMPLATE_RESULT_DIR = $(SRC_DIR)/TemplateResult
 TEST_DIR = $(SRC_DIR)/Test
 
-TOKEN_OBJECTS = TokenComment.o TokenGlobalIdentifier.o LibraryTokens.o TokenKeyword.o TokenOperator.o TokenString.o \
-				TokenParenthesis.o TokenAttributeID.o TokenCurlyBrace.o TokenLocalIdentifier.o \
+TOKEN_OBJECTS = TokenComment.o TokenGlobalNamedIdentifier.o LibraryTokens.o TokenKeyword.o TokenOperator.o TokenString.o \
+				TokenParenthesis.o TokenAttributeID.o TokenCurlyBrace.o TokenLocalNamedIdentifier.o \
 				TokenNamedMetadata.o HelperFunctionsTokens.o TokenNumberLiteral.o TokenMetadataNodeStart.o \
 				TokenMetadataString.o TokenComma.o TokenLocalUnnamedIdentifier.o \
 				TokenGlobalUnnamedIdentifier.o TokenTypeInteger.o TokenTypeReservedWord.o TokenMetadataIdentifier.o \

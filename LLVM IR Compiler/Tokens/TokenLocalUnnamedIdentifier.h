@@ -4,18 +4,19 @@
 #include <memory>
 #include <iostream>
 
-#include "TokenBaseUnnamedIdentifier.h"
+#include "TokenLocalIdentifier.h"
 
 namespace Tokens {
-    class TokenLocalUnnamedIdentifier : public TokenBaseUnnamedIdentifier {
+    class TokenLocalUnnamedIdentifier : public TokenLocalIdentifier {
         public:
-            TokenLocalUnnamedIdentifier(int IDArg, int srcPosArg) : TokenBaseUnnamedIdentifier(IDArg, srcPosArg) {}
+            const int ID;
+            TokenLocalUnnamedIdentifier(int IDArg, int srcPosArg) : ID(IDArg), TokenLocalIdentifier(srcPosArg) {}
             std::string getName() const {return "TokenLocalUnnamedIdentifier("+std::to_string(ID)+")"; }
             // Maybe store the token's minimum/maximum lengths, as well as the valid starting character(s)?
             //  To perhaps optimize how the tokenizer iterates through them.
     };
 
-    class TokenLocalUnnamedIdentifierConstructor : public TokenBaseUnnamedIdentifierConstructor { // TODO: Should this be a singleton?
+    class TokenLocalUnnamedIdentifierConstructor : public TokenLocalIdentifierConstructor { // TODO: Should this be a singleton?
         public:
             TokenizeResult tokenize(BasicArray::BasicCharArray* fileData, int startPos);
     };
