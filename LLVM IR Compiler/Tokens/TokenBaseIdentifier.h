@@ -17,10 +17,6 @@ namespace Token {
     };
 
     class TokenBaseIdentifierConstructor : public TokenConstructor { // TODO: Should this be a singleton?
-        protected:
-            // For whatever reason, this is inaccessible in subclasses if it's named tokenize (overloading the tokenize method)
-            TokenizeResult tokenizeHelper(BasicArray::BasicCharArray* fileData, int startPos, char identiferStartChar,
-                                        std::shared_ptr<Token> (*tokenCtor)(std::string, int));
     };
 }
 

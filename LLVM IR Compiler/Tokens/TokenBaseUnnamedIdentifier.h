@@ -17,9 +17,6 @@ namespace Token {
     };
 
     class TokenBaseUnnamedIdentifierConstructor : public TokenConstructor { // TODO: Should this be a singleton?
-        public:
-            TokenizeResult tokenizeHelper(BasicArray::BasicCharArray* fileData, int startPos, char identiferStartChar,
-                                        std::shared_ptr<Token> (*tokenCtor)(int ID, int srcPos));
     };
 }
 

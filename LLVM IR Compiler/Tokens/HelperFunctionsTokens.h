@@ -4,6 +4,7 @@
 #include <utility>
 
 #include "../BasicCharArray.h"
+#include "Token.h" // Feels a bit cyclical or awkward, given this will then be used by subclasses of Token
 
 namespace TokenLib{
     using nextPosition = int;
@@ -31,6 +32,12 @@ namespace TokenLib{
     // Fails if there was no string starting at the specified position, or if the string was improperly
     //   terminated (no '"', or a newline before the ending '"')
     stringParseResult extractQuotedString(BasicArray::BasicCharArray *fileData, int startPos);
+
+    Token::TokenizeResult lexUnnamedIdentifier(BasicArray::BasicCharArray* fileData, int startPos, char identiferStartChar,
+                                                        std::shared_ptr<Token::Token> (*tokenCtor)(int ID, int srcPos));
+
+    Token::TokenizeResult lexNamedIdentifier(BasicArray::BasicCharArray* fileData, int startPos, char identiferStartChar,
+                                        std::shared_ptr<Token::Token> (*tokenCtor)(std::string, int));
 }
 
 #endif // LLVM_IR_COMPILER_HELPERFUNCTIONSTOKENS_H

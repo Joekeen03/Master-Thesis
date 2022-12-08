@@ -8,9 +8,9 @@ TEMPLATE_RESULT_DIR = $(SRC_DIR)/TemplateResult
 TEST_DIR = $(SRC_DIR)/Test
 
 TOKEN_OBJECTS = TokenComment.o TokenGlobalIdentifier.o LibraryTokens.o TokenKeyword.o TokenOperator.o TokenString.o \
-				TokenParenthesis.o TokenAttributeID.o TokenCurlyBrace.o TokenBaseIdentifier.o TokenLocalIdentifier.o \
+				TokenParenthesis.o TokenAttributeID.o TokenCurlyBrace.o TokenLocalIdentifier.o \
 				TokenNamedMetadata.o HelperFunctionsTokens.o TokenNumberLiteral.o TokenMetadataNodeStart.o \
-				TokenMetadataString.o TokenComma.o TokenBaseUnnamedIdentifier.o TokenLocalUnnamedIdentifier.o \
+				TokenMetadataString.o TokenComma.o TokenLocalUnnamedIdentifier.o \
 				TokenGlobalUnnamedIdentifier.o TokenTypeInteger.o TokenTypeReservedWord.o TokenMetadataIdentifier.o \
 				TokenUnnamedMetadata.o
 EXPRESSION_OBJECTS = 
