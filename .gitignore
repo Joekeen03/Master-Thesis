@@ -5,4 +5,3 @@
 SNES Target/Test/Generate/*
 llvm-project/*
 *.ll
-TemplateResult/*
