@@ -23,7 +23,7 @@ namespace ReservedWords {
     const int nKeywords = keywordRegistry->finalize();
 }
 
-namespace Token {
+namespace Tokens {
     TokenizeResult TokenKeywordConstructor::tokenize(BasicArray::BasicCharArray* fileData, int startPos) {
         int currPos = startPos;
         std::string word = "";

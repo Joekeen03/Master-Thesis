@@ -38,7 +38,7 @@ namespace Parser {
     using Tokenizer::tokensArrayPointer;
     using stringExtractResult = std::pair<std::string, bool>;
     using numberExtractResult = std::pair<int, bool>;
-    using tokenPointer = std::shared_ptr<const Token::Token>;
+    using tokenPointer = std::shared_ptr<const Tokens::Token>;
     using expressionPointer = std::shared_ptr<const Expressions::Expression>;
     using newTokenPos = int;
 

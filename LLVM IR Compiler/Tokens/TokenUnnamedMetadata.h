@@ -7,7 +7,7 @@
 #include "TokenMetadataIdentifier.h"
 #include "HelperFunctionsTokens.h"
 
-namespace Token {
+namespace Tokens {
     class TokenUnnamedMetadata : public TokenMetadataIdentifier {
         public:
             const int ID;

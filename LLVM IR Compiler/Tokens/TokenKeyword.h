@@ -31,8 +31,8 @@ namespace ReservedWords {
     extern const int nKeywords;
 }
 
-namespace Token {
-    class TokenKeyword : public Token::Token {
+namespace Tokens {
+    class TokenKeyword : public Token {
         public:
             const EnumRegistry::RegistryItem registryItem;
             TokenKeyword(EnumRegistry::RegistryItem registryItemArg, int srcPosArg) : registryItem(registryItemArg), Token(srcPosArg) {}

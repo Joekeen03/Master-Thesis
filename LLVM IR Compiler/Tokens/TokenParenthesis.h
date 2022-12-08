@@ -6,8 +6,8 @@
 
 #include "Token.h"
 
-namespace Token {
-    class TokenParenthesis : public Token::Token {
+namespace Tokens {
+    class TokenParenthesis : public Token {
         public:
             const bool left;
             TokenParenthesis(bool leftArg, int srcPosArg) : left(leftArg), Token(srcPosArg) {}

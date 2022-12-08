@@ -1,7 +1,7 @@
 #include "TokenMetadataIdentifier.h"
 
 
-namespace Token {
+namespace Tokens {
     TokenizeResult TokenMetadataIdentifierConstructor::tokenize(BasicArray::BasicCharArray* fileData, int startPos) {
         try {
 

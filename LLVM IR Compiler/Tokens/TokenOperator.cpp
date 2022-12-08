@@ -6,7 +6,7 @@ namespace Operators {
     const int nOperators = operatorRegistry->finalize();
 }
 
-namespace Token {
+namespace Tokens {
     TokenizeResult TokenOperatorConstructor::tokenize(BasicArray::BasicCharArray* fileData, int startPos) {
         int nextPosAfterChar = startPos;
         int operatorID = 0;

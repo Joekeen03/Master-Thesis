@@ -7,7 +7,7 @@
 namespace Tokenizer {
     std::shared_ptr<tokensArray> Tokenizer::tokenize(std::string fileName) {
         readFileData(fileName);
-        tokensArrayPointer tokens = std::make_shared<std::vector<std::shared_ptr<const Token::Token>>>();
+        tokensArrayPointer tokens = std::make_shared<std::vector<std::shared_ptr<const Tokens::Token>>>();
         int currPos = 0;
         while (fileData->positionInBounds(currPos)) {
             switch ((*fileData)[currPos]) {
@@ -25,10 +25,10 @@ namespace Tokenizer {
                     {
                         // std::cout << "Trying token type #"<< i << '\n';
                         
-                        Token::TokenizeResult result = TokenLibrary::tokenConstructors[i]->tokenize(fileData, currPos);
+                        Tokens::TokenizeResult result = TokenLibrary::tokenConstructors[i]->tokenize(fileData, currPos);
                         if (result.success) {
                             std::cout << "Token created: " << result.token->getName() << '\n';
-                            if (typeid(*result.token) != typeid(Token::TokenComment)) {
+                            if (typeid(*result.token) != typeid(Tokens::TokenComment)) {
                                 tokens->push_back(result.token);
                             } else {
                                 std::cout << "Didn't add comment token to tokens array." << '\n';

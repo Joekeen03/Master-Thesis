@@ -1,7 +1,7 @@
 #include "TokenTEMPLATE.h"
 
 
-namespace Token {
+namespace Tokens {
     TokenizeResult TokenTEMPLATEConstructor::tokenize(BasicArray::BasicCharArray* fileData, int startPos) {
         try {
 

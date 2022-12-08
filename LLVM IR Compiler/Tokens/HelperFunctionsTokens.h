@@ -33,11 +33,11 @@ namespace TokenLib{
     //   terminated (no '"', or a newline before the ending '"')
     stringParseResult extractQuotedString(BasicArray::BasicCharArray *fileData, int startPos);
 
-    Token::TokenizeResult lexUnnamedIdentifier(BasicArray::BasicCharArray* fileData, int startPos, char identiferStartChar,
-                                                        std::shared_ptr<Token::Token> (*tokenCtor)(int ID, int srcPos));
+    Tokens::TokenizeResult lexUnnamedIdentifier(BasicArray::BasicCharArray* fileData, int startPos, char identiferStartChar,
+                                                        std::shared_ptr<Tokens::Token> (*tokenCtor)(int ID, int srcPos));
 
-    Token::TokenizeResult lexNamedIdentifier(BasicArray::BasicCharArray* fileData, int startPos, char identiferStartChar,
-                                        std::shared_ptr<Token::Token> (*tokenCtor)(std::string, int));
+    Tokens::TokenizeResult lexNamedIdentifier(BasicArray::BasicCharArray* fileData, int startPos, char identiferStartChar,
+                                        std::shared_ptr<Tokens::Token> (*tokenCtor)(std::string, int));
 }
 
 #endif // LLVM_IR_COMPILER_HELPERFUNCTIONSTOKENS_H

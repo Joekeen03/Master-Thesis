@@ -7,7 +7,7 @@ namespace TypeReservedWords {
     extern const int nTypeReservedWords = typeReservedWordRegistry->finalize();
 }
 
-namespace Token {
+namespace Tokens {
     TokenizeResult TokenTypeReservedWordConstructor::tokenize(BasicArray::BasicCharArray* fileData, int startPos) {
         bool success;
         int currPos = startPos;

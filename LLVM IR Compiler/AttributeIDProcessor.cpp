@@ -25,13 +25,13 @@ namespace AttributeIDProcessor {
         int nestedParen = 0;
         int nestedCurly = 0;
         int id = -1;
-        std::shared_ptr<const Token::TokenKeyword> startToken;
+        std::shared_ptr<const Tokens::TokenKeyword> startToken;
         for (auto&& tokenPointer : *tokens) {
             // std::cout << tokenPointer->getName() << " @ " << tokenPointer->srcPos << '\n';
             switch (buildState) {
                 case notBuilding: {
-                    if (typeid(*tokenPointer) == typeid(Token::TokenKeyword)
-                        && (std::dynamic_pointer_cast<const Token::TokenKeyword>(tokenPointer)->registryItem == ReservedWords::attributes)) {
+                    if (typeid(*tokenPointer) == typeid(Tokens::TokenKeyword)
+                        && (std::dynamic_pointer_cast<const Tokens::TokenKeyword>(tokenPointer)->registryItem == ReservedWords::attributes)) {
                             // Attribute groups are module-level, so they shouldn't be defined in any blocks, argument lists, etc.
                             if (nestedParen > 0) {
                                 throw AttributeIDException("Attempted to define attribute group inside parentheses at source position "
@@ -40,23 +40,23 @@ namespace AttributeIDProcessor {
                                 throw AttributeIDException("Attempted to define attribute group inside curly braces at source position "
                                                             +tokenPointer->srcPos);
                             }
-                            startToken = std::dynamic_pointer_cast<const Token::TokenKeyword>(tokenPointer);
+                            startToken = std::dynamic_pointer_cast<const Tokens::TokenKeyword>(tokenPointer);
                             buildState = ID;
                     } else {
                         processedTokens->push_back(tokenPointer);
-                        if (typeid(*tokenPointer) == typeid(Token::TokenCurlyBrace)) {
-                            nestedCurly += std::dynamic_pointer_cast<const Token::TokenCurlyBrace>(tokenPointer)->left ? 1 : -1;
-                        } else if (typeid(*tokenPointer) == typeid(Token::TokenMetadataNodeStart)) {
+                        if (typeid(*tokenPointer) == typeid(Tokens::TokenCurlyBrace)) {
+                            nestedCurly += std::dynamic_pointer_cast<const Tokens::TokenCurlyBrace>(tokenPointer)->left ? 1 : -1;
+                        } else if (typeid(*tokenPointer) == typeid(Tokens::TokenMetadataNodeStart)) {
                             nestedCurly += 1;
-                        } else if (typeid(*tokenPointer) == typeid(Token::TokenParenthesis)) {
-                            nestedParen += std::dynamic_pointer_cast<const Token::TokenParenthesis>(tokenPointer)->left ? 1 : -1;
+                        } else if (typeid(*tokenPointer) == typeid(Tokens::TokenParenthesis)) {
+                            nestedParen += std::dynamic_pointer_cast<const Tokens::TokenParenthesis>(tokenPointer)->left ? 1 : -1;
                         } 
                     }
                     break;
                 }
                 case ID: {
-                    if (typeid(*tokenPointer) == typeid(Token::TokenAttributeID)) {
-                        id = std::dynamic_pointer_cast<const Token::TokenAttributeID>(tokenPointer)->attributeID;
+                    if (typeid(*tokenPointer) == typeid(Tokens::TokenAttributeID)) {
+                        id = std::dynamic_pointer_cast<const Tokens::TokenAttributeID>(tokenPointer)->attributeID;
                         // Are any of these actual restrictions on attribute group definitions or attribute IDs?
                         if (id < 0) {
                             throw AttributeIDException("Attribute ID at source position "+std::to_string(tokenPointer->srcPos)+" was negative.");
@@ -78,8 +78,8 @@ namespace AttributeIDProcessor {
                     break;
                 }
                 case equals: {
-                    if (typeid(*tokenPointer) == typeid(Token::TokenOperator)
-                        && std::dynamic_pointer_cast<const Token::TokenOperator>(tokenPointer)->registryItem == Operators::equals) {
+                    if (typeid(*tokenPointer) == typeid(Tokens::TokenOperator)
+                        && std::dynamic_pointer_cast<const Tokens::TokenOperator>(tokenPointer)->registryItem == Operators::equals) {
                             buildState = leftCurly;
                     } else {
                         throw AttributeIDException("Expected equals sign at source position "+std::to_string(tokenPointer->srcPos)+", received "+tokenPointer->getName());
@@ -87,8 +87,8 @@ namespace AttributeIDProcessor {
                     break;
                 }
                 case leftCurly: {
-                    if (typeid(*tokenPointer) == typeid(Token::TokenCurlyBrace)
-                        && std::dynamic_pointer_cast<const Token::TokenCurlyBrace>(tokenPointer)->left) {
+                    if (typeid(*tokenPointer) == typeid(Tokens::TokenCurlyBrace)
+                        && std::dynamic_pointer_cast<const Tokens::TokenCurlyBrace>(tokenPointer)->left) {
                             buildState = rightCurly;
                     } else {
                         throw AttributeIDException("Expected left curly brace at source position "+std::to_string(tokenPointer->srcPos)+", received "+tokenPointer->getName());
@@ -96,10 +96,10 @@ namespace AttributeIDProcessor {
                     break;
                 }
                 case rightCurly: { // Just add the tokens and let the parser figure out if they're valid.
-                    if (typeid(*tokenPointer) == typeid(Token::TokenCurlyBrace)
-                        && !std::dynamic_pointer_cast<const Token::TokenCurlyBrace>(tokenPointer)->left) {
+                    if (typeid(*tokenPointer) == typeid(Tokens::TokenCurlyBrace)
+                        && !std::dynamic_pointer_cast<const Tokens::TokenCurlyBrace>(tokenPointer)->left) {
                             buildState = notBuilding;
-                    } else if (typeid(*tokenPointer) == typeid(Token::TokenAttributeID)) {
+                    } else if (typeid(*tokenPointer) == typeid(Tokens::TokenAttributeID)) {
                         // FIXME Can attribute groups include other attribute groups?
                         //  E.g. Something like 'attributes #4 = { noundef #2 #1 }
                         throw AttributeIDException("Nested attribute groups are forbidden. Attribute group defined starting at source position"
@@ -129,8 +129,8 @@ namespace AttributeIDProcessor {
         std::shared_ptr<std::vector<int>> mappings = std::make_shared<std::vector<int>>();
         for (auto &&tokenPointer : *(procTokens.tokens)) {
             // std::cout << tokenPointer->getName() << '@' << tokenPointer->srcPos << '\n';
-            if (typeid(*tokenPointer) == typeid(Token::TokenAttributeID)) {
-                int id = std::dynamic_pointer_cast<const Token::TokenAttributeID>(tokenPointer)->attributeID;
+            if (typeid(*tokenPointer) == typeid(Tokens::TokenAttributeID)) {
+                int id = std::dynamic_pointer_cast<const Tokens::TokenAttributeID>(tokenPointer)->attributeID;
                 if (id < 0 || id >= procTokens.attributeGroups->size()){
                     throw AttributeIDException("Undefined attribute ID "+std::to_string(id)+" at "+std::to_string(tokenPointer->srcPos)+".");
                 }

@@ -14,7 +14,7 @@
 #include "BasicCharArray.h"
 
 namespace Tokenizer {
-    using tokensArray = std::vector<std::shared_ptr<const Token::Token>>;
+    using tokensArray = std::vector<std::shared_ptr<const Tokens::Token>>;
     using tokensArrayPointer = std::shared_ptr<tokensArray>;
 
     class Tokenizer {

@@ -1,7 +1,7 @@
 #include "TokenCurlyBrace.h"
 
 
-namespace Token {
+namespace Tokens {
     TokenizeResult TokenCurlyBraceConstructor::tokenize(BasicArray::BasicCharArray* fileData, int startPos) {
         bool success = false;
         bool left = true;

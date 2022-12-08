@@ -2,7 +2,7 @@
 
 #include "HelperFunctionsTokens.h"
 
-namespace Token {
+namespace Tokens {
     TokenizeResult TokenMetadataStringConstructor::tokenize(BasicArray::BasicCharArray* fileData, int startPos) {
         TokenLib::stringParseResult result = (fileData->positionInBounds(startPos) && (*fileData)[startPos] == '!')
                                              ? TokenLib::extractQuotedString(fileData, startPos+1) : TokenLib::stringParseFAILED;

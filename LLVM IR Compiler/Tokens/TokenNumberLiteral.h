@@ -6,8 +6,8 @@
 
 #include "Token.h"
 
-namespace Token {
-    class TokenNumberLiteral : public Token::Token {
+namespace Tokens {
+    class TokenNumberLiteral : public Token {
         public:
             const int val;
             TokenNumberLiteral(int valArg, int srcPosArg) : val(valArg), Token(srcPosArg) {}

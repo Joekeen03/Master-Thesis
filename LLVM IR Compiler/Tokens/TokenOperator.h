@@ -13,8 +13,8 @@ namespace Operators {
     extern const int nOperators;
 }
 
-namespace Token {
-    class TokenOperator : public Token::Token {
+namespace Tokens {
+    class TokenOperator : public Token {
         public:
             const EnumRegistry::RegistryItem registryItem;
             TokenOperator(EnumRegistry::RegistryItem registryItemArg, int srcPosArg) : registryItem(registryItemArg), Token(srcPosArg) {}

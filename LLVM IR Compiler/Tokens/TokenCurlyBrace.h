@@ -6,8 +6,8 @@
 
 #include "Token.h"
 
-namespace Token {
-    class TokenCurlyBrace : public Token::Token {
+namespace Tokens {
+    class TokenCurlyBrace : public Token {
         public:
             const bool left;
             TokenCurlyBrace(bool leftArg, int srcPosArg) : left(leftArg), Token(srcPosArg) {}

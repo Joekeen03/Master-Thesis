@@ -1,7 +1,7 @@
 #include "TokenMetadataNodeStart.h"
 
 
-namespace Token {
+namespace Tokens {
     TokenizeResult TokenMetadataNodeStartConstructor::tokenize(BasicArray::BasicCharArray* fileData, int startPos) {
         int currPos = startPos;
         bool success = false;

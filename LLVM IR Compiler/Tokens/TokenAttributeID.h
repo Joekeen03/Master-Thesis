@@ -6,8 +6,8 @@
 
 #include "Token.h"
 
-namespace Token {
-    class TokenAttributeID : public Token::Token {
+namespace Tokens {
+    class TokenAttributeID : public Token {
         public:
             const int attributeID;
             TokenAttributeID(int attributeIDArg, int srcPosArg) : attributeID(attributeIDArg), Token(srcPosArg) {}

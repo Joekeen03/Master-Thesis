@@ -14,7 +14,7 @@ TOKEN_OBJECTS = TokenComment.o TokenGlobalIdentifier.o LibraryTokens.o TokenKeyw
 				TokenGlobalUnnamedIdentifier.o TokenTypeInteger.o TokenTypeReservedWord.o TokenMetadataIdentifier.o \
 				TokenUnnamedMetadata.o
 EXPRESSION_OBJECTS = 
-OBJECTS = Tokenizer.o BasicCharArray.o main.o ParseResultSourceFile.o EnumRegistry.o Parser.o AttributeIDProcessor.o
+OBJECTS = Tokenizer.o BasicCharArray.o main.o EnumRegistry.o Parser.o AttributeIDProcessor.o
 TEST_LL_FILES = mainOnly.ll
 
 TEMPLATE_TOKEN_H_FILE := $(TEMPLATE_DIR)/TokenTEMPLATE.h

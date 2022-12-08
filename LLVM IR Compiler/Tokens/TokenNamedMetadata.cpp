@@ -4,7 +4,7 @@
 
 #include "HelperFunctionsTokens.h"
 
-namespace Token {
+namespace Tokens {
     TokenizeResult TokenNamedMetadataConstructor::tokenize(BasicArray::BasicCharArray* fileData, int startPos) {
         int currPos = startPos;
         int nextPosAfterToken = currPos;

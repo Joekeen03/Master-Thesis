@@ -47,7 +47,7 @@ namespace Parser {
     
     template<typename T>
     std::string Parser::extractNamedIdentifier(int pos) {
-        static_assert(std::is_base_of<Token::TokenBaseIdentifier, T>(), "Type <T> must be a derivative of TokenBaseIdentifier");
+        static_assert(std::is_base_of<Tokens::TokenBaseIdentifier, T>(), "Type <T> must be a derivative of TokenBaseIdentifier");
         tokenPointer token = (*tokens)[pos];
         if (typeid(*token) == typeid(T)) {
             return std::dynamic_pointer_cast<const T>(token)->identifier;
@@ -58,22 +58,22 @@ namespace Parser {
 
     stringExtractResult Parser::attemptExtractString(int pos) {
         auto token = getToken(pos);
-        bool isString = isType<Token::TokenString>(token);
-        return isString ? stringExtractResult(std::dynamic_pointer_cast<const Token::TokenString>(token)->str, true)
+        bool isString = isType<Tokens::TokenString>(token);
+        return isString ? stringExtractResult(std::dynamic_pointer_cast<const Tokens::TokenString>(token)->str, true)
                         : stringExtractResult("", false);
     }
 
     numberExtractResult Parser::attemptExtractInteger(int pos) {
         auto token = getToken(pos);
-        bool isInt = isType<Token::TokenNumberLiteral>(token);
-        return isInt ? numberExtractResult(std::dynamic_pointer_cast<const Token::TokenNumberLiteral>(token)->val, true)
+        bool isInt = isType<Tokens::TokenNumberLiteral>(token);
+        return isInt ? numberExtractResult(std::dynamic_pointer_cast<const Tokens::TokenNumberLiteral>(token)->val, true)
                         : numberExtractResult(-1, false);
     }
 
     std::string Parser::extractString(int pos) {
         tokenPointer token = getToken(pos);
-        if (isType<Token::TokenString>(token)) {
-            return std::dynamic_pointer_cast<const Token::TokenString>(token)->str;
+        if (isType<Tokens::TokenString>(token)) {
+            return std::dynamic_pointer_cast<const Tokens::TokenString>(token)->str;
         } else {
             throw ParsingException("Expected TokenString at token position "+std::to_string(token->srcPos)+", instead received: "+token->getName(), pos);
         }
@@ -81,8 +81,8 @@ namespace Parser {
 
     int Parser::extractInteger(int pos) {
         tokenPointer token = getToken(pos);
-        if (isType<Token::TokenNumberLiteral>(token)) {
-            return std::dynamic_pointer_cast<const Token::TokenNumberLiteral>(token)->val;
+        if (isType<Tokens::TokenNumberLiteral>(token)) {
+            return std::dynamic_pointer_cast<const Tokens::TokenNumberLiteral>(token)->val;
         } else {
             throw ParsingException("Expected TokenInteger at source position "+std::to_string(token->srcPos)+", instead received: "+token->getName(), pos);
         }
@@ -115,7 +115,7 @@ namespace Parser {
         std::shared_ptr<const Expressions::ExpressionOperand> valueOperand;
         std::shared_ptr<const Expressions::ExpressionIdentifier> pointerOperand;
         int alignment = -1;
-        if (checkReserved<Token::TokenKeyword>(currPos, ReservedWords::store)) {
+        if (checkReserved<Tokens::TokenKeyword>(currPos, ReservedWords::store)) {
             currPos++;
             // Try parsing volatile
             // TODO
@@ -128,16 +128,16 @@ namespace Parser {
                 if (valueOperandResult.success) {
                     valueOperand = valueOperandResult.result;
                     currPos = valueOperandResult.newPos;
-                    if (isType<Token::TokenComma>(getToken(currPos))) {
+                    if (isType<Tokens::TokenComma>(getToken(currPos))) {
                         currPos++;
-                        if (checkReserved<Token::TokenTypeReservedWord>(currPos, TypeReservedWords::typePtr)) {
+                        if (checkReserved<Tokens::TokenTypeReservedWord>(currPos, TypeReservedWords::typePtr)) {
                             currPos++;
                             auto pointerOperandResult = parseIdentifier(currPos);
                             if (pointerOperandResult.success) {
                                 pointerOperand = pointerOperandResult.result;
                                 currPos = pointerOperandResult.newPos;
                                 // Try to parse alignment:
-                                if (isType<Token::TokenComma>(getToken(currPos)) && checkReserved<Token::TokenKeyword>(currPos+1, ReservedWords::align)) {
+                                if (isType<Tokens::TokenComma>(getToken(currPos)) && checkReserved<Tokens::TokenKeyword>(currPos+1, ReservedWords::align)) {
                                     currPos += 2;
                                     alignment = extractInteger(currPos);
                                     currPos++;
@@ -168,7 +168,7 @@ namespace Parser {
         std::shared_ptr<const Types::TypeSized> allocationType;
         bool inalloca = false;
         int alignment = -1;
-        if (checkReserved<Token::TokenKeyword>(currPos, ReservedWords::alloca)) {
+        if (checkReserved<Tokens::TokenKeyword>(currPos, ReservedWords::alloca)) {
             currPos++;
             // Try parsing an 'inalloca' token
             // TODO
@@ -181,7 +181,7 @@ namespace Parser {
                 // TODO
 
                 // Try parsing the alignment section
-                if (isType<Token::TokenComma>(getToken(currPos)) && checkReserved<Token::TokenKeyword>(currPos+1, ReservedWords::align)) {
+                if (isType<Tokens::TokenComma>(getToken(currPos)) && checkReserved<Tokens::TokenKeyword>(currPos+1, ReservedWords::align)) {
                     currPos += 2;
                     alignment = extractInteger(currPos);
                     currPos++;
@@ -206,7 +206,7 @@ namespace Parser {
         std::shared_ptr<const Types::Type> retType;
         std::shared_ptr<const Expressions::ExpressionOperand> retVal;
 
-        if (checkReserved<Token::TokenKeyword>(currPos, ReservedWords::ret)) {
+        if (checkReserved<Tokens::TokenKeyword>(currPos, ReservedWords::ret)) {
             currPos++;
             auto typeParseResult = parseType(currPos); // FIXME Should be restricted to valid return types
             if (typeParseResult.success) {
@@ -246,11 +246,11 @@ namespace Parser {
         bool success = false;
         std::shared_ptr<const Expressions::ExpressionLocalIdentifier> identifier;
         // FIXME Implement proper hierarchy for identifiers
-        if (isType<Token::TokenLocalUnnamedIdentifier>(token)) {
-            identifier = std::make_shared<const Expressions::ExpressionLocalUnnamedIdentifier>(std::dynamic_pointer_cast<const Token::TokenLocalUnnamedIdentifier>(token)->ID);
+        if (isType<Tokens::TokenLocalUnnamedIdentifier>(token)) {
+            identifier = std::make_shared<const Expressions::ExpressionLocalUnnamedIdentifier>(std::dynamic_pointer_cast<const Tokens::TokenLocalUnnamedIdentifier>(token)->ID);
             success = true;
-        } else if (isType<Token::TokenLocalIdentifier>(token)) {
-            identifier = std::make_shared<const Expressions::ExpressionLocalNamedIdentifier>(std::dynamic_pointer_cast<const Token::TokenLocalIdentifier>(token)->identifier);
+        } else if (isType<Tokens::TokenLocalIdentifier>(token)) {
+            identifier = std::make_shared<const Expressions::ExpressionLocalNamedIdentifier>(std::dynamic_pointer_cast<const Tokens::TokenLocalIdentifier>(token)->identifier);
             success = true;
         }
         return success ? Lib::ResultPointer<Expressions::ExpressionLocalIdentifier>(identifier, nextPos)
@@ -259,11 +259,11 @@ namespace Parser {
 
     Lib::ResultPointer<Types::Type> Parser::parseType(int startPos) {
         int nextPosition=-1;
-        std::shared_ptr<const Token::Token> firstToken = getToken(startPos);
+        std::shared_ptr<const Tokens::Token> firstToken = getToken(startPos);
         std::shared_ptr<const Types::Type> determinedType;
         bool success = false;
-        if (isType<Token::TokenTypeInteger>(firstToken)) {
-            determinedType = std::make_shared<const Types::TypeInteger>(std::dynamic_pointer_cast<const Token::TokenTypeInteger>(firstToken)->bitWidth);
+        if (isType<Tokens::TokenTypeInteger>(firstToken)) {
+            determinedType = std::make_shared<const Types::TypeInteger>(std::dynamic_pointer_cast<const Tokens::TokenTypeInteger>(firstToken)->bitWidth);
             success = true;
             nextPosition = startPos+1;
         }
@@ -272,11 +272,11 @@ namespace Parser {
 
     Lib::ResultPointer<Types::TypeSized> Parser::parseSizedType(int startPos) {
         int nextPosition=-1;
-        std::shared_ptr<const Token::Token> firstToken = getToken(startPos);
+        std::shared_ptr<const Tokens::Token> firstToken = getToken(startPos);
         std::shared_ptr<const Types::TypeSized> determinedType;
         bool success = false;
-        if (isType<Token::TokenTypeInteger>(firstToken)) {
-            determinedType = std::make_shared<const Types::TypeInteger>(std::dynamic_pointer_cast<const Token::TokenTypeInteger>(firstToken)->bitWidth);
+        if (isType<Tokens::TokenTypeInteger>(firstToken)) {
+            determinedType = std::make_shared<const Types::TypeInteger>(std::dynamic_pointer_cast<const Tokens::TokenTypeInteger>(firstToken)->bitWidth);
             success = true;
             nextPosition = startPos+1;
         }
@@ -285,11 +285,11 @@ namespace Parser {
 
     Lib::ResultPointer<Types::TypeSized> Parser::parseFirstClassKnownSizeType(int startPos) {
         int nextPosition=-1;
-        std::shared_ptr<const Token::Token> firstToken = getToken(startPos);
+        std::shared_ptr<const Tokens::Token> firstToken = getToken(startPos);
         std::shared_ptr<const Types::TypeSized> determinedType;
         bool success = false;
-        if (isType<Token::TokenTypeInteger>(firstToken)) {
-            determinedType = std::make_shared<const Types::TypeInteger>(std::dynamic_pointer_cast<const Token::TokenTypeInteger>(firstToken)->bitWidth);
+        if (isType<Tokens::TokenTypeInteger>(firstToken)) {
+            determinedType = std::make_shared<const Types::TypeInteger>(std::dynamic_pointer_cast<const Tokens::TokenTypeInteger>(firstToken)->bitWidth);
             success = true;
             nextPosition = startPos+1;
         }
@@ -324,9 +324,9 @@ namespace Parser {
         int nextTokenAfterExpr = currPos;
         std::string str = "";
         bool success = false;
-        if (checkReserved<Token::TokenKeyword>(currPos, ReservedWords::source_filename)) {
+        if (checkReserved<Tokens::TokenKeyword>(currPos, ReservedWords::source_filename)) {
             currPos++;
-            if (checkReserved<Token::TokenOperator>(currPos, Operators::equals)) {
+            if (checkReserved<Tokens::TokenOperator>(currPos, Operators::equals)) {
                 currPos++;
                 str = extractString(currPos);
                 success = true;
@@ -343,11 +343,11 @@ namespace Parser {
         int nextTokenAfterExpr = currPos;
         std::string str = "";
         bool success = false;
-        if (checkReserved<Token::TokenKeyword>(currPos, ReservedWords::target)) {
+        if (checkReserved<Tokens::TokenKeyword>(currPos, ReservedWords::target)) {
             currPos++;
-            if (checkReserved<Token::TokenKeyword>(currPos, ReservedWords::datalayout)) {
+            if (checkReserved<Tokens::TokenKeyword>(currPos, ReservedWords::datalayout)) {
                 currPos++;
-                if (checkReserved<Token::TokenOperator>(currPos, Operators::equals)) {
+                if (checkReserved<Tokens::TokenOperator>(currPos, Operators::equals)) {
                     currPos++;
                     // FIXME Was it better to use the attemptExtractString(...) instead?
                     str = extractString(currPos);
@@ -368,11 +368,11 @@ namespace Parser {
         std::string str = "";
         bool success = false;
         // FIXME Should it throw a ParsingException if any of the other if (...) statements fail?
-        if (checkReserved<Token::TokenKeyword>(currPos, ReservedWords::target)) {
+        if (checkReserved<Tokens::TokenKeyword>(currPos, ReservedWords::target)) {
             currPos++;
-            if (checkReserved<Token::TokenKeyword>(currPos, ReservedWords::triple)) {
+            if (checkReserved<Tokens::TokenKeyword>(currPos, ReservedWords::triple)) {
                 currPos++;
-                if (checkReserved<Token::TokenOperator>(currPos, Operators::equals)) {
+                if (checkReserved<Tokens::TokenOperator>(currPos, Operators::equals)) {
                     currPos++;
                     str = extractString(currPos);
                     success = true;
@@ -387,13 +387,13 @@ namespace Parser {
     
     ParsingResult<Expressions::ExpressionFunctionHeaderPreName> Parser::parseFunctionHeaderPreName(int startPos) {
         
-        std::shared_ptr<std::vector<std::shared_ptr<const Token::TokenKeyword>>> keywords = std::make_shared<std::vector<std::shared_ptr<const Token::TokenKeyword>>>();
+        std::shared_ptr<std::vector<std::shared_ptr<const Tokens::TokenKeyword>>> keywords = std::make_shared<std::vector<std::shared_ptr<const Tokens::TokenKeyword>>>();
         int currPos = startPos;
         // Parse linkages:
 
         // Parse Runtime Preemption Specifiers - need to add dso_preemptable
-        if (checkReserved<Token::TokenKeyword>(currPos, ReservedWords::dso_local)) {
-            keywords->push_back(std::dynamic_pointer_cast<const Token::TokenKeyword>((*tokens)[currPos]));
+        if (checkReserved<Tokens::TokenKeyword>(currPos, ReservedWords::dso_local)) {
+            keywords->push_back(std::dynamic_pointer_cast<const Tokens::TokenKeyword>((*tokens)[currPos]));
             currPos++;
         }
 
@@ -409,10 +409,10 @@ namespace Parser {
     ParsingResult<Expressions::ExpressionReturnType> Parser::parseFunctionReturnType(int startPos) {
         int currPos = startPos;
         bool success = false;
-        std::shared_ptr<std::vector<std::shared_ptr<const Token::TokenKeyword>>> attributes
-            = std::make_shared<std::vector<std::shared_ptr<const Token::TokenKeyword>>>();
-        if (checkReserved<Token::TokenKeyword>(currPos, ReservedWords::noundef)) {
-            attributes->push_back(std::dynamic_pointer_cast<const Token::TokenKeyword>((*tokens)[currPos]));
+        std::shared_ptr<std::vector<std::shared_ptr<const Tokens::TokenKeyword>>> attributes
+            = std::make_shared<std::vector<std::shared_ptr<const Tokens::TokenKeyword>>>();
+        if (checkReserved<Tokens::TokenKeyword>(currPos, ReservedWords::noundef)) {
+            attributes->push_back(std::dynamic_pointer_cast<const Tokens::TokenKeyword>((*tokens)[currPos]));
             currPos++;
         }
         auto typeResult = parseType(currPos);
@@ -426,12 +426,14 @@ namespace Parser {
     }
 
     ParsingResult<Expressions::ExpressionArgumentList> Parser::parseFunctionArgumentList(int startPos) {
+        // FIXME Unnamed function parameters should count towards unnamed temporary numbering (e.g. first unnamed parameter
+        //  should be %0)
         bool success = false;
         int currPos = startPos;
-        if (isLeftToken<Token::TokenParenthesis>(currPos)) {
+        if (isLeftToken<Tokens::TokenParenthesis>(currPos)) {
             currPos++;
             // TODO Capture arguments
-            if (isRightToken<Token::TokenParenthesis>(currPos)) {
+            if (isRightToken<Tokens::TokenParenthesis>(currPos)) {
                 currPos++;
                 success = true;
             }
@@ -441,7 +443,7 @@ namespace Parser {
     }
 
     ParsingResult<Expressions::ExpressionFunctionHeaderPostName> Parser::parseFunctionHeaderPostName(int startPos) {
-        std::shared_ptr<std::vector<std::shared_ptr<const Token::TokenKeyword>>> keywords = std::make_shared<std::vector<std::shared_ptr<const Token::TokenKeyword>>>();
+        std::shared_ptr<std::vector<std::shared_ptr<const Tokens::TokenKeyword>>> keywords = std::make_shared<std::vector<std::shared_ptr<const Tokens::TokenKeyword>>>();
         std::shared_ptr<std::map<std::string, std::string>> strKeywords = std::make_shared<std::map<std::string, std::string>>();
         int currPos = startPos;
         // Parse unamed_addr:
@@ -452,8 +454,8 @@ namespace Parser {
         bool parseFunctionAttribute = true;
         while (parseFunctionAttribute && currPos < tokens->size()) {
             tokenPointer token = (*tokens)[currPos];
-            if (typeid(*token) == typeid(Token::TokenKeyword)) {
-                std::shared_ptr<const Token::TokenKeyword> keywordToken = std::dynamic_pointer_cast<const Token::TokenKeyword>(token);
+            if (typeid(*token) == typeid(Tokens::TokenKeyword)) {
+                std::shared_ptr<const Tokens::TokenKeyword> keywordToken = std::dynamic_pointer_cast<const Tokens::TokenKeyword>(token);
                 EnumRegistry::RegistryItem keyword = keywordToken->registryItem;
                 if (keyword == ReservedWords::mustprogress || keyword == ReservedWords::noinline || keyword == ReservedWords::norecurse
                     || keyword == ReservedWords::nounwind || keyword == ReservedWords::optnone || keyword == ReservedWords::uwtable) {
@@ -463,7 +465,7 @@ namespace Parser {
             } else {
                 stringExtractResult strLabelResult = attemptExtractString(currPos);
                 if (strLabelResult.second) { // Should this verify that the string value is an accepted keyword?
-                    if (checkReserved<Token::TokenOperator>(currPos+1, Operators::equals)) {
+                    if (checkReserved<Tokens::TokenOperator>(currPos+1, Operators::equals)) {
                         std::string strValue = extractString(currPos+2);
                         (*strKeywords)[strLabelResult.first] = strValue;
                         currPos += 3;
@@ -498,7 +500,7 @@ namespace Parser {
         int currPos = startPos;
         if (localIdentifierResult.success) {
             currPos = localIdentifierResult.newPos;
-            if (checkReserved<Token::TokenOperator>(currPos, Operators::equals)) {
+            if (checkReserved<Tokens::TokenOperator>(currPos, Operators::equals)) {
                 currPos++;
                 for (int i = 0; i < nInstructionsYieldValue; i++)
                 {
@@ -593,7 +595,7 @@ namespace Parser {
         bool success = false;
         auto codeBlocks = std::make_shared<std::vector<const std::shared_ptr<const Expressions::ExpressionFunctionCodeBlock>>>();
         auto localNameSet = std::make_shared<std::set<std::string>>();
-        if (isLeftToken<Token::TokenCurlyBrace>(currPos)) { // Function code section should open with a '{'
+        if (isLeftToken<Tokens::TokenCurlyBrace>(currPos)) { // Function code section should open with a '{'
             currPos++;
             int currUnnamedLocal = 0;
             bool parseBlocks = true;
@@ -612,7 +614,7 @@ namespace Parser {
             } while (parseBlocks);
 
             if (notEmpty) { // Must contain at least one code block.
-                if (isRightToken<Token::TokenCurlyBrace>(currPos)) { // Function code section closes with a '}'
+                if (isRightToken<Tokens::TokenCurlyBrace>(currPos)) { // Function code section closes with a '}'
                     currPos++;
                     success = true;
                 }
@@ -634,7 +636,7 @@ namespace Parser {
         std::shared_ptr<const Expressions::ExpressionFunctionHeaderPostName> headerPostName;
         std::shared_ptr<const std::vector<const std::shared_ptr<const Expressions::ExpressionFunctionCodeBlock>>> codeBlocks;
 
-        if (checkReserved<Token::TokenKeyword>(currPos, ReservedWords::define)) {
+        if (checkReserved<Tokens::TokenKeyword>(currPos, ReservedWords::define)) {
             currPos++;
             auto headerPreNameResult = parseFunctionHeaderPreName(currPos);
             if (headerPreNameResult.success) {
@@ -644,7 +646,7 @@ namespace Parser {
                 if (returnTypeResult.success) {
                     returnType = returnTypeResult.result;
                     currPos = returnTypeResult.newPos;
-                    std::string functionName = extractNamedIdentifier<Token::TokenGlobalIdentifier>(currPos);
+                    std::string functionName = extractNamedIdentifier<Tokens::TokenGlobalIdentifier>(currPos);
                     currPos++;
                     auto parameterListResult = parseFunctionArgumentList(currPos);
                     if (parameterListResult.success) {

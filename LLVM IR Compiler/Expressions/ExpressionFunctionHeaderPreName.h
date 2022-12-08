@@ -10,8 +10,8 @@ namespace Expressions {
     // Temporary expression
     class ExpressionFunctionHeaderPreName : public Expression {
         public:
-            const std::shared_ptr<std::vector<std::shared_ptr<const Token::TokenKeyword>>> keywords;
-            ExpressionFunctionHeaderPreName(std::shared_ptr<std::vector<std::shared_ptr<const Token::TokenKeyword>>> keywordsArg) : keywords(keywordsArg) {}
+            const std::shared_ptr<std::vector<std::shared_ptr<const Tokens::TokenKeyword>>> keywords;
+            ExpressionFunctionHeaderPreName(std::shared_ptr<std::vector<std::shared_ptr<const Tokens::TokenKeyword>>> keywordsArg) : keywords(keywordsArg) {}
             std::string getName() const { return "ExpressionFunctionHeaderPreName"; }
     };
 }

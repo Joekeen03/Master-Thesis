@@ -10,9 +10,9 @@
 namespace Expressions {
     class ExpressionFunctionHeaderPostName : public Expression {
         public:
-            const std::shared_ptr<std::vector<std::shared_ptr<const Token::TokenKeyword>>> keywords;
+            const std::shared_ptr<std::vector<std::shared_ptr<const Tokens::TokenKeyword>>> keywords;
             const std::shared_ptr<std::map<std::string, std::string>> strKeywords;
-            ExpressionFunctionHeaderPostName(std::shared_ptr<std::vector<std::shared_ptr<const Token::TokenKeyword>>> keywordsArg,
+            ExpressionFunctionHeaderPostName(std::shared_ptr<std::vector<std::shared_ptr<const Tokens::TokenKeyword>>> keywordsArg,
                                              std::shared_ptr<std::map<std::string, std::string>> strKeywordsArg)
                                              : keywords(keywordsArg), strKeywords(strKeywordsArg) {}
             std::string getName() const { return "ExpressionFunctionHeaderPostName"; }

@@ -6,8 +6,8 @@
 
 #include "Token.h"
 
-namespace Token {
-    class TokenTEMPLATE : public Token::Token {
+namespace Tokens {
+    class TokenTEMPLATE : public Token {
         public:
             explicit TokenTEMPLATE(int srcPosArg) : Token(srcPosArg) {}
             std::string getName() const {return "TokenTEMPLATE"; }

@@ -6,8 +6,8 @@
 
 #include "Token.h"
 
-namespace Token {
-    class TokenBaseUnnamedIdentifier : public Token::Token {
+namespace Tokens {
+    class TokenBaseUnnamedIdentifier : public Token {
         public:
             const int ID;
             explicit TokenBaseUnnamedIdentifier(int IDArg, int srcPosArg) : ID(IDArg), Token(srcPosArg) {}

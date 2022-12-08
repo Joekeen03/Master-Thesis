@@ -1,6 +1,6 @@
 #include "TokenParenthesis.h"
 
-namespace Token {
+namespace Tokens {
     TokenizeResult TokenParenthesisConstructor::tokenize(BasicArray::BasicCharArray* fileData, int startPos) {
         bool success = false;
         bool left = true;

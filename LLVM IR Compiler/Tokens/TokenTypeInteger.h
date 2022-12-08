@@ -6,7 +6,7 @@
 
 #include "TokenType.h"
 
-namespace Token {
+namespace Tokens {
     class TokenTypeInteger : public TokenType {
         public:
             const int bitWidth;

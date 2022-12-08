@@ -6,7 +6,7 @@
 
 #include "../BasicCharArray.h" // FIXME Properly set up include path
 
-namespace Token {
+namespace Tokens {
     class Token {
         public:
             const int srcPos;

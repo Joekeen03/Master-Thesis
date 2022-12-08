@@ -5,8 +5,8 @@
 
 #include "Token.h"
 
-namespace Token {
-    class TokenComment : public Token::Token {
+namespace Tokens {
+    class TokenComment : public Token {
         public:
             std::string comment;
             TokenComment(std::string commentArg, int srcPosArg) : comment(commentArg), Token(srcPosArg) {}

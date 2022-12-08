@@ -6,7 +6,7 @@
 
 #include "TokenBaseUnnamedIdentifier.h"
 
-namespace Token {
+namespace Tokens {
     class TokenLocalUnnamedIdentifier : public TokenBaseUnnamedIdentifier {
         public:
             TokenLocalUnnamedIdentifier(int IDArg, int srcPosArg) : TokenBaseUnnamedIdentifier(IDArg, srcPosArg) {}

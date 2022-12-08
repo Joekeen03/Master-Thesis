@@ -6,7 +6,7 @@
 
 #include "TokenMetadataIdentifier.h"
 
-namespace Token {
+namespace Tokens {
     class TokenNamedMetadata : public TokenMetadataIdentifier {
         public:
             const std::string name;

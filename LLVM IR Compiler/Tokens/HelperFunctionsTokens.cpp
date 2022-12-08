@@ -76,15 +76,15 @@ namespace TokenLib {
         return success ? stringParseResult(str, nextPosAfterString) : stringParseFAILED;
     }
 
-    Token::TokenizeResult lexUnnamedIdentifier(BasicArray::BasicCharArray* fileData, int startPos, char identiferStartChar,
-                                                        std::shared_ptr<Token::Token> (*tokenCtor)(int ID, int srcPos)) {
+    Tokens::TokenizeResult lexUnnamedIdentifier(BasicArray::BasicCharArray* fileData, int startPos, char identiferStartChar,
+                                                        std::shared_ptr<Tokens::Token> (*tokenCtor)(int ID, int srcPos)) {
         numberParseResult result = extractPrefixedNumber(fileData, startPos, identiferStartChar);
-        return result != TokenLib::numberParseFAILED ? Token::TokenizeResult(tokenCtor(result.first, startPos), result.second)
-                                                        : Token::TokenizeResult();
+        return result != TokenLib::numberParseFAILED ? Tokens::TokenizeResult(tokenCtor(result.first, startPos), result.second)
+                                                        : Tokens::TokenizeResult();
     }
 
-    Token::TokenizeResult lexNamedIdentifier(BasicArray::BasicCharArray* fileData, int startPos, char identiferStartChar,
-                                        std::shared_ptr<Token::Token> (*tokenCtor)(std::string, int)) {
+    Tokens::TokenizeResult lexNamedIdentifier(BasicArray::BasicCharArray* fileData, int startPos, char identiferStartChar,
+                                        std::shared_ptr<Tokens::Token> (*tokenCtor)(std::string, int)) {
         int currPos = startPos;
         int firstCharAfterToken = currPos;
         bool succeeded = false;
@@ -134,7 +134,7 @@ namespace TokenLib {
         } catch (...) { // Went out of bounds on the array
         
         }
-        return succeeded ? Token::TokenizeResult(tokenCtor(identifier, startPos), firstCharAfterToken) : Token::TokenizeResult();
+        return succeeded ? Tokens::TokenizeResult(tokenCtor(identifier, startPos), firstCharAfterToken) : Tokens::TokenizeResult();
     }
 
 }

@@ -13,7 +13,7 @@ namespace TypeReservedWords {
     extern const int nTypeReservedWords;
 }
 
-namespace Token {
+namespace Tokens {
     class TokenTypeReservedWord : public TokenType {
         public:
             const EnumRegistry::RegistryItem registryItem;

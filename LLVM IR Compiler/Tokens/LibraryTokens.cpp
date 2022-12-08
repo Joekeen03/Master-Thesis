@@ -21,26 +21,26 @@
 #include "TokenUnnamedMetadata.h"
 
 namespace TokenLibrary {
-    std::unique_ptr<Token::TokenConstructor> tokenConstructors[] = {
-        std::make_unique<Token::TokenGlobalIdentifierConstructor>(),
-        std::make_unique<Token::TokenLocalIdentifierConstructor>(),
-        std::make_unique<Token::TokenLocalUnnamedIdentifierConstructor>(),
-        std::make_unique<Token::TokenGlobalUnnamedIdentifierConstructor>(),
-        std::make_unique<Token::TokenCommentConstructor>(),
-        std::make_unique<Token::TokenKeywordConstructor>(),
-        std::make_unique<Token::TokenOperatorConstructor>(),
-        std::make_unique<Token::TokenStringConstructor>(),
-        std::make_unique<Token::TokenParenthesisConstructor>(),
-        std::make_unique<Token::TokenAttributeIDConstructor>(),
-        std::make_unique<Token::TokenCurlyBraceConstructor>(),
-        std::make_unique<Token::TokenNamedMetadataConstructor>(),
-        std::make_unique<Token::TokenNumberLiteralConstructor>(),
-        std::make_unique<Token::TokenMetadataNodeStartConstructor>(),
-        std::make_unique<Token::TokenMetadataStringConstructor>(),
-        std::make_unique<Token::TokenCommaConstructor>(),
-        std::make_unique<Token::TokenTypeIntegerConstructor>(),
-        std::make_unique<Token::TokenTypeReservedWordConstructor>(),
-        std::make_unique<Token::TokenUnnamedMetadataConstructor>(),
+    std::unique_ptr<Tokens::TokenConstructor> tokenConstructors[] = {
+        std::make_unique<Tokens::TokenGlobalIdentifierConstructor>(),
+        std::make_unique<Tokens::TokenLocalIdentifierConstructor>(),
+        std::make_unique<Tokens::TokenLocalUnnamedIdentifierConstructor>(),
+        std::make_unique<Tokens::TokenGlobalUnnamedIdentifierConstructor>(),
+        std::make_unique<Tokens::TokenCommentConstructor>(),
+        std::make_unique<Tokens::TokenKeywordConstructor>(),
+        std::make_unique<Tokens::TokenOperatorConstructor>(),
+        std::make_unique<Tokens::TokenStringConstructor>(),
+        std::make_unique<Tokens::TokenParenthesisConstructor>(),
+        std::make_unique<Tokens::TokenAttributeIDConstructor>(),
+        std::make_unique<Tokens::TokenCurlyBraceConstructor>(),
+        std::make_unique<Tokens::TokenNamedMetadataConstructor>(),
+        std::make_unique<Tokens::TokenNumberLiteralConstructor>(),
+        std::make_unique<Tokens::TokenMetadataNodeStartConstructor>(),
+        std::make_unique<Tokens::TokenMetadataStringConstructor>(),
+        std::make_unique<Tokens::TokenCommaConstructor>(),
+        std::make_unique<Tokens::TokenTypeIntegerConstructor>(),
+        std::make_unique<Tokens::TokenTypeReservedWordConstructor>(),
+        std::make_unique<Tokens::TokenUnnamedMetadataConstructor>(),
     };
     const int nTokens = sizeof(tokenConstructors)/sizeof(tokenConstructors[0]);
 }

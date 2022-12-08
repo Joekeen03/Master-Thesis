@@ -6,8 +6,8 @@
 
 #include "Token.h"
 
-namespace Token {
-    class TokenComma : public Token::Token {
+namespace Tokens {
+    class TokenComma : public Token {
         public:
             explicit TokenComma(int srcPosArg) : Token(srcPosArg) {}
             std::string getName() const {return "TokenComma"; }

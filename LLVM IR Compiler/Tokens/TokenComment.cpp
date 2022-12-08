@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-namespace Token {
+namespace Tokens {
     TokenizeResult TokenCommentConstructor::tokenize(BasicArray::BasicCharArray* fileData, int startPos) {
         int currPos = startPos;
         bool succeeded = false;

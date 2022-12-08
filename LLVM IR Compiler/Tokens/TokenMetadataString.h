@@ -6,8 +6,8 @@
 
 #include "Token.h"
 
-namespace Token {
-    class TokenMetadataString : public Token::Token {
+namespace Tokens {
+    class TokenMetadataString : public Token {
         public:
             const std::string str;
             TokenMetadataString(std::string strArg, int srcPosArg) : str(strArg), Token(srcPosArg) {}

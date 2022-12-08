@@ -6,7 +6,7 @@
 
 #include "TokenBaseIdentifier.h"
 
-namespace Token {
+namespace Tokens {
     class TokenLocalIdentifier : public TokenBaseIdentifier {
         public:
             TokenLocalIdentifier(std::string identifierArg, int srcPosArg) : TokenBaseIdentifier(identifierArg, srcPosArg) {}

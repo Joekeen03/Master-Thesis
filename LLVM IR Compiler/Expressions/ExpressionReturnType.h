@@ -9,7 +9,7 @@
 
 namespace Expressions {
     class ExpressionReturnType : public Expression {
-        using keywordsVector = const std::shared_ptr<std::vector<std::shared_ptr<const Token::TokenKeyword>>>;
+        using keywordsVector = const std::shared_ptr<std::vector<std::shared_ptr<const Tokens::TokenKeyword>>>;
         public:
             const keywordsVector attributes;
             const std::shared_ptr<const Types::Type> returnType;

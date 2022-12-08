@@ -8,8 +8,8 @@
 #include "../Types/Type.h"
 #include "../EnumRegistry.h"
 
-namespace Token {
-    class TokenType : public Token::Token {
+namespace Tokens {
+    class TokenType : public Token {
         public:
             explicit TokenType(int srcPosArg) : Token(srcPosArg) {}
             std::string getName() const {return "TokenType"; }
