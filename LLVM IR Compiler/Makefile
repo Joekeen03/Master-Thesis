@@ -12,7 +12,7 @@ TOKEN_OBJECTS = TokenComment.o TokenGlobalNamedIdentifier.o LibraryTokens.o Toke
 				TokenNamedMetadata.o HelperFunctionsTokens.o TokenNumberLiteral.o TokenMetadataNodeStart.o \
 				TokenMetadataString.o TokenComma.o TokenLocalUnnamedIdentifier.o \
 				TokenGlobalUnnamedIdentifier.o TokenTypeInteger.o TokenTypeReservedWord.o TokenMetadataIdentifier.o \
-				TokenUnnamedMetadata.o
+				TokenUnnamedMetadata.o TokenEOF.o
 EXPRESSION_OBJECTS = 
 OBJECTS = Tokenizer.o BasicCharArray.o main.o EnumRegistry.o Parser.o AttributeIDProcessor.o
 TEST_LL_FILES = mainOnly.ll

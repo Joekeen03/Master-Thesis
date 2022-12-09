@@ -20,8 +20,10 @@
 #include "Expressions/ExpressionLocalIdentifier.h"
 #include "Expressions/ExpressionOperand.h"
 #include "Expressions/ExpressionNamedMetadataDefinition.h"
+#include "Expressions/ExpressionUnnamedMetadataDefinition.h"
 #include "Expressions/ExpressionNamedMetadataIdentifier.h"
 #include "Expressions/ExpressionUnnamedMetadataIdentifier.h"
+#include "Expressions/ExpressionValue.h"
 
 #include "Expressions/Instructions/Instruction.h"
 
@@ -136,7 +138,7 @@ namespace Parser {
 
             Instructions::InstructionParseResult parseInstructionAlloca(int startPos, std::shared_ptr<const Expressions::ExpressionLocalIdentifier> assignee);
 
-            // Parsing for termintaor instructions
+            // Parsing for terminator instructions
 
             Instructions::InstructionParseResult parseInstructinRetValue(int startPos);
 
@@ -168,21 +170,13 @@ namespace Parser {
             ParsingResult<Expressions::ExpressionNamedMetadataIdentifier> parseNamedMetadataIdentifier(int startPos);
             ParsingResult<Expressions::ExpressionUnnamedMetadataIdentifier> parseUnnamedMetadataIdentifier(int startPos);
             ParsingResult<Expressions::ExpressionNamedMetadataDefinition> parseNamedMetdataDefinition(int startPos);
+            ParsingResult<Expressions::ExpressionValue> parseValue(int startPos);
+            ParsingResult<Expressions::ExpressionUnnamedMetadataDefinition> parseUnnamedMetdataDefinition(int startPos);
 
             std::shared_ptr<const Expressions::ExpressionFile> parse();
             Parser(AttributeIDProcessor::SubstitutedTokens substitutedTokens)
                 : tokens(substitutedTokens.tokens), mappings(substitutedTokens.mappings), attributeGroups(substitutedTokens.attributeGroups) {}
     };
-
-    // template <typename T>
-    // struct ParsingResult {
-    //     const std::shared_ptr<T> expression;
-    //     const newTokenPos newPos;
-    //     const bool success;
-    //     ParsingResult() : expression(), newPos(-1), success(false) {}
-    //     ParsingResult(std::shared_ptr<T> expressionArg, newTokenPos newPosArg)
-    //                     : expression(expressionArg), newPos(newPosArg), success(true) {}
-    // };
 
     struct CodeBlockParsingResult : public ParsingResult<Expressions::ExpressionFunctionCodeBlock> {
         const int nextUnnamedLocal;

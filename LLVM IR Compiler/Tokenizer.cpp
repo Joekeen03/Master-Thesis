@@ -21,7 +21,7 @@ namespace Tokenizer {
                 default:
                     // std::cout << "Attempting to tokenize at position "<< currPos << ". Character is '"<< (*fileData)[currPos] << "'" << '\n';
                     bool success = false;
-                    for (int i = 0; i < TokenLibrary::nTokens; i++)
+                    for (int i = 0; !success && i < TokenLibrary::nTokens; i++)
                     {
                         // std::cout << "Trying token type #"<< i << '\n';
                         
@@ -35,20 +35,24 @@ namespace Tokenizer {
                             }
                             currPos = result.newPos;
                             success = true;
-                            i = TokenLibrary::nTokens;
                         }
                     }
                     if (!success) {
                         std::string charsAtPosition = "";
-                        for (int i = 0; i < 10 && fileData->positionInBounds(currPos+i); i++)
+                        for (int i = 0; i < 10 && fileData->positionInBounds(currPos+i); i++) // Collect nearby characters
                         {
                             charsAtPosition += (*fileData)[currPos+i];
                         }
-                        throw TokenizationException(((std::string)"Failed to tokenize file at character "+std::to_string(currPos)\
-                                                    +". Characters at position: "+charsAtPosition).c_str());
+                        throw TokenizationException("Failed to tokenize file at character position "+std::to_string(currPos)\
+                                                    +". Characters starting at position: "+charsAtPosition);
                     }
                     break;
             }
+        }
+        if (currPos == fileData->size) {
+            tokens->push_back(TokenLibrary::EOFConstructor->createEOFToken(fileData, currPos));
+        } else {
+            throw TokenizationException("Tokenization went past the end of the file! Final position: "+std::to_string(currPos));
         }
         std::cout << "Tokenization successful."<<'\n';
         return tokens;

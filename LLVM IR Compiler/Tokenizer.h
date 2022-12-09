@@ -29,7 +29,7 @@ namespace Tokenizer {
 
     class TokenizationException : public std::runtime_error {
         public:
-            TokenizationException(const char * msg) : runtime_error(msg) {}
+            TokenizationException(std::string msg) : runtime_error(msg.c_str()) {}
     };
 }
 

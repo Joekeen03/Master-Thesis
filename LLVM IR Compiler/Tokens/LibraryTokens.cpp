@@ -43,4 +43,5 @@ namespace TokenLibrary {
         std::make_unique<Tokens::TokenUnnamedMetadataConstructor>(),
     };
     const int nTokens = sizeof(tokenConstructors)/sizeof(tokenConstructors[0]);
+    const std::unique_ptr<const Tokens::TokenEOFConstructor> EOFConstructor = std::make_unique<const Tokens::TokenEOFConstructor>();
 }

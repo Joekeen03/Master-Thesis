@@ -8,6 +8,7 @@
 namespace BasicArray {
     class BasicCharArray {
         public:
+            const int size;
             BasicCharArray(char* arr, int size) : array(arr), size(size) {}
             const char& operator[](int pos) {
                 if (!positionInBounds(pos)) {
@@ -22,7 +23,6 @@ namespace BasicArray {
             bool compareSubsectionToLiteral(int startPos, std::string literal);
         private:
             char* array;
-            const int size;
     };
 }
 #endif // LLVM_IR_COMPILER_BASICCHARARRAY_H

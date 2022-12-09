@@ -21,6 +21,7 @@
 #include "Tokens/TokenNamedMetadata.h"
 #include "Tokens/TokenUnnamedMetadata.h"
 #include "Tokens/TokenMetadataNodeStart.h"
+#include "Tokens/TokenMetadataString.h"
 
 #include "Types/TypeInteger.h"
 
@@ -31,6 +32,8 @@
 #include "Expressions/ExpressionLocalUnnamedIdentifier.h"
 #include "Expressions/ExpressionOperandIdentifier.h"
 #include "Expressions/ExpressionOperandLiteralInteger.h"
+#include "Expressions/ExpressionValueInteger.h"
+#include "Expressions/ExpressionValueMetadataString.h"
 
 #include "Expressions/Instructions/InstructionAlloca.h"
 #include "Expressions/Instructions/InstructionStore.h"
@@ -320,7 +323,6 @@ namespace Parser {
     }
 
     ParsingResult<Expressions::ExpressionSourceFile> Parser::parseSourceFile(int startPos) {
-        
         int currPos = startPos;
         int nextTokenAfterExpr = currPos;
         std::string str = "";
@@ -691,6 +693,8 @@ namespace Parser {
     }
 
     ParsingResult<Expressions::ExpressionNamedMetadataDefinition> Parser::parseNamedMetdataDefinition(int startPos) {
+        // FIXME Does metadata follow the SSA rules, and should this enforce them?
+        //  I.e. should this throw an error if a duplicate metadata definition is encountered?
         bool success = false;
         int currPos = startPos;
         int nextPos = -1;
@@ -706,7 +710,7 @@ namespace Parser {
                     currPos++;
                     auto firstUnnamedIdentifierResult = parseUnnamedMetadataIdentifier(currPos);
                     if (firstUnnamedIdentifierResult.success) {
-                        auto values = std::make_shared<std::vector<const std::shared_ptr<const Expressions::ExpressionUnnamedMetadataIdentifier>>>();
+                        values = std::make_shared<std::vector<const std::shared_ptr<const Expressions::ExpressionUnnamedMetadataIdentifier>>>();
                         values->push_back(firstUnnamedIdentifierResult.result);
                         currPos = firstUnnamedIdentifierResult.newPos;
                         bool buildValuesVector = true;
@@ -737,6 +741,88 @@ namespace Parser {
                         : ParsingResult<Expressions::ExpressionNamedMetadataDefinition>();
     }
 
+    ParsingResult<Expressions::ExpressionValue> Parser::parseValue(int startPos) {
+        int currPos = startPos;
+        int nextPos = -1;
+        bool success = false;
+        auto firstToken = getToken(currPos);
+        std::shared_ptr<const Expressions::ExpressionValue> val;
+        if (isType<Tokens::TokenMetadataString>(firstToken)) {
+            val = std::make_shared<const Expressions::ExpressionValueMetadataString>(std::dynamic_pointer_cast<const Tokens::TokenMetadataString>(firstToken)->str);
+            nextPos = currPos+1;
+            success = true;
+        } else if (isType<Tokens::TokenTypeInteger>(firstToken)) {
+            currPos++;
+            auto intType = std::make_shared<const Types::TypeInteger>(std::dynamic_pointer_cast<const Tokens::TokenTypeInteger>(firstToken)->bitWidth);
+            auto valToken = getToken(currPos);
+            if (isType<Tokens::TokenNumberLiteral>(valToken)) {
+                val = std::make_shared<const Expressions::ExpressionValueInteger>(intType, std::dynamic_pointer_cast<const Tokens::TokenNumberLiteral>(valToken)->val);
+                nextPos = currPos+1;
+                success = true;
+            }
+        }
+        return success ? ParsingResult<Expressions::ExpressionValue>(val, nextPos) : ParsingResult<Expressions::ExpressionValue>();
+    }
+
+    ParsingResult<Expressions::ExpressionUnnamedMetadataDefinition> Parser::parseUnnamedMetdataDefinition(int startPos) {
+        // FIXME Should this enforce that unnamed metadata should follow the same sequential numbering scheme as unnamed locals?
+        //  E.g. first unnamed metadata must be !0, second must be !1, etc.
+        //  Also, can you define metadata nodes w/o explicitly specifying their ID? E.g.:
+        //      !{"asdf"}
+        //  instead of
+        //      !0 = !{"asdf"}
+        bool success = false;
+        int currPos = startPos;
+        int nextPos = -1;
+        std::shared_ptr<const Expressions::ExpressionUnnamedMetadataIdentifier> assignee;
+        bool distinct = false;
+        std::shared_ptr<std::vector<const std::shared_ptr<const Expressions::ExpressionValue>>> values;
+        auto unnamedIdentifierResult = parseUnnamedMetadataIdentifier(currPos);
+        if (unnamedIdentifierResult.success) {
+            currPos = unnamedIdentifierResult.newPos;
+            assignee = unnamedIdentifierResult.result;
+            if (checkReserved<Tokens::TokenOperator>(currPos, Operators::equals)) {
+                currPos++;
+                // Attempt to parse "distinct"
+                if (isType<Tokens::TokenMetadataNodeStart>(getToken(currPos))) {
+                    currPos++;
+                    auto firstValueResult = parseValue(currPos);
+                    if (firstValueResult.success) {
+                        values = std::make_shared<std::vector<const std::shared_ptr<const Expressions::ExpressionValue>>>();
+                        values->push_back(firstValueResult.result);
+                        currPos = firstValueResult.newPos;
+                        bool buildValuesVector = true;
+                        do {
+                            if (isType<Tokens::TokenComma>(getToken(currPos))) {
+                                currPos++;
+                                auto valueResult = parseValue(currPos);
+                                if (valueResult.success) {
+                                    values->push_back(valueResult.result);
+                                    currPos = valueResult.newPos;
+                                } else {
+                                    buildValuesVector = false;
+                                }
+                            } else {
+                                buildValuesVector = false;
+                            }
+                        } while (buildValuesVector);
+                        if (isRightToken<Tokens::TokenCurlyBrace>(currPos)) {
+                            nextPos = currPos;
+                            success = true;
+                        }
+                    }
+                }
+            }
+        }
+        if (success) {
+            auto constVec = Lib::makePointerToConst(values);
+            auto definitionExpression = std::make_shared<Expressions::ExpressionUnnamedMetadataDefinition>(assignee, distinct, constVec);
+            return ParsingResult<Expressions::ExpressionUnnamedMetadataDefinition>(definitionExpression, nextPos);
+        } else {
+            return ParsingResult<Expressions::ExpressionUnnamedMetadataDefinition>();
+        }
+    }
+
     // Misc
 
     std::shared_ptr<const Expressions::ExpressionFile> Parser::parse() {
@@ -752,6 +838,7 @@ namespace Parser {
         //  Maybe the different parse...(...) methods should throw ParsingExceptions if they can't successfully parse their intended
         //  expression, and the function that calls them is responsible for determining whether or not to ignore them?
         // Are these required to be at the start of the file?
+        // FIXME How to handle out of bounds array accesses (go off the end of the array while parsing something)?
         pos = srcResult.newPos;
         auto dataLayoutResult = parseDataLayout(pos);
         if (dataLayoutResult.success) pos = dataLayoutResult.newPos;
@@ -759,10 +846,9 @@ namespace Parser {
         if (targetTripleResult.success) pos = targetTripleResult.newPos;
         auto functionResult = parseFunctionDefinition(pos);
         auto namedMetadataResult = parseNamedMetdataDefinition(functionResult.newPos);
-        std::cout << "Metadata Parsing: " << namedMetadataResult.success << '\n';
         
         std::shared_ptr<const Expressions::ExpressionFile> result
-                    = std::make_shared<Expressions::ExpressionFile>(std::dynamic_pointer_cast<const Expressions::ExpressionSourceFile>(srcResult.result),
+                    = std::make_shared<const Expressions::ExpressionFile>(std::dynamic_pointer_cast<const Expressions::ExpressionSourceFile>(srcResult.result),
                                                                     std::dynamic_pointer_cast<const Expressions::ExpressionDataLayout>(dataLayoutResult.result));
         
         return result;

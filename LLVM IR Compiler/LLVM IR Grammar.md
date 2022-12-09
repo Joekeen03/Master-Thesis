@@ -65,7 +65,7 @@ metadataNode ::= ['distinct'] '!{' nodeValue [',' nodeValue] '}'
 unnamedMetadata ::= '!' integer
 nodeValue ::= metadataValue | integerValue // What is a value? Just a value of any type?
 metadataValue ::= namedMetadata | unnamedMetadata
-integerValue ::= integerType integer // Should I be enforcing types on the 
+integerValue ::= integerType integer // Should I be enforcing types in the grammar? Probably... i32 3.0 doesn't make much sense, except as an implicit cast. Using C++ as a reference, but C++ doesn't have similar syntax that I'm aware of.
 metadataString = '!"' identifierString '"'
 
 // Types
