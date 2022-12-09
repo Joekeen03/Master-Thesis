@@ -19,6 +19,9 @@
 #include "Expressions/ExpressionIdentifier.h"
 #include "Expressions/ExpressionLocalIdentifier.h"
 #include "Expressions/ExpressionOperand.h"
+#include "Expressions/ExpressionNamedMetadataDefinition.h"
+#include "Expressions/ExpressionNamedMetadataIdentifier.h"
+#include "Expressions/ExpressionUnnamedMetadataIdentifier.h"
 
 #include "Expressions/Instructions/Instruction.h"
 
@@ -162,7 +165,9 @@ namespace Parser {
             ParsingResult<Expressions::ExpressionFunctionDefinition> parseFunctionDefinition(int startPos);
 
             // Metadata Parsing Methods
-            // parseMetdataDefinition(int startPos);
+            ParsingResult<Expressions::ExpressionNamedMetadataIdentifier> parseNamedMetadataIdentifier(int startPos);
+            ParsingResult<Expressions::ExpressionUnnamedMetadataIdentifier> parseUnnamedMetadataIdentifier(int startPos);
+            ParsingResult<Expressions::ExpressionNamedMetadataDefinition> parseNamedMetdataDefinition(int startPos);
 
             std::shared_ptr<const Expressions::ExpressionFile> parse();
             Parser(AttributeIDProcessor::SubstitutedTokens substitutedTokens)

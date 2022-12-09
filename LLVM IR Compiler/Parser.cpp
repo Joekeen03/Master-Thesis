@@ -18,6 +18,9 @@
 #include "Tokens/TokenTypeReservedWord.h"
 #include "Tokens/TokenNumberLiteral.h"
 #include "Tokens/TokenComma.h"
+#include "Tokens/TokenNamedMetadata.h"
+#include "Tokens/TokenUnnamedMetadata.h"
+#include "Tokens/TokenMetadataNodeStart.h"
 
 #include "Types/TypeInteger.h"
 
@@ -670,6 +673,72 @@ namespace Parser {
                         : Lib::ResultPointer<Expressions::ExpressionFunctionDefinition>();
     }
 
+    // Metadata parsing methods
+
+    
+    ParsingResult<Expressions::ExpressionNamedMetadataIdentifier> Parser::parseNamedMetadataIdentifier(int startPos) {
+        auto token = getToken(startPos);
+        return isType<Tokens::TokenNamedMetadata>(token)
+            ? ParsingResult<Expressions::ExpressionNamedMetadataIdentifier>(std::make_shared<Expressions::ExpressionNamedMetadataIdentifier>(std::dynamic_pointer_cast<const Tokens::TokenNamedMetadata>(token)->name), startPos+1)
+            : ParsingResult<Expressions::ExpressionNamedMetadataIdentifier>();
+    }
+
+    ParsingResult<Expressions::ExpressionUnnamedMetadataIdentifier> Parser::parseUnnamedMetadataIdentifier(int startPos) {
+        auto token = getToken(startPos);
+        return isType<Tokens::TokenUnnamedMetadata>(token)
+            ? ParsingResult<Expressions::ExpressionUnnamedMetadataIdentifier>(std::make_shared<Expressions::ExpressionUnnamedMetadataIdentifier>(std::dynamic_pointer_cast<const Tokens::TokenUnnamedMetadata>(token)->ID), startPos+1)
+            : ParsingResult<Expressions::ExpressionUnnamedMetadataIdentifier>();
+    }
+
+    ParsingResult<Expressions::ExpressionNamedMetadataDefinition> Parser::parseNamedMetdataDefinition(int startPos) {
+        bool success = false;
+        int currPos = startPos;
+        int nextPos = -1;
+        std::shared_ptr<const Expressions::ExpressionNamedMetadataIdentifier> assignee;
+        std::shared_ptr<std::vector<const std::shared_ptr<const Expressions::ExpressionUnnamedMetadataIdentifier>>> values;
+        auto namedIdentifierResult = parseNamedMetadataIdentifier(currPos);
+        if (namedIdentifierResult.success) {
+            currPos = namedIdentifierResult.newPos;
+            assignee = namedIdentifierResult.result;
+            if (checkReserved<Tokens::TokenOperator>(currPos, Operators::equals)) {
+                currPos++;
+                if (isType<Tokens::TokenMetadataNodeStart>(getToken(currPos))) {
+                    currPos++;
+                    auto firstUnnamedIdentifierResult = parseUnnamedMetadataIdentifier(currPos);
+                    if (firstUnnamedIdentifierResult.success) {
+                        auto values = std::make_shared<std::vector<const std::shared_ptr<const Expressions::ExpressionUnnamedMetadataIdentifier>>>();
+                        values->push_back(firstUnnamedIdentifierResult.result);
+                        currPos = firstUnnamedIdentifierResult.newPos;
+                        bool buildValuesVector = true;
+                        do {
+                            if (isType<Tokens::TokenComma>(getToken(currPos))) {
+                                currPos++;
+                                auto unnamedIdentifierResult = parseUnnamedMetadataIdentifier(currPos);
+                                if (unnamedIdentifierResult.success) {
+                                    values->push_back(unnamedIdentifierResult.result);
+                                    currPos = unnamedIdentifierResult.newPos;
+                                } else {
+                                    buildValuesVector = false;
+                                }
+                            } else {
+                                buildValuesVector = false;
+                            }
+                        } while (buildValuesVector);
+                        if (isRightToken<Tokens::TokenCurlyBrace>(currPos)) {
+                            nextPos = currPos;
+                            success = true;
+                        }
+                    }
+                }
+            }
+        }
+        auto constVec = Lib::makePointerToConst(values);
+        return success ? ParsingResult<Expressions::ExpressionNamedMetadataDefinition>(std::make_shared<Expressions::ExpressionNamedMetadataDefinition>(assignee, constVec), nextPos)
+                        : ParsingResult<Expressions::ExpressionNamedMetadataDefinition>();
+    }
+
+    // Misc
+
     std::shared_ptr<const Expressions::ExpressionFile> Parser::parse() {
         
         bool success = false;
@@ -689,6 +758,8 @@ namespace Parser {
         auto targetTripleResult = parseTargetTriple(pos);
         if (targetTripleResult.success) pos = targetTripleResult.newPos;
         auto functionResult = parseFunctionDefinition(pos);
+        auto namedMetadataResult = parseNamedMetdataDefinition(functionResult.newPos);
+        std::cout << "Metadata Parsing: " << namedMetadataResult.success << '\n';
         
         std::shared_ptr<const Expressions::ExpressionFile> result
                     = std::make_shared<Expressions::ExpressionFile>(std::dynamic_pointer_cast<const Expressions::ExpressionSourceFile>(srcResult.result),
