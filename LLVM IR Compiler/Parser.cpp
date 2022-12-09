@@ -22,6 +22,7 @@
 #include "Tokens/TokenUnnamedMetadata.h"
 #include "Tokens/TokenMetadataNodeStart.h"
 #include "Tokens/TokenMetadataString.h"
+#include "Tokens/TokenEOF.h"
 
 #include "Types/TypeInteger.h"
 
@@ -324,7 +325,7 @@ namespace Parser {
 
     ParsingResult<Expressions::ExpressionSourceFile> Parser::parseSourceFile(int startPos) {
         int currPos = startPos;
-        int nextTokenAfterExpr = currPos;
+        int nextTokenAfterExpr = -1;
         std::string str = "";
         bool success = false;
         if (checkReserved<Tokens::TokenKeyword>(currPos, ReservedWords::source_filename)) {
@@ -729,6 +730,7 @@ namespace Parser {
                             }
                         } while (buildValuesVector);
                         if (isRightToken<Tokens::TokenCurlyBrace>(currPos)) {
+                            currPos++;
                             nextPos = currPos;
                             success = true;
                         }
@@ -807,6 +809,7 @@ namespace Parser {
                             }
                         } while (buildValuesVector);
                         if (isRightToken<Tokens::TokenCurlyBrace>(currPos)) {
+                            currPos++;
                             nextPos = currPos;
                             success = true;
                         }
@@ -829,8 +832,18 @@ namespace Parser {
         
         bool success = false;
         int pos = 0;
-        auto srcResult = parseSourceFile(pos);
-        if (!srcResult.success) {
+        
+        std::shared_ptr<const Expressions::ExpressionSourceFile> sourceFile;
+        std::shared_ptr<const Expressions::ExpressionDataLayout> dataLayout;
+        std::shared_ptr<const Expressions::ExpressionTargetTriple> targetTriple;
+        auto functionDefinitions = std::make_shared<std::vector<const std::shared_ptr<const Expressions::ExpressionFunctionDefinition>>>();
+        auto namedMetadataDefinitions = std::make_shared<std::vector<const std::shared_ptr<const Expressions::ExpressionNamedMetadataDefinition>>>();
+        auto unnamedMetadataDefinitions = std::make_shared<std::vector<const std::shared_ptr<const Expressions::ExpressionUnnamedMetadataDefinition>>>();
+
+        if (auto srcResult = parseSourceFile(pos); srcResult.success) {
+            sourceFile = srcResult.result;
+            pos = srcResult.newPos;
+        } else {
             throw ParsingException("Missing source filename at start of file.", pos);
         }
         // The datalayout and target triples are optional.
@@ -839,17 +852,43 @@ namespace Parser {
         //  expression, and the function that calls them is responsible for determining whether or not to ignore them?
         // Are these required to be at the start of the file?
         // FIXME How to handle out of bounds array accesses (go off the end of the array while parsing something)?
-        pos = srcResult.newPos;
-        auto dataLayoutResult = parseDataLayout(pos);
-        if (dataLayoutResult.success) pos = dataLayoutResult.newPos;
-        auto targetTripleResult = parseTargetTriple(pos);
-        if (targetTripleResult.success) pos = targetTripleResult.newPos;
-        auto functionResult = parseFunctionDefinition(pos);
-        auto namedMetadataResult = parseNamedMetdataDefinition(functionResult.newPos);
+        
+        if (auto dataLayoutResult = parseDataLayout(pos); dataLayoutResult.success) {
+            dataLayout = dataLayoutResult.result;
+            pos = dataLayoutResult.newPos;
+        }
+
+        if (auto targetTripleResult = parseTargetTriple(pos); targetTripleResult.success) {
+            targetTriple = targetTripleResult.result;
+            pos = targetTripleResult.newPos;
+        }
+
+        while (!isType<Tokens::TokenEOF>(getToken(pos))) {
+            std::cout<< "a";
+            if (auto functionDefinitionResult = parseFunctionDefinition(pos); functionDefinitionResult.success) {
+                functionDefinitions->push_back(functionDefinitionResult.result);
+                pos = functionDefinitionResult.newPos;
+            } else if (auto namedMetadataResult = parseNamedMetdataDefinition(pos); namedMetadataResult.success) {
+                namedMetadataDefinitions->push_back(namedMetadataResult.result);
+                pos = namedMetadataResult.newPos;
+            } else if (auto unnamedMetadataResult = parseUnnamedMetdataDefinition(pos); unnamedMetadataResult.success) {
+                unnamedMetadataDefinitions->push_back(unnamedMetadataResult.result);
+                pos = unnamedMetadataResult.newPos;
+            } else {
+                auto token = getToken(pos);
+                outputToken(pos);
+                outputToken(pos+1);
+                outputToken(pos+2);
+                throw ParsingException("Unrecognized module-level structure start token: "+token->getNameAndPos()+".", pos);
+            }
+            std::cout<< "b";
+        }
         
         std::shared_ptr<const Expressions::ExpressionFile> result
-                    = std::make_shared<const Expressions::ExpressionFile>(std::dynamic_pointer_cast<const Expressions::ExpressionSourceFile>(srcResult.result),
-                                                                    std::dynamic_pointer_cast<const Expressions::ExpressionDataLayout>(dataLayoutResult.result));
+                    = std::make_shared<const Expressions::ExpressionFile>(sourceFile, dataLayout, targetTriple,
+                                                                            Lib::makePointerToConst(functionDefinitions),
+                                                                            Lib::makePointerToConst(unnamedMetadataDefinitions),
+                                                                            Lib::makePointerToConst(namedMetadataDefinitions));
         
         return result;
     }
