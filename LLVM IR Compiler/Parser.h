@@ -58,40 +58,23 @@ namespace Parser {
 
             inline tokenPointer getToken(int pos) const { return (*tokens)[pos]; }
             inline void outputToken(int pos) const { std::cout << getToken(pos)->getNameAndPos() << '\n'; }
-            
-            // FIXME Is it sufficiently clear that it expects a shared_ptr, and compares the dereferenced object's type to <T>?
-
-            // Determines if the provided pointer points to an object of type <T>
-            template<typename T, typename Y>
-            inline bool isType(std::shared_ptr<Y> ptr) const { return typeid(*ptr) == typeid(T); }
-
-            // Determines if the provided pointer points to an instance of a subclass of class <T>
-            // Specifically, it dynamically casts the pointer w/in the shared_ptr to const T*, and checks if that is not equal to
-            //  nullptr. If the pointed-to-instance can be cast to type T successfully, dynamic_cast returns something other than
-            //  nullptr, and this returns true; Otherwise (if the instance isn't an instance of a subclass of class <T>, or the
-            //  pointer == nullptr), dynamic_cast returns nullptr, and this returns false.
-            template<typename T, typename Y>
-            inline bool isDerivedType(std::shared_ptr<Y> ptr) const { return dynamic_cast<const T*>(ptr.get())!=nullptr; }
-
-            // template<typename T>
-            // inline bool isType<tokenPointer>(tokenPointer token) const { return typeid(*token) == typeid(T); }
 
             // FIXME Should I make this description more generic - remove mentions of checking if 'token' is
             //      a <T> type token?
             //      E.g. '<T> type token' -> '<T> type'
 
-            // Returns whether or not the provided token is a <T> type token for the provided reserved string.
-            // Returns false if '*token' is not a <T> type token, or the token's registryItem (reserved word, operator, etc.)
+            // Returns whether or not the token at 'pos' is a <T> type token for the provided reserved string.
+            // Returns false if '*getToken(pos)' is not a <T> type token, or the token's registryItem (reserved word, operator, etc.)
             // isn't the same as the provided RegistryItem; otherwise returns true.
             //
-            // Note: Generically, this checks that '*token' can be dynamically cast to type <T>,
+            // Note: Generically, this checks that the token at 'pos' can be dynamically cast to type <T>,
             //      and that (T)(*token).registryItem == reserved
             //      So, objects of type T must have a RegistryItem registryItem member.
             template<typename T>
             bool checkReserved(int pos, EnumRegistry::RegistryItem reserved);
 
-            // Checks if the provided token is a <T> type identifier token.
-            // throws a ParsingException if *token is not a <T> type token.
+            // Checks if the token at 'pos' is a <T> type identifier token.
+            // throws a ParsingException if that token is not a <T> type token.
             // Note: <T> must have an "std::string name" member.
             template<typename T>
             std::string extractNamedIdentifier(int pos);

@@ -63,21 +63,21 @@ namespace Parser {
 
     stringExtractResult Parser::attemptExtractString(int pos) {
         auto token = getToken(pos);
-        bool isString = isType<Tokens::TokenString>(token);
+        bool isString = Lib::isType<Tokens::TokenString>(token);
         return isString ? stringExtractResult(std::dynamic_pointer_cast<const Tokens::TokenString>(token)->str, true)
                         : stringExtractResult("", false);
     }
 
     numberExtractResult Parser::attemptExtractInteger(int pos) {
         auto token = getToken(pos);
-        bool isInt = isType<Tokens::TokenNumberLiteral>(token);
+        bool isInt = Lib::isType<Tokens::TokenNumberLiteral>(token);
         return isInt ? numberExtractResult(std::dynamic_pointer_cast<const Tokens::TokenNumberLiteral>(token)->val, true)
                         : numberExtractResult(-1, false);
     }
 
     std::string Parser::extractString(int pos) {
         tokenPointer token = getToken(pos);
-        if (isType<Tokens::TokenString>(token)) {
+        if (Lib::isType<Tokens::TokenString>(token)) {
             return std::dynamic_pointer_cast<const Tokens::TokenString>(token)->str;
         } else {
             throw ParsingException("Expected TokenString at token position "+std::to_string(token->srcPos)+", instead received: "+token->getName(), pos);
@@ -86,7 +86,7 @@ namespace Parser {
 
     int Parser::extractInteger(int pos) {
         tokenPointer token = getToken(pos);
-        if (isType<Tokens::TokenNumberLiteral>(token)) {
+        if (Lib::isType<Tokens::TokenNumberLiteral>(token)) {
             return std::dynamic_pointer_cast<const Tokens::TokenNumberLiteral>(token)->val;
         } else {
             throw ParsingException("Expected TokenInteger at source position "+std::to_string(token->srcPos)+", instead received: "+token->getName(), pos);
@@ -133,7 +133,7 @@ namespace Parser {
                 if (valueOperandResult.success) {
                     valueOperand = valueOperandResult.result;
                     currPos = valueOperandResult.newPos;
-                    if (isType<Tokens::TokenComma>(getToken(currPos))) {
+                    if (Lib::isType<Tokens::TokenComma>(getToken(currPos))) {
                         currPos++;
                         if (checkReserved<Tokens::TokenTypeReservedWord>(currPos, TypeReservedWords::typePtr)) {
                             currPos++;
@@ -142,7 +142,7 @@ namespace Parser {
                                 pointerOperand = pointerOperandResult.result;
                                 currPos = pointerOperandResult.newPos;
                                 // Try to parse alignment:
-                                if (isType<Tokens::TokenComma>(getToken(currPos)) && checkReserved<Tokens::TokenKeyword>(currPos+1, ReservedWords::align)) {
+                                if (Lib::isType<Tokens::TokenComma>(getToken(currPos)) && checkReserved<Tokens::TokenKeyword>(currPos+1, ReservedWords::align)) {
                                     currPos += 2;
                                     alignment = extractInteger(currPos);
                                     currPos++;
@@ -186,7 +186,7 @@ namespace Parser {
                 // TODO
 
                 // Try parsing the alignment section
-                if (isType<Tokens::TokenComma>(getToken(currPos)) && checkReserved<Tokens::TokenKeyword>(currPos+1, ReservedWords::align)) {
+                if (Lib::isType<Tokens::TokenComma>(getToken(currPos)) && checkReserved<Tokens::TokenKeyword>(currPos+1, ReservedWords::align)) {
                     currPos += 2;
                     alignment = extractInteger(currPos);
                     currPos++;
@@ -251,10 +251,10 @@ namespace Parser {
         bool success = false;
         std::shared_ptr<const Expressions::ExpressionLocalIdentifier> identifier;
         // FIXME Implement proper hierarchy for identifiers
-        if (isType<Tokens::TokenLocalUnnamedIdentifier>(token)) {
+        if (Lib::isType<Tokens::TokenLocalUnnamedIdentifier>(token)) {
             identifier = std::make_shared<const Expressions::ExpressionLocalUnnamedIdentifier>(std::dynamic_pointer_cast<const Tokens::TokenLocalUnnamedIdentifier>(token)->ID);
             success = true;
-        } else if (isType<Tokens::TokenLocalNamedIdentifier>(token)) {
+        } else if (Lib::isType<Tokens::TokenLocalNamedIdentifier>(token)) {
             identifier = std::make_shared<const Expressions::ExpressionLocalNamedIdentifier>(std::dynamic_pointer_cast<const Tokens::TokenLocalNamedIdentifier>(token)->name);
             success = true;
         }
@@ -267,7 +267,7 @@ namespace Parser {
         std::shared_ptr<const Tokens::Token> firstToken = getToken(startPos);
         std::shared_ptr<const Types::Type> determinedType;
         bool success = false;
-        if (isType<Tokens::TokenTypeInteger>(firstToken)) {
+        if (Lib::isType<Tokens::TokenTypeInteger>(firstToken)) {
             determinedType = std::make_shared<const Types::TypeInteger>(std::dynamic_pointer_cast<const Tokens::TokenTypeInteger>(firstToken)->bitWidth);
             success = true;
             nextPosition = startPos+1;
@@ -280,7 +280,7 @@ namespace Parser {
         std::shared_ptr<const Tokens::Token> firstToken = getToken(startPos);
         std::shared_ptr<const Types::TypeSized> determinedType;
         bool success = false;
-        if (isType<Tokens::TokenTypeInteger>(firstToken)) {
+        if (Lib::isType<Tokens::TokenTypeInteger>(firstToken)) {
             determinedType = std::make_shared<const Types::TypeInteger>(std::dynamic_pointer_cast<const Tokens::TokenTypeInteger>(firstToken)->bitWidth);
             success = true;
             nextPosition = startPos+1;
@@ -293,7 +293,7 @@ namespace Parser {
         std::shared_ptr<const Tokens::Token> firstToken = getToken(startPos);
         std::shared_ptr<const Types::TypeSized> determinedType;
         bool success = false;
-        if (isType<Tokens::TokenTypeInteger>(firstToken)) {
+        if (Lib::isType<Tokens::TokenTypeInteger>(firstToken)) {
             determinedType = std::make_shared<const Types::TypeInteger>(std::dynamic_pointer_cast<const Tokens::TokenTypeInteger>(firstToken)->bitWidth);
             success = true;
             nextPosition = startPos+1;
@@ -551,12 +551,12 @@ namespace Parser {
         do {
             auto instructionResult = parseInstruction(currPos);
             if (instructionResult.success) {
-                if (isType<Instructions::YieldsValue>(instructionResult.result)) {
+                if (Lib::isType<Instructions::YieldsValue>(instructionResult.result)) {
                     // Ensure the local assigned to isn't a duplicate assignment (violating SSA), and if it's an unnamed local,
                     //  that it matches with the next unnamed local ID (local ID definitions must be monotonically increasing, as
                     //      in %0=, %1=, %2=, %3=, ...)
                     auto assignedIdentifier = std::dynamic_pointer_cast<const Instructions::YieldsValue>(instructionResult.result)->assignee;
-                    if (isType<Expressions::ExpressionLocalUnnamedIdentifier>(assignedIdentifier)) {
+                    if (Lib::isType<Expressions::ExpressionLocalUnnamedIdentifier>(assignedIdentifier)) {
                         auto identifier = std::dynamic_pointer_cast<const Expressions::ExpressionLocalUnnamedIdentifier>(assignedIdentifier);
                         if (identifier->ID < nextUnnamedLocal) {
                             throw ParsingException("LLVM IR is a single-assignment language. Duplicate unnamed local assignment at source position "
@@ -567,7 +567,7 @@ namespace Parser {
                                                     +std::to_string(nextUnnamedLocal)+".", currPos);
                         }
                         newLocalNameSet->insert(std::to_string(identifier->ID));
-                    } else if (isType<Expressions::ExpressionLocalNamedIdentifier>(assignedIdentifier)) {
+                    } else if (Lib::isType<Expressions::ExpressionLocalNamedIdentifier>(assignedIdentifier)) {
                         auto identifier = std::dynamic_pointer_cast<const Expressions::ExpressionLocalNamedIdentifier>(assignedIdentifier);
                         if (newLocalNameSet->count(identifier->name)) {
                             throw ParsingException("LLVM IR is a single-assignment language. Duplicate named local assignment at source position "
@@ -576,7 +576,7 @@ namespace Parser {
                         newLocalNameSet->insert(identifier->name);
                     }
                 }
-                if (isDerivedType<Instructions::InstructionTerminator>(instructionResult.result)) {
+                if (Lib::isDerivedType<Instructions::InstructionTerminator>(instructionResult.result)) {
                     terminator = std::dynamic_pointer_cast<const Instructions::InstructionTerminator>(instructionResult.result);
                     parseInstructions = false;
                     foundTerminator = true;
@@ -681,14 +681,14 @@ namespace Parser {
     
     ParsingResult<Expressions::ExpressionNamedMetadataIdentifier> Parser::parseNamedMetadataIdentifier(int startPos) {
         auto token = getToken(startPos);
-        return isType<Tokens::TokenNamedMetadata>(token)
+        return Lib::isType<Tokens::TokenNamedMetadata>(token)
             ? ParsingResult<Expressions::ExpressionNamedMetadataIdentifier>(std::make_shared<Expressions::ExpressionNamedMetadataIdentifier>(std::dynamic_pointer_cast<const Tokens::TokenNamedMetadata>(token)->name), startPos+1)
             : ParsingResult<Expressions::ExpressionNamedMetadataIdentifier>();
     }
 
     ParsingResult<Expressions::ExpressionUnnamedMetadataIdentifier> Parser::parseUnnamedMetadataIdentifier(int startPos) {
         auto token = getToken(startPos);
-        return isType<Tokens::TokenUnnamedMetadata>(token)
+        return Lib::isType<Tokens::TokenUnnamedMetadata>(token)
             ? ParsingResult<Expressions::ExpressionUnnamedMetadataIdentifier>(std::make_shared<Expressions::ExpressionUnnamedMetadataIdentifier>(std::dynamic_pointer_cast<const Tokens::TokenUnnamedMetadata>(token)->ID), startPos+1)
             : ParsingResult<Expressions::ExpressionUnnamedMetadataIdentifier>();
     }
@@ -707,7 +707,7 @@ namespace Parser {
             assignee = namedIdentifierResult.result;
             if (checkReserved<Tokens::TokenOperator>(currPos, Operators::equals)) {
                 currPos++;
-                if (isType<Tokens::TokenMetadataNodeStart>(getToken(currPos))) {
+                if (Lib::isType<Tokens::TokenMetadataNodeStart>(getToken(currPos))) {
                     currPos++;
                     auto firstUnnamedIdentifierResult = parseUnnamedMetadataIdentifier(currPos);
                     if (firstUnnamedIdentifierResult.success) {
@@ -716,7 +716,7 @@ namespace Parser {
                         currPos = firstUnnamedIdentifierResult.newPos;
                         bool buildValuesVector = true;
                         do {
-                            if (isType<Tokens::TokenComma>(getToken(currPos))) {
+                            if (Lib::isType<Tokens::TokenComma>(getToken(currPos))) {
                                 currPos++;
                                 auto unnamedIdentifierResult = parseUnnamedMetadataIdentifier(currPos);
                                 if (unnamedIdentifierResult.success) {
@@ -749,15 +749,15 @@ namespace Parser {
         bool success = false;
         auto firstToken = getToken(currPos);
         std::shared_ptr<const Expressions::ExpressionValue> val;
-        if (isType<Tokens::TokenMetadataString>(firstToken)) {
+        if (Lib::isType<Tokens::TokenMetadataString>(firstToken)) {
             val = std::make_shared<const Expressions::ExpressionValueMetadataString>(std::dynamic_pointer_cast<const Tokens::TokenMetadataString>(firstToken)->str);
             nextPos = currPos+1;
             success = true;
-        } else if (isType<Tokens::TokenTypeInteger>(firstToken)) {
+        } else if (Lib::isType<Tokens::TokenTypeInteger>(firstToken)) {
             currPos++;
             auto intType = std::make_shared<const Types::TypeInteger>(std::dynamic_pointer_cast<const Tokens::TokenTypeInteger>(firstToken)->bitWidth);
             auto valToken = getToken(currPos);
-            if (isType<Tokens::TokenNumberLiteral>(valToken)) {
+            if (Lib::isType<Tokens::TokenNumberLiteral>(valToken)) {
                 val = std::make_shared<const Expressions::ExpressionValueInteger>(intType, std::dynamic_pointer_cast<const Tokens::TokenNumberLiteral>(valToken)->val);
                 nextPos = currPos+1;
                 success = true;
@@ -786,7 +786,7 @@ namespace Parser {
             if (checkReserved<Tokens::TokenOperator>(currPos, Operators::equals)) {
                 currPos++;
                 // Attempt to parse "distinct"
-                if (isType<Tokens::TokenMetadataNodeStart>(getToken(currPos))) {
+                if (Lib::isType<Tokens::TokenMetadataNodeStart>(getToken(currPos))) {
                     currPos++;
                     auto firstValueResult = parseValue(currPos);
                     if (firstValueResult.success) {
@@ -795,7 +795,7 @@ namespace Parser {
                         currPos = firstValueResult.newPos;
                         bool buildValuesVector = true;
                         do {
-                            if (isType<Tokens::TokenComma>(getToken(currPos))) {
+                            if (Lib::isType<Tokens::TokenComma>(getToken(currPos))) {
                                 currPos++;
                                 auto valueResult = parseValue(currPos);
                                 if (valueResult.success) {
@@ -863,7 +863,7 @@ namespace Parser {
             pos = targetTripleResult.newPos;
         }
 
-        while (!isType<Tokens::TokenEOF>(getToken(pos))) {
+        while (!Lib::isType<Tokens::TokenEOF>(getToken(pos))) {
             std::cout<< "a";
             if (auto functionDefinitionResult = parseFunctionDefinition(pos); functionDefinitionResult.success) {
                 functionDefinitions->push_back(functionDefinitionResult.result);
