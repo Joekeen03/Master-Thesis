@@ -3,5 +3,6 @@
 *.dat
 *.exe
 SNES Target/Test/Generate/*
+LLVM IR Compiler/build
 llvm-project/*
 *.ll
