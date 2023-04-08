@@ -31,8 +31,6 @@
 #include "Expressions/ExpressionFunctionHeaderPreName.h"
 #include "Expressions/ExpressionLocalNamedIdentifier.h"
 #include "Expressions/ExpressionLocalUnnamedIdentifier.h"
-#include "Expressions/ExpressionOperandIdentifier.h"
-#include "Expressions/ExpressionOperandLiteralInteger.h"
 #include "Expressions/ExpressionValueInteger.h"
 #include "Expressions/ExpressionValueMetadataString.h"
 
@@ -113,7 +111,7 @@ namespace Parser {
 
     // Instructions that yield void
 
-    Instructions::InstructionParseResult Parser::parseInstructionStore(int startPos) {
+    InstructionParseResult Parser::parseInstructionStore(int startPos) {
         int currPos = startPos;
         bool success = false;
         std::shared_ptr<const Types::TypeSized> valueType; // FIXME should be some kind of TypeFirstClass
@@ -160,14 +158,14 @@ namespace Parser {
                 }
             }
         }
-        return success ? Instructions::InstructionParseResult(std::make_shared<const Instructions::InstructionStore>
-                                                                (valueType, valueOperand, pointerOperand, alignment), currPos)
-                        : Instructions::InstructionParseResult();
+        auto instruction = Instructions::InstructionStore(valueType, valueOperand, pointerOperand, alignment);
+        return success ? InstructionParseResult(std::make_shared<Instructions::InstructionVariant>(instruction), currPos)
+                        : InstructionParseResult();
     }
 
     // Instructions that yield values
 
-    Instructions::InstructionParseResult Parser::parseInstructionAlloca(int startPos, std::shared_ptr<const Expressions::ExpressionLocalIdentifier> assignee) {
+    InstructionParseResult Parser::parseInstructionAlloca(int startPos, std::shared_ptr<const Expressions::ExpressionLocalIdentifier> assignee) {
         int currPos = startPos;
         bool success = false;
         std::shared_ptr<const Types::TypeSized> allocationType;
@@ -197,14 +195,14 @@ namespace Parser {
                 success = true;
             }
         }
-        return success ? Instructions::InstructionParseResult(std::make_shared<Instructions::InstructionAlloca>
-                                                                (assignee, inalloca, allocationType, alignment), currPos)
-                        : Instructions::InstructionParseResult();
+        auto instruction = Instructions::InstructionAlloca(assignee, inalloca, allocationType, alignment);
+        return success ? InstructionParseResult(std::make_shared<Instructions::InstructionVariant>(instruction), currPos)
+                        : InstructionParseResult();
     }
 
     // Terminator Instructions
 
-    Instructions::InstructionParseResult Parser::parseInstructinRetValue(int startPos) {
+    InstructionParseResult Parser::parseInstructinRetValue(int startPos) {
         bool success = false;
         int currPos = startPos;
         int nextPos = -1;
@@ -225,8 +223,9 @@ namespace Parser {
                 }
             }
         }
-        return success ? Instructions::InstructionParseResult(std::make_shared<const Instructions::InstructionRetValue>(retType, retVal), nextPos)
-                        : Instructions::InstructionParseResult();
+        auto instruction = Instructions::InstructionRetValue(retType, retVal);
+        return success ? InstructionParseResult(std::make_shared<Instructions::InstructionVariant>(instruction), nextPos)
+                        : InstructionParseResult();
     }
 
     /** GENERAL PARSE METHODS **/
@@ -305,21 +304,35 @@ namespace Parser {
         int currPos = startPos;
         int nextPos = -1;
         bool success = false;
-        std::shared_ptr<const Expressions::ExpressionOperand> operand;
+        std::shared_ptr<const Expressions::ExpressionOperand> operandExpression;
         auto numberResult = attemptExtractInteger(currPos);
         if (numberResult.second) {
             success = true;
-            operand = std::make_shared<const Expressions::ExpressionOperandLiteralInteger>(numberResult.first);
+            auto operandValue = std::make_shared<const Expressions::operandVariant>(Expressions::ExpressionLiteralInteger(numberResult.first));
+            // auto x = Expressions::ExpressionOperand(operandValue);
+            operandExpression = std::make_shared<const Expressions::ExpressionOperand>(operandValue);
             nextPos = currPos+1;
         } else {
             auto identifierResult = parseIdentifier(currPos);
             if (identifierResult.success) {
                 success = true;
-                operand = std::make_shared<const Expressions::ExpressionOperandIdentifier>(identifierResult.result);
+                std::shared_ptr<const Expressions::operandVariant> operandValue;
+                // FIXME change parseIdentifier's result to contain a pointer to a variant of different identifiers, rather
+                //  than a pointer to a generic identifier.
+                if (Lib::isType<Expressions::ExpressionLocalNamedIdentifier>(identifierResult.result)) {
+                    auto castIdentifier = std::dynamic_pointer_cast<const Expressions::ExpressionLocalNamedIdentifier>(identifierResult.result);
+                    operandValue = std::make_shared<const Expressions::operandVariant>(*castIdentifier);
+                } else if (Lib::isType<Expressions::ExpressionLocalUnnamedIdentifier>(identifierResult.result)) {
+                    auto castIdentifier = std::dynamic_pointer_cast<const Expressions::ExpressionLocalUnnamedIdentifier>(identifierResult.result);
+                    operandValue = std::make_shared<const Expressions::operandVariant>(*castIdentifier);
+                } else {
+                    throw std::runtime_error("Unhandled identifier type in Parser::parseOperand.");
+                }
+                operandExpression = std::make_shared<const Expressions::ExpressionOperand>(operandValue);
                 nextPos = identifierResult.newPos;
             }
         }
-        return success ? Lib::ResultPointer<Expressions::ExpressionOperand>(operand, nextPos)
+        return success ? Lib::ResultPointer<Expressions::ExpressionOperand>(operandExpression, nextPos)
                         : Lib::ResultPointer<Expressions::ExpressionOperand>();
     }
 
@@ -499,7 +512,7 @@ namespace Parser {
         return ParsingResult<Expressions::ExpressionFunctionHeaderPostName>(std::make_shared<Expressions::ExpressionFunctionHeaderPostName>(keywords, strKeywords), currPos);
     }
 
-    Instructions::InstructionParseResult Parser::parseInstruction(int startPos) {
+    InstructionParseResult Parser::parseInstruction(int startPos) {
         auto localIdentifierResult = parseLocalIdentifier(startPos);
         int currPos = startPos;
         if (localIdentifierResult.success) {
@@ -525,17 +538,19 @@ namespace Parser {
                 if (result.success) return result;
             }
         }
-        return Instructions::InstructionParseResult();
+        return InstructionParseResult();
     }
 
     CodeBlockParsingResult Parser::parseFunctionCodeBlock(int startPos, int startUnnamedLocal, std::shared_ptr<std::set<std::string>> localNameSet) {
+        // FIXME: move stuff regarding identifier validation, out of this (environment object that manages that, or even a second
+        //  pass)
         int nextUnnamedLocal = startUnnamedLocal;
         int currPos = startPos;
         std::string label;
         auto newLocalNameSet = std::make_shared<std::set<std::string>>();
         std::copy(newLocalNameSet->begin(), newLocalNameSet->end(), std::inserter(*localNameSet, localNameSet->begin()));
-        auto instructions = std::make_shared<std::vector<const std::shared_ptr<const Instructions::Instruction>>>();
-        std::shared_ptr<const Instructions::InstructionTerminator> terminator;
+        auto instructions = std::make_shared<std::vector<const std::shared_ptr<const Instructions::NonTerminators>>>();
+        std::shared_ptr<const Instructions::Terminators> terminator;
         
         if (false) {
 
@@ -551,44 +566,75 @@ namespace Parser {
         do {
             auto instructionResult = parseInstruction(currPos);
             if (instructionResult.success) {
-                if (Lib::isType<Instructions::YieldsValue>(instructionResult.result)) {
-                    // Ensure the local assigned to isn't a duplicate assignment (violating SSA), and if it's an unnamed local,
-                    //  that it matches with the next unnamed local ID (local ID definitions must be monotonically increasing, as
-                    //      in %0=, %1=, %2=, %3=, ...)
-                    auto assignedIdentifier = std::dynamic_pointer_cast<const Instructions::YieldsValue>(instructionResult.result)->assignee;
-                    if (Lib::isType<Expressions::ExpressionLocalUnnamedIdentifier>(assignedIdentifier)) {
-                        auto identifier = std::dynamic_pointer_cast<const Expressions::ExpressionLocalUnnamedIdentifier>(assignedIdentifier);
-                        if (identifier->ID < nextUnnamedLocal) {
-                            throw ParsingException("LLVM IR is a single-assignment language. Duplicate unnamed local assignment at source position "
-                                                    +std::to_string(getToken(currPos)->srcPos)+".", currPos);
-                        } else if (identifier->ID > nextUnnamedLocal) {
-                            throw ParsingException("Unnamed locals must be defined consecutively - 1, 2, 3...; local definition at sourcePosition"
-                                                    +std::to_string(getToken(currPos)->srcPos)+" was not the expected ID, "
-                                                    +std::to_string(nextUnnamedLocal)+".", currPos);
-                        }
-                        newLocalNameSet->insert(std::to_string(identifier->ID));
-                    } else if (Lib::isType<Expressions::ExpressionLocalNamedIdentifier>(assignedIdentifier)) {
-                        auto identifier = std::dynamic_pointer_cast<const Expressions::ExpressionLocalNamedIdentifier>(assignedIdentifier);
-                        if (newLocalNameSet->count(identifier->name)) {
-                            throw ParsingException("LLVM IR is a single-assignment language. Duplicate named local assignment at source position "
-                                                    +std::to_string(getToken(currPos)->srcPos)+".", currPos);
-                        }
-                        newLocalNameSet->insert(identifier->name);
+
+                // FIXME Move into separate method
+                // if (Lib::isType<Instructions::YieldsValue>(instructionResult.result)) {
+                //     // Ensure the local assigned to isn't a duplicate assignment (violating SSA), and if it's an unnamed local,
+                //     //  that it matches with the next unnamed local ID (local ID definitions must be monotonically increasing, as
+                //     //      in %0=, %1=, %2=, %3=, ...)
+                //     auto assignedIdentifier = std::dynamic_pointer_cast<const Instructions::YieldsValue>(instructionResult.result)->assignee;
+                //     if (Lib::isType<Expressions::ExpressionLocalUnnamedIdentifier>(assignedIdentifier)) {
+                //         auto identifier = std::dynamic_pointer_cast<const Expressions::ExpressionLocalUnnamedIdentifier>(assignedIdentifier);
+                //         if (identifier->ID < nextUnnamedLocal) {
+                //             throw ParsingException("LLVM IR is a single-assignment language. Duplicate unnamed local assignment at source position "
+                //                                     +std::to_string(getToken(currPos)->srcPos)+".", currPos);
+                //         } else if (identifier->ID > nextUnnamedLocal) {
+                //             throw ParsingException("Unnamed locals must be defined consecutively - 1, 2, 3...; local definition at sourcePosition"
+                //                                     +std::to_string(getToken(currPos)->srcPos)+" was not the expected ID, "
+                //                                     +std::to_string(nextUnnamedLocal)+".", currPos);
+                //         }
+                //         newLocalNameSet->insert(std::to_string(identifier->ID));
+                //     } else if (Lib::isType<Expressions::ExpressionLocalNamedIdentifier>(assignedIdentifier)) {
+                //         auto identifier = std::dynamic_pointer_cast<const Expressions::ExpressionLocalNamedIdentifier>(assignedIdentifier);
+                //         if (newLocalNameSet->count(identifier->name)) {
+                //             throw ParsingException("LLVM IR is a single-assignment language. Duplicate named local assignment at source position "
+                //                                     +std::to_string(getToken(currPos)->srcPos)+".", currPos);
+                //         }
+                //         newLocalNameSet->insert(identifier->name);
+                //     }
+                // }
+                
+                // Which of this is more idiomatic? This, which captures more local variables, or the alternative (below),
+                //  which checks the instruction's type twice and has to have a dummy else clause that returns
+                //  std::monostate()?
+                // This is far more succint, so that would seem to be preferable for now.
+                // std:: visit(overloaded {})
+                std::visit([&terminator, &parseInstructions, &foundTerminator, instructions](auto&& arg) mutable {
+                    if constexpr (std::is_base_of_v<Instructions::InstructionTerminator, std::remove_reference_t<decltype(arg)>>) {
+                        terminator = std::make_shared<Instructions::Terminators>(arg);
+                        parseInstructions = false;
+                        foundTerminator = true;
+                    } else { // Should explicitly check for InstructionNonTerminator?
+                        instructions->push_back(std::make_shared<Instructions::NonTerminators>(arg));
                     }
-                }
-                if (Lib::isDerivedType<Instructions::InstructionTerminator>(instructionResult.result)) {
-                    terminator = std::dynamic_pointer_cast<const Instructions::InstructionTerminator>(instructionResult.result);
-                    parseInstructions = false;
-                    foundTerminator = true;
-                } else {
-                    instructions->push_back(instructionResult.result);
-                }
+                }, *(instructionResult.result));
+
+
+                // Alternative:
+
+                // if (std::visit([](auto&& arg) -> bool {return Lib::isBaseOf<Instructions::InstructionTerminator>(arg);}, *(instructionResult.result))) {
+                //     terminator = std::make_shared<Instructions::Terminators>(std::visit([](auto&& arg) -> Instructions::Terminators {
+                //             typedef decltype(arg) T;
+                //             if constexpr (std::is_base_of<Instructions::InstructionTerminator, T>::value) {
+                //                 return arg;
+                //             } else {
+                //                 return std::monostate();
+                //             }
+                //         }, *(instructionResult.result)));
+                    
+                //     // terminator = std::make_shared<Instructions::Terminators>(instructionResult.result);
+                //     parseInstructions = false;
+                //     foundTerminator = true;
+                // } else {
+                //     instructions->push_back(std::make_shared<Instructions::NonTerminators>(instructionResult.result));
+                // }
                 currPos = instructionResult.newPos;
             } else {
                 parseInstructions = false;
             }
 
         } while (parseInstructions);
+        
         return foundTerminator ? CodeBlockParsingResult(std::make_shared<Expressions::ExpressionFunctionCodeBlock>(label, instructions, terminator),
                                                         currPos, nextUnnamedLocal, newLocalNameSet)
                                 : CodeBlockParsingResult();
@@ -650,7 +696,8 @@ namespace Parser {
                 if (returnTypeResult.success) {
                     returnType = returnTypeResult.result;
                     currPos = returnTypeResult.newPos;
-                    std::string functionName = extractNamedIdentifier<Tokens::TokenGlobalNamedIdentifier>(currPos);
+                    // Do functions have to use named identifiers for their name?
+                    functionName = extractNamedIdentifier<Tokens::TokenGlobalNamedIdentifier>(currPos);
                     currPos++;
                     auto parameterListResult = parseFunctionArgumentList(currPos);
                     if (parameterListResult.success) {
@@ -665,6 +712,8 @@ namespace Parser {
                                 codeBlocks = codeBlocksResult.result;
                                 nextPos = codeBlocksResult.newPos;
                                 success = true;
+                                
+                                std::cout << "Parsed function definition." << '\n';
                             }
                         }
                     }
@@ -864,7 +913,6 @@ namespace Parser {
         }
 
         while (!Lib::isType<Tokens::TokenEOF>(getToken(pos))) {
-            std::cout<< "a";
             if (auto functionDefinitionResult = parseFunctionDefinition(pos); functionDefinitionResult.success) {
                 functionDefinitions->push_back(functionDefinitionResult.result);
                 pos = functionDefinitionResult.newPos;
@@ -881,7 +929,6 @@ namespace Parser {
                 outputToken(pos+2);
                 throw ParsingException("Unrecognized module-level structure start token: "+token->getNameAndPos()+".", pos);
             }
-            std::cout<< "b";
         }
         
         std::shared_ptr<const Expressions::ExpressionFile> result

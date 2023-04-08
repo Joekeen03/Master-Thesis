@@ -7,6 +7,7 @@
 #include "../Types/TypeInteger.h"
 
 namespace Expressions {
+    // Represents an integer of a specific integer type (known bit-size)
     class ExpressionValueInteger : public ExpressionValue {
         public:
             const std::shared_ptr<const Types::TypeInteger> intType;

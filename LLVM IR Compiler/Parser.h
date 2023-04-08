@@ -26,6 +26,7 @@
 #include "Expressions/ExpressionValue.h"
 
 #include "Expressions/Instructions/Instruction.h"
+#include "Expressions/Instructions/AllInstructions.h"
 
 #include "Types/TypeSized.h"
 
@@ -49,6 +50,8 @@ namespace Parser {
 
     template <typename T>
     using ParsingResult = Lib::ResultPointer<T>;
+
+    using InstructionParseResult = Lib::ResultPointer<Instructions::InstructionVariant>;
 
     class Parser {
         private:
@@ -115,15 +118,15 @@ namespace Parser {
         public:
             // Parsing for instructions that yield void
 
-            Instructions::InstructionParseResult parseInstructionStore(int startPos);
+            InstructionParseResult parseInstructionStore(int startPos);
 
             // Parsing for instructions that yield a value
 
-            Instructions::InstructionParseResult parseInstructionAlloca(int startPos, std::shared_ptr<const Expressions::ExpressionLocalIdentifier> assignee);
+            InstructionParseResult parseInstructionAlloca(int startPos, std::shared_ptr<const Expressions::ExpressionLocalIdentifier> assignee);
 
             // Parsing for terminator instructions
 
-            Instructions::InstructionParseResult parseInstructinRetValue(int startPos);
+            InstructionParseResult parseInstructinRetValue(int startPos);
 
             // General parsing
 
@@ -144,7 +147,7 @@ namespace Parser {
             ParsingResult<Expressions::ExpressionReturnType> parseFunctionReturnType(int startPos);
             ParsingResult<Expressions::ExpressionArgumentList> parseFunctionArgumentList(int startPos);
             ParsingResult<Expressions::ExpressionFunctionHeaderPostName> parseFunctionHeaderPostName(int startPos);
-            Instructions::InstructionParseResult parseInstruction(int startPos);
+            InstructionParseResult parseInstruction(int startPos);
             CodeBlockParsingResult parseFunctionCodeBlock(int startPos, int startUnnamedLocal, std::shared_ptr<std::set<std::string>> localNameSet);
             ParsingResult<std::vector<const std::shared_ptr<const Expressions::ExpressionFunctionCodeBlock>>> parseFunctionCodeBlocks(int startPos);
             ParsingResult<Expressions::ExpressionFunctionDefinition> parseFunctionDefinition(int startPos);
@@ -177,8 +180,8 @@ namespace Parser {
             ParsingException(std::string msg, int tokenPosArg) : tokenPos(tokenPosArg), runtime_error(msg.c_str()) {}
     };
 
-    using instructionYieldsVoidParser = Instructions::InstructionParseResult(Parser::*)(int);
-    using instructionYieldsValueParser = Instructions::InstructionParseResult(Parser::*)(int, std::shared_ptr<const Expressions::ExpressionLocalIdentifier>);
+    using instructionYieldsVoidParser = InstructionParseResult(Parser::*)(int);
+    using instructionYieldsValueParser = InstructionParseResult(Parser::*)(int, std::shared_ptr<const Expressions::ExpressionLocalIdentifier>);
     extern const instructionYieldsVoidParser instructionsYieldVoid[];
     extern const int nInstructionsYieldVoid;
     extern const instructionYieldsValueParser instructionsYieldValue[];

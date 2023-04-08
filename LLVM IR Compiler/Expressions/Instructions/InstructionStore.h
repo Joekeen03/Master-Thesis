@@ -3,6 +3,7 @@
 
 #include <string>
 
+#include "../ExpressionOperand.h"
 #include "InstructionNonTerminatorYieldsVoid.h"
 #include "../../Types/TypeSized.h"
 

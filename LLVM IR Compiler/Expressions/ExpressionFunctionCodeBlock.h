@@ -5,16 +5,17 @@
 
 #include "Expression.h"
 #include "Instructions/Instruction.h"
+#include "Instructions/AllInstructions.h"
 
 namespace Expressions {
     class ExpressionFunctionCodeBlock : public Expression {
         public:
             const std::string label;
-            const std::shared_ptr<const std::vector<const std::shared_ptr<const Instructions::Instruction>>> instructions;
-            const std::shared_ptr<const Instructions::Instruction> terminator;
+            const std::shared_ptr<const std::vector<const std::shared_ptr<const Instructions::NonTerminators>>> instructions;
+            const std::shared_ptr<const Instructions::Terminators> terminator;
             ExpressionFunctionCodeBlock(std::string labelArg,
-                                        std::shared_ptr<const std::vector<const std::shared_ptr<const Instructions::Instruction>>> instructionsArg,
-                                        std::shared_ptr<const Instructions::Instruction> terminatorArg)
+                                        std::shared_ptr<const std::vector<const std::shared_ptr<const Instructions::NonTerminators>>> instructionsArg,
+                                        std::shared_ptr<const Instructions::Terminators> terminatorArg)
                                             : label(labelArg), instructions(instructionsArg), terminator(terminatorArg) {}
             std::string getName() const { return "ExpressionFunctionCodeBlock"; }
     };

@@ -35,7 +35,7 @@ clean:
 tokenizer: prepareDirectories $(patsubst %,$(SRC_DIR)/%,$(OBJECTS)) $(patsubst %,$(TOKEN_DIR)/%,$(TOKEN_OBJECTS)) \
 		   $(patsubst %,$(EXPRESSION_DIR)/%,$(EXPRESSION_OBJECTS))
 	$(CXX) $(CFLAGS) $(patsubst %,$(OBJECT_DIR)/%,$(OBJECTS) $(TOKEN_OBJECTS) $(EXPRESSION_OBJECTS)) \
-	$(LDFLAGS) -o $(BUILD_DIR)/$@
+	$(LDFLAGS) -std=c++17 -o $(BUILD_DIR)/$@
 	./$(BUILD_DIR)/$@
 
 NewToken%: h_data := $(file <$(subst /,\\,$(TEMPLATE_TOKEN_H_FILE)))
@@ -69,4 +69,4 @@ NewHeader%: prepareDirectories
 prepareTests: $(patsubst %,$(TEST_DIR)/%,$(TEST_LL_FILES))
 
 .cpp.o:
-	$(CXX) $(CFLAGS) -c $< -o $(OBJECT_DIR)/$(subst .cpp,.o,$(<F))
+	$(CXX) $(CFLAGS) -c $< -std=c++17 -o $(OBJECT_DIR)/$(subst .cpp,.o,$(<F))
