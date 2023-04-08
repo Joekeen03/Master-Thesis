@@ -2,14 +2,19 @@
 #define LLVM_IR_COMPILER_YIELDSVALUE_H
 
 #include "../ExpressionIdentifier.h"
+#include "../ExpressionLocalIdentifier.h"
+#include "../../Types/Type.h"
 
 namespace Instructions {
     class YieldsValue {
         // Is it possible to have one of these instructions and not assign the yielded value to an identifier?
         //      I.e. ignore the yielded value.
         public:
-            const std::shared_ptr<const Expressions::ExpressionIdentifier> assignee;
-            YieldsValue(std::shared_ptr<const Expressions::ExpressionIdentifier> assigneeArg) : assignee(assigneeArg) {}
+            // Assume you can only assign to a local variable.
+            const std::shared_ptr<const Expressions::ExpressionLocalIdentifier> assignee;
+            YieldsValue(std::shared_ptr<const Expressions::ExpressionLocalIdentifier> assigneeArg) : assignee(assigneeArg) {}
+            virtual std::shared_ptr<Types::Type> getYieldedType() const { throw std::runtime_error("YieldsValue::getYieldedType was not\
+                                                                                     overridden in a subclass");}
     };
 }
 

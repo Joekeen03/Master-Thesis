@@ -11,9 +11,9 @@ namespace Instructions {
     class InstructionRetValue : public InstructionTerminatorYieldsVoid {
         public:
             const std::shared_ptr<const Types::Type> returnType; // FIXME Should only allow valid return types
-            const std::shared_ptr<const Expressions::ExpressionOperand> value; // FIXME Should only allow valid return values (?)
-            InstructionRetValue(std::shared_ptr<const Types::Type> returnTypeArg, std::shared_ptr<const Expressions::ExpressionOperand> valueArg)
-                                : returnType(returnTypeArg), value(valueArg) {}
+            const std::shared_ptr<const Expressions::ExpressionOperand> returnOperand; // FIXME Should only allow valid return values (?)
+            InstructionRetValue(std::shared_ptr<const Types::Type> returnTypeArg, std::shared_ptr<const Expressions::ExpressionOperand> returnValueArg)
+                                : returnType(returnTypeArg), returnOperand(returnValueArg) {}
             std::string getName() const { return "InstructionRetValue"; }
     };
 }

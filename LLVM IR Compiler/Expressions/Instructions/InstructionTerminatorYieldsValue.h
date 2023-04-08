@@ -9,7 +9,7 @@
 namespace Instructions {
     class InstructionTerminatorYieldsValue : public InstructionTerminator, public YieldsValue {
         public:
-            InstructionTerminatorYieldsValue(std::shared_ptr<const Expressions::ExpressionIdentifier> assigneeArg) : YieldsValue(assigneeArg) {}
+            InstructionTerminatorYieldsValue(std::shared_ptr<const Expressions::ExpressionLocalIdentifier> assigneeArg) : YieldsValue(assigneeArg) {}
             std::string getName() const { return "InstructionTerminatorYieldsValue"; }
     };
 }

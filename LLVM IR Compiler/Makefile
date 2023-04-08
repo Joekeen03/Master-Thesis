@@ -1,72 +1,87 @@
 SRC_DIR = .
 TOKEN_DIR = $(SRC_DIR)/Tokens
 EXPRESSION_DIR = $(SRC_DIR)/ParseExpressions
+
 BUILD_DIR = build
 OBJECT_DIR = $(BUILD_DIR)/objects
+
 TEMPLATE_DIR = $(SRC_DIR)/Templates
 TEMPLATE_RESULT_DIR = $(SRC_DIR)/TemplateResult
 TEST_DIR = $(SRC_DIR)/Test
 
-TOKEN_OBJECTS = TokenComment.o TokenGlobalNamedIdentifier.o LibraryTokens.o TokenKeyword.o TokenOperator.o TokenString.o \
-				TokenParenthesis.o TokenAttributeID.o TokenCurlyBrace.o TokenLocalNamedIdentifier.o \
-				TokenNamedMetadata.o HelperFunctionsTokens.o TokenNumberLiteral.o TokenMetadataNodeStart.o \
-				TokenMetadataString.o TokenComma.o TokenLocalUnnamedIdentifier.o \
-				TokenGlobalUnnamedIdentifier.o TokenTypeInteger.o TokenTypeReservedWord.o TokenMetadataIdentifier.o \
-				TokenUnnamedMetadata.o TokenEOF.o
-EXPRESSION_OBJECTS = 
-OBJECTS = Tokenizer.o BasicCharArray.o main.o EnumRegistry.o Parser.o AttributeIDProcessor.o
+EXTRA_CFLAGS = -std=c++17 
+EXECUTABLE_NAME = main
+
+DIRS = $(SRC_DIR) $(TOKEN_DIR) $(EXPRESSION_DIR)
+SRC_FILES = $(foreach dir,$(DIRS),$(wildcard $(dir)/*.cpp))
+OBJ_FILES = $(SRC_FILES:$(SRC_DIR)%.cpp=$(OBJECT_DIR)%.o)
+DEP_FILES = $(OBJ_FILES:.o=.d)
+
 TEST_LL_FILES = mainOnly.ll
 
 TEMPLATE_TOKEN_H_FILE := $(TEMPLATE_DIR)/TokenTEMPLATE.h
 TEMPLATE_TOKEN_CPP_FILE := $(TEMPLATE_DIR)/TokenTEMPLATE.cpp
 TEMPLATE_EXPRESSION_H_FILE := $(TEMPLATE_DIR)/ExpressionTEMPLATE.h
-TEMPLATE_INSTRUCTION_NORMAL_YIELDS_VALUE_H_FILE := $(TEMPLATE_DIR)/InstructionNormalYieldsValueTEMPLATE.h
-TEMPLATE_INSTRUCTION_NORMAL_YIELDS_VOID_H_FILE := $(TEMPLATE_DIR)/InstructionNormalYieldsVoidTEMPLATE.h
-TEMPLATE_INSTRUCTION_TERMINATOR_YIELDS_VOID_H_FILE := $(TEMPLATE_DIR)/InstructionTerminatorYieldsVoidTEMPLATE.h
+TEMPLATE_LLVMIR_INSTRUCTION_NORMAL_YIELDS_VALUE_H_FILE := $(TEMPLATE_DIR)/InstructionNonTerminatorYieldsValueTEMPLATE.h
+TEMPLATE_LLVMIR_INSTRUCTION_NORMAL_YIELDS_VOID_H_FILE := $(TEMPLATE_DIR)/InstructionNonTerminatorYieldsVoidTEMPLATE.h
+TEMPLATE_LLVMIR_INSTRUCTION_TERMINATOR_YIELDS_VOID_H_FILE := $(TEMPLATE_DIR)/InstructionTerminatorYieldsVoidTEMPLATE.h
 TEMPLATE_GENERIC_H_FILE := $(TEMPLATE_DIR)/HeaderTEMPLATE.h
-
-prepareDirectories:
-	- mkdir $(subst /,\\,$(OBJECT_DIR))
-	- mkdir $(subst /,\\,$(TEMPLATE_RESULT_DIR))
 
 clean:
 	-del $(subst /,\\,$(OBJECT_DIR))\\*.o
+	-del $(subst /,\\,$(OBJECT_DIR))\\*.d
 
-tokenizer: prepareDirectories $(patsubst %,$(SRC_DIR)/%,$(OBJECTS)) $(patsubst %,$(TOKEN_DIR)/%,$(TOKEN_OBJECTS)) \
-		   $(patsubst %,$(EXPRESSION_DIR)/%,$(EXPRESSION_OBJECTS))
-	$(CXX) $(CFLAGS) $(patsubst %,$(OBJECT_DIR)/%,$(OBJECTS) $(TOKEN_OBJECTS) $(EXPRESSION_OBJECTS)) \
-	$(LDFLAGS) -std=c++17 -o $(BUILD_DIR)/$@
-	./$(BUILD_DIR)/$@
+parser: $(EXECUTABLE_NAME)
+	./$(BUILD_DIR)/$(EXECUTABLE_NAME)
+
+info:
+	$(info $(OBJ_FILES))
+
+$(EXECUTABLE_NAME): $(OBJ_FILES)
+	$(CXX) $(CFLAGS) $(EXTRA_CFLAGS) $(OBJ_FILES) $(LDFLAGS) -o $(BUILD_DIR)/$(EXECUTABLE_NAME)
 
 NewToken%: h_data := $(file <$(subst /,\\,$(TEMPLATE_TOKEN_H_FILE)))
 NewToken%: cpp_data := $(file <$(subst /,\\,$(TEMPLATE_TOKEN_CPP_FILE)))
-NewToken%: prepareDirectories
+NewToken%: | $(TEMPLATE_RESULT_DIR)/
 	$(file >$(subst /,\\,$(TEMPLATE_RESULT_DIR)/$(subst NewToken,Token,$@).h),$(subst TEMPLATE,$(subst NewToken,,$@),$(h_data)))
 	$(file >$(subst /,\\,$(TEMPLATE_RESULT_DIR)/$(subst NewToken,Token,$@).cpp),$(subst TEMPLATE,$(subst NewToken,,$@),$(cpp_data)))
 
 NewExpression%: h_data := $(file <$(subst /,\\,$(TEMPLATE_EXPRESSION_H_FILE)))
-NewExpression%: prepareDirectories
+NewExpression%: | $(TEMPLATE_RESULT_DIR)/
 	$(file >$(subst /,\\,$(TEMPLATE_RESULT_DIR)/$(subst NewExpression,Expression,$@).h),$(subst TEMPLATE,$(subst NewExpression,,$@),$(h_data)))
 
-NewInstructionNormalYieldsValue%: h_data := $(file <$(subst /,\\,$(TEMPLATE_INSTRUCTION_NORMAL_YIELDS_VALUE_H_FILE)))
-NewInstructionNormalYieldsValue%: prepareDirectories
-	$(file >$(subst /,\\,$(TEMPLATE_RESULT_DIR)/$(subst NewInstructionNormalYieldsValue,Instruction,$@).h),$(subst TEMPLATE,$(subst NewInstructionNormalYieldsValue,,$@),$(h_data)))
+NewLLVMIRInstructionNonTerminatorYieldsValue%: h_data := $(file <$(subst /,\\,$(TEMPLATE_LLVMIR_INSTRUCTION_NORMAL_YIELDS_VALUE_H_FILE)))
+NewLLVMIRInstructionNonTerminatorYieldsValue%: | $(TEMPLATE_RESULT_DIR)/
+	$(file >$(subst /,\\,$(TEMPLATE_RESULT_DIR)/$(subst NewLLVMIRInstructionNonTerminatorYieldsValue,Instruction,$@).h),$(subst TEMPLATE,$(subst NewLLVMIRInstructionNonTerminatorYieldsValue,,$@),$(h_data)))
 
-NewInstructionNormalYieldsVoid%: h_data := $(file <$(subst /,\\,$(TEMPLATE_INSTRUCTION_NORMAL_YIELDS_VOID_H_FILE)))
-NewInstructionNormalYieldsVoid%: prepareDirectories
-	$(file >$(subst /,\\,$(TEMPLATE_RESULT_DIR)/$(subst NewInstructionNormalYieldsVoid,Instruction,$@).h),$(subst TEMPLATE,$(subst NewInstructionNormalYieldsVoid,,$@),$(h_data)))
+NewLLVMIRInstructionNonTerminatorYieldsVoid%: h_data := $(file <$(subst /,\\,$(TEMPLATE_LLVMIR_INSTRUCTION_NORMAL_YIELDS_VOID_H_FILE)))
+NewLLVMIRInstructionNonTerminatorYieldsVoid%: | $(TEMPLATE_RESULT_DIR)/
+	$(file >$(subst /,\\,$(TEMPLATE_RESULT_DIR)/$(subst NewLLVMIRInstructionNonTerminatorYieldsVoid,Instruction,$@).h),$(subst TEMPLATE,$(subst NewLLVMIRInstructionNonTerminatorYieldsVoid,,$@),$(h_data)))
 
-NewInstructionTerminatorYieldsVoid%: h_data := $(file <$(subst /,\\,$(TEMPLATE_INSTRUCTION_TERMINATOR_YIELDS_VOID_H_FILE)))
-NewInstructionTerminatorYieldsVoid%: prepareDirectories
-	$(file >$(subst /,\\,$(TEMPLATE_RESULT_DIR)/$(subst NewInstructionTerminatorYieldsVoid,Instruction,$@).h),$(subst TEMPLATE,$(subst NewInstructionTerminatorYieldsVoid,,$@),$(h_data)))
+NewLLVMIRInstructionTerminatorYieldsVoid%: h_data := $(file <$(subst /,\\,$(TEMPLATE_LLVMIR_INSTRUCTION_TERMINATOR_YIELDS_VOID_H_FILE)))
+NewLLVMIRInstructionTerminatorYieldsVoid%: | $(TEMPLATE_RESULT_DIR)/
+	$(file >$(subst /,\\,$(TEMPLATE_RESULT_DIR)/$(subst NewLLVMIRInstructionTerminatorYieldsVoid,Instruction,$@).h),$(subst TEMPLATE,$(subst NewLLVMIRInstructionTerminatorYieldsVoid,,$@),$(h_data)))
 
 NewHeader%: h_data := $(file <$(subst /,\\,$(TEMPLATE_GENERIC_H_FILE)))
-NewHeader%: prepareDirectories
+NewHeader%: | $(TEMPLATE_RESULT_DIR)/
 	$(file >$(subst /,\\,$(TEMPLATE_RESULT_DIR)/$(subst NewHeader,,$@).h),$(subst TEMPLATE,$(subst NewHeader,,$@),$(h_data)))
 
 %.ll : %.cpp ; $(CXX) $(CFLAGS) -c $< -o $(TEST_DIR)/$(subst .cpp,.ll,$(<F)) -S -emit-llvm
 
 prepareTests: $(patsubst %,$(TEST_DIR)/%,$(TEST_LL_FILES))
 
-.cpp.o:
-	$(CXX) $(CFLAGS) -c $< -std=c++17 -o $(OBJECT_DIR)/$(subst .cpp,.o,$(<F))
+$(OBJECT_DIR)/%.o: %.cpp | $(@D)/
+	$(CXX) -MMD -MP -I. $(EXTRA_CFLAGS) $(CFLAGS) $(LDFLAGS) -c $< -o $@
+
+%/:
+	$(info $@)
+	mkdir $(subst /,\\,$@)
+
+testing: $(OBJECT_DIR)/Tokens/HelperFunctionsTokens.o
+	$(info Testing)
+	$(info $(DEP_FILES))
+	$(info $(DIRS))
+
+.PHONY: testing
+
+-include $(DEP_FILES)

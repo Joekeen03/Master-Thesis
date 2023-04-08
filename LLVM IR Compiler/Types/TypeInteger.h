@@ -8,6 +8,7 @@ namespace Types {
         public:
             const int bits;
             TypeInteger(int bitsArg) : bits(bitsArg) {}
+            virtual int getSizeBits() const override { return bits; }
     };
 }
 

@@ -11,8 +11,6 @@ namespace Instructions {
         public:
             virtual std::string getName() const { return "Base Instruction"; }
     };
-    
-    using InstructionParseResult = Lib::ResultPointer<Instruction>;
 }
 
 #endif // LLVM_IR_COMPILER_INSTRUCTION_H

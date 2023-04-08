@@ -10,14 +10,14 @@ namespace Tokens {
     class TokenTEMPLATE : public Token {
         public:
             explicit TokenTEMPLATE(int srcPosArg) : Token(srcPosArg) {}
-            std::string getName() const {return "TokenTEMPLATE"; }
+            std::string getName() const override {return "TokenTEMPLATE"; }
             // Maybe store the token's minimum/maximum lengths, as well as the valid starting character(s)?
             //  To perhaps optimize how the tokenizer iterates through them.
     };
 
     class TokenTEMPLATEConstructor : public TokenConstructor { // TODO: Should this be a singleton?
         public:
-            TokenizeResult tokenize(BasicArray::BasicCharArray* fileData, int startPos);
+            TokenizeResult tokenize(BasicArray::BasicCharArray* fileData, int startPos) override;
     };
 }
 
