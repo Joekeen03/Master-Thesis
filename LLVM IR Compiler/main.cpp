@@ -6,6 +6,7 @@
 #include "Parser.h"
 #include "EnumRegistry.h"
 #include "Expressions/ExpressionFile.h"
+#include "CodeGenerator.h"
 
 int main(int argv, char* argc[]) {
     Tokenizer::Tokenizer tokenizer;
@@ -21,6 +22,8 @@ int main(int argv, char* argc[]) {
         std::cout << std::boolalpha << "Success: " << parseResult2.success << '\n'
                   << std::resetiosflags(std::ios_base::boolalpha);
         std::shared_ptr<const Expressions::ExpressionFile> fileExpression = parser.parse();
+        auto codeGen = CodeGen::CodeGenerator(fileExpression);
+        auto generatedCode = codeGen.generateCode();
     } catch (const Tokenizer::TokenizationException& e) {
         std::cout << "Tokenization Exception:\n" << e.what() << '\n';
     } catch (const Parser::ParsingException& e) {

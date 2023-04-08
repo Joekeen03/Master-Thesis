@@ -1,6 +1,8 @@
 SRC_DIR = .
 TOKEN_DIR = $(SRC_DIR)/Tokens
 EXPRESSION_DIR = $(SRC_DIR)/ParseExpressions
+CODEGEN_DIR = $(SRC_DIR)/CodeGen
+SNES_INSTRUCTIONS_DIR = $(CODEGEN_DIR)/SNESInstructions
 
 BUILD_DIR = build
 OBJECT_DIR = $(BUILD_DIR)/objects
@@ -12,7 +14,7 @@ TEST_DIR = $(SRC_DIR)/Test
 EXTRA_CFLAGS = -std=c++17 
 EXECUTABLE_NAME = main
 
-DIRS = $(SRC_DIR) $(TOKEN_DIR) $(EXPRESSION_DIR)
+DIRS = $(SRC_DIR) $(TOKEN_DIR) $(EXPRESSION_DIR) $(CODEGEN_DIR) $(SNES_INSTRUCTION_OBJECTS)
 SRC_FILES = $(foreach dir,$(DIRS),$(wildcard $(dir)/*.cpp))
 OBJ_FILES = $(SRC_FILES:$(SRC_DIR)%.cpp=$(OBJECT_DIR)%.o)
 DEP_FILES = $(OBJ_FILES:.o=.d)
@@ -25,13 +27,14 @@ TEMPLATE_EXPRESSION_H_FILE := $(TEMPLATE_DIR)/ExpressionTEMPLATE.h
 TEMPLATE_LLVMIR_INSTRUCTION_NORMAL_YIELDS_VALUE_H_FILE := $(TEMPLATE_DIR)/InstructionNonTerminatorYieldsValueTEMPLATE.h
 TEMPLATE_LLVMIR_INSTRUCTION_NORMAL_YIELDS_VOID_H_FILE := $(TEMPLATE_DIR)/InstructionNonTerminatorYieldsVoidTEMPLATE.h
 TEMPLATE_LLVMIR_INSTRUCTION_TERMINATOR_YIELDS_VOID_H_FILE := $(TEMPLATE_DIR)/InstructionTerminatorYieldsVoidTEMPLATE.h
+TEMPLATE_SNES_INSTRUCTION_H_FILE := $(TEMPLATE_DIR)/SNESInstructionTEMPLATE.h
 TEMPLATE_GENERIC_H_FILE := $(TEMPLATE_DIR)/HeaderTEMPLATE.h
 
 clean:
 	-del $(subst /,\\,$(OBJECT_DIR))\\*.o
 	-del $(subst /,\\,$(OBJECT_DIR))\\*.d
 
-parser: $(EXECUTABLE_NAME)
+compiler: $(EXECUTABLE_NAME)
 	./$(BUILD_DIR)/$(EXECUTABLE_NAME)
 
 info:
@@ -61,6 +64,10 @@ NewLLVMIRInstructionNonTerminatorYieldsVoid%: | $(TEMPLATE_RESULT_DIR)/
 NewLLVMIRInstructionTerminatorYieldsVoid%: h_data := $(file <$(subst /,\\,$(TEMPLATE_LLVMIR_INSTRUCTION_TERMINATOR_YIELDS_VOID_H_FILE)))
 NewLLVMIRInstructionTerminatorYieldsVoid%: | $(TEMPLATE_RESULT_DIR)/
 	$(file >$(subst /,\\,$(TEMPLATE_RESULT_DIR)/$(subst NewLLVMIRInstructionTerminatorYieldsVoid,Instruction,$@).h),$(subst TEMPLATE,$(subst NewLLVMIRInstructionTerminatorYieldsVoid,,$@),$(h_data)))
+
+NewSNESInstruction%: h_data := $(file <$(subst /,\\,$(TEMPLATE_SNES_INSTRUCTION_H_FILE)))
+NewSNESInstruction%: | $(TEMPLATE_RESULT_DIR)/
+	$(file >$(subst /,\\,$(TEMPLATE_RESULT_DIR)/$(subst NewSNESInstruction,SNESInstruction,$@).h),$(subst TEMPLATE,$(subst NewSNESInstruction,,$@),$(h_data)))
 
 NewHeader%: h_data := $(file <$(subst /,\\,$(TEMPLATE_GENERIC_H_FILE)))
 NewHeader%: | $(TEMPLATE_RESULT_DIR)/
