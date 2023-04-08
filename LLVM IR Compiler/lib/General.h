@@ -1,3 +1,6 @@
+#ifndef LLVM_IR_COMPILER_General_H
+#define LLVM_IR_COMPILER_General_H
+
 #include <memory>
 
 namespace Lib {
@@ -18,4 +21,15 @@ namespace Lib {
     //  pointer == nullptr), dynamic_cast returns nullptr, and this returns false.
     template<typename T, typename Y>
     inline bool isDerivedType(std::shared_ptr<Y> ptr) { return dynamic_cast<const T*>(ptr.get())!=nullptr; }
+
+    // Wrapper for std::isBaseOf, for cases where you don't have access to 'val's type (or at least, I can't figure out
+    //  how to get its type). For instance, when defining lambdas for use in std::visit, such as [](auto&& arg)...; I don't
+    //  know how to find out arg's type, though the compiler clearly has to know it. Or if there might be a different way
+    //  to write the lambda such that the type of arg is available.
+    template <typename Base, typename Other>
+    constexpr bool isBaseOf(Other val) {
+        return std::is_base_of<Base, Other>();
+    }
 }
+
+#endif // LLVM_IR_COMPILER_General_H
