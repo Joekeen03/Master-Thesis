@@ -10,6 +10,7 @@ OBJECT_DIR = $(BUILD_DIR)/objects
 TEMPLATE_DIR = $(SRC_DIR)/Templates
 TEMPLATE_RESULT_DIR = $(SRC_DIR)/TemplateResult
 TEST_DIR = $(SRC_DIR)/Test
+TEST_OUTPUT_DIR = $(SRC_DIR)/TestOutput
 
 EXTRA_CFLAGS = -std=c++17 
 EXECUTABLE_NAME = main
@@ -19,7 +20,8 @@ SRC_FILES = $(foreach dir,$(DIRS),$(wildcard $(dir)/*.cpp))
 OBJ_FILES = $(SRC_FILES:$(SRC_DIR)%.cpp=$(OBJECT_DIR)%.o)
 DEP_FILES = $(OBJ_FILES:.o=.d)
 
-TEST_LL_FILES = mainOnly.ll
+TEST_CPP_FILES = $(wildcard $(TEST_DIR)/*.cpp)
+TEST_LL_FILES = $(TEST_CPP_FILES:%.cpp=%.ll)
 
 TEMPLATE_TOKEN_H_FILE := $(TEMPLATE_DIR)/TokenTEMPLATE.h
 TEMPLATE_TOKEN_CPP_FILE := $(TEMPLATE_DIR)/TokenTEMPLATE.cpp
@@ -35,7 +37,7 @@ clean:
 	-del $(subst /,\\,$(OBJECT_DIR))\\*.d
 
 compiler: $(EXECUTABLE_NAME)
-	./$(BUILD_DIR)/$(EXECUTABLE_NAME)
+	./$(BUILD_DIR)/$(EXECUTABLE_NAME) -ll Test/simpleAddition.ll -asm TestOutput/simpleAddition.asm
 
 info:
 	$(info $(OBJ_FILES))
@@ -75,7 +77,9 @@ NewHeader%: | $(TEMPLATE_RESULT_DIR)/
 
 %.ll : %.cpp ; $(CXX) $(CFLAGS) -c $< -o $(TEST_DIR)/$(subst .cpp,.ll,$(<F)) -S -emit-llvm
 
-prepareTests: $(patsubst %,$(TEST_DIR)/%,$(TEST_LL_FILES))
+$(TEST_OUTPUT_DIR)/%.asm : $(TEST_OUTPUT_DIR)/%.smc ; $(TEST_OUTPUT_DIR)/wla.bat %
+
+prepareTests: $(TEST_LL_FILES)
 
 $(OBJECT_DIR)/%.o: %.cpp | $(@D)/
 	$(CXX) -MMD -MP -I. $(EXTRA_CFLAGS) $(CFLAGS) $(LDFLAGS) -c $< -o $@
@@ -88,6 +92,8 @@ testing: $(OBJECT_DIR)/Tokens/HelperFunctionsTokens.o
 	$(info Testing)
 	$(info $(DEP_FILES))
 	$(info $(DIRS))
+	$(info $(TEST_CPP_FILES))
+	$(info $(TEST_LL_FILES))
 
 .PHONY: testing
 

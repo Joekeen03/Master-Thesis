@@ -8,10 +8,12 @@ namespace SNESAssembly {
     // Example: SNESAssemblyLabel("Vegetable") -> 'Vegetable:'
     class SNESAssemblyLabel {
         public:
-            const std::string label;
-            SNESAssemblyLabel(std::string labelArg) : label(labelArg) {}
-            inline std::string getStringRepresentation() const { return label+":"; }
+            const std::string rawLabel;
+            SNESAssemblyLabel(std::string rawLabelArg) : rawLabel(rawLabelArg) {}
+            inline std::string getStringRepresentation() const { return convertToLabelString(rawLabel); }
+            static inline std::string convertToLabelString(std::string rawLabel) { return rawLabel+":"; }
     };
+    // FIXME Fix the name of this class.
 }
 
 #endif // LLVM_IR_COMPILER_SNESAssemblyLabel_H

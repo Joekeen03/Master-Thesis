@@ -49,7 +49,6 @@ namespace CodeGen { // FIXME use a more appropriate namespace?
             static std::shared_ptr<LocalsMap> createLocalsMap(std::string functionName, LocalsTypeListConstPtr paramLocals,
                                                                 LocalsTypeListConstPtr instructionLocals,
                                                                 std::shared_ptr<const Types::Type> returnType);
-
     };
 }
 

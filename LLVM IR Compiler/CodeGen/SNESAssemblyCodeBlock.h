@@ -9,24 +9,23 @@
 #include "SNESAssemblySegment.h"
 #include "SNESAssemblyLineComment.h"
 #include "SNESAssemblyLineLabel.h"
+#include "NameMangling.h"
 
 namespace SNESAssembly {
     using segmentVectorPtr = std::shared_ptr<const std::vector<const std::shared_ptr<const SNESAssemblySegment>>>;
     class SNESAssemblyCodeBlock {
         public:
             const std::optional<SNESAssemblyLineComment> comment;
-            const std::optional<SNESAssemblyLineLabel> label;
+            const std::optional<CodeGen::MangledCodeBlockLabel> label;
             const segmentVectorPtr instructions;
             // FIXME Are these constructors clear and unambiguous? I believe it can also take strings or the corresponding
             //  label/comment objects as arguments, given the converison constructors in the LineLabel/LineComment objects
 
-            SNESAssemblyCodeBlock(SNESAssemblyLineLabel labelArg, segmentVectorPtr instructionsArg)
+            SNESAssemblyCodeBlock(CodeGen::MangledCodeBlockLabel labelArg, segmentVectorPtr instructionsArg)
                                     : label(labelArg), instructions(instructionsArg) {}
-            SNESAssemblyCodeBlock(std::string labelArg, segmentVectorPtr instructionsArg)
-                                    : label(labelArg), instructions(instructionsArg) {}
-            SNESAssemblyCodeBlock(SNESAssemblyLineLabel labelArg, SNESAssemblyLineComment commentArg, segmentVectorPtr instructionsArg)
+            SNESAssemblyCodeBlock(CodeGen::MangledCodeBlockLabel labelArg, SNESAssemblyLineComment commentArg, segmentVectorPtr instructionsArg)
                                     : comment(commentArg), label(labelArg), instructions(instructionsArg) {}
-            std::shared_ptr<const std::vector<const std::string>> getASMLines(std::string functionName) const;
+            std::shared_ptr<const std::vector<const std::string>> getASMLines() const;
     };
 }
 

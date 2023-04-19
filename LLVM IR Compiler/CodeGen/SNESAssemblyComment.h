@@ -11,7 +11,8 @@ namespace SNESAssembly {
             const std::string comment;
             SNESAssemblyComment() {}
             SNESAssemblyComment(std::string commentArg) : comment(commentArg) {}
-            inline std::string getStringRepresentation() const { return "; "+comment; }
+            inline std::string getStringRepresentation() const { return convertToCommentString(comment); }
+            static inline std::string convertToCommentString(std::string rawComment) { return "; "+rawComment;}
     };
 }
 

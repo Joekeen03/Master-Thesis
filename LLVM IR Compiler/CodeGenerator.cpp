@@ -1,11 +1,14 @@
 #include "CodeGenerator.h"
 
 #include "Lib/General.h"
+
 #include "CodeGen/SNESAssemblyModule.h"
 #include "CodeGen/SNESAssemblyFunction.h"
 #include "CodeGen/SNESAssemblyCodeBlock.h"
 #include "CodeGen/SNESAssemblyLineInstruction.h"
 #include "CodeGen/SNESAssemblySegmentInstructionChunk.h"
+#include "CodeGen/NameMangling.h"
+#include "CodeGen/FunctionInfo.h"
 
 #include "Expressions/Instructions/InstructionAlloca.h"
 #include "Expressions/Instructions/InstructionStore.h"
@@ -33,6 +36,8 @@
 #include "CodeGen/SNESInstructions/SNESInstructionExchangeCarryWithEmulation.h"
 #include "CodeGen/SNESInstructions/SNESInstructionChangeProcessorStatus.h"
 #include "CodeGen/SNESInstructions/SNESInstructionReturn.h"
+#include "CodeGen/SNESInstructions/SNESInstructionJump.h"
+#include "CodeGen/SNESInstructions/SNESInstructionJumpToSubroutine.h"
 
 namespace CodeGen {
     const std::string MAIN = "main";
@@ -42,14 +47,14 @@ namespace CodeGen {
     
     template <>
     std::shared_ptr<SNESAssembly::SNESAssemblySegmentInstructionChunk> CodeGenerator::convertNonTerminatorInstruction (
-        std::monostate nonInstruction, std::shared_ptr<LocalsMap> localsMap
+        std::monostate nonInstruction, std::shared_ptr<const DefinedFunctionInfo> definedFunctionInfo
     ) {
         throw std::runtime_error("CodeGenerator::convertNonTerminator received a monostate instance.");
     }
 
     template <>
     std::shared_ptr<SNESAssembly::SNESAssemblySegmentInstructionChunk> CodeGenerator::convertNonTerminatorInstruction (
-        Instructions::InstructionAlloca instruction, std::shared_ptr<LocalsMap> localsMap
+        Instructions::InstructionAlloca instruction, std::shared_ptr<const DefinedFunctionInfo> definedFunctionInfo
     ) {
         
         auto SNESInstructions = std::vector<const std::shared_ptr<const SNESAssembly::SNESInstruction>>();
@@ -62,7 +67,7 @@ namespace CodeGen {
         //  pointer has been updated (space on the stack has actually been allocated), but given our programs are single-
         //  threaded, and just how the SNES works, I think it's acceptable to not do so here, especially since it would take
         //  extra instructions to juggle around the allocated object's pointer.
-        auto stackOffset = localsMap->getLocalEntry(instruction.assignee).second;
+        auto stackOffset = definedFunctionInfo->localsMap->getLocalEntry(instruction.assignee).second;
         SNESInstructions.push_back(std::make_shared<const SNESAssembly::SNESInstructionStoreAccumulatorToMemory<AddressingModes::StackRelative>>(stackOffset));
 
         SNESInstructions.push_back(std::make_shared<const SNESAssembly::SNESInstructionClearCarryFlag>());
@@ -90,7 +95,7 @@ namespace CodeGen {
 
     template <>
     std::shared_ptr<SNESAssembly::SNESAssemblySegmentInstructionChunk> CodeGenerator::convertNonTerminatorInstruction (
-        Instructions::InstructionStore instruction, std::shared_ptr<LocalsMap> localsMap
+        Instructions::InstructionStore instruction, std::shared_ptr<const DefinedFunctionInfo> definedFunctionInfo
     ) {
         
         auto SNESInstructions = std::vector<const std::shared_ptr<const SNESAssembly::SNESInstruction>>();
@@ -102,8 +107,8 @@ namespace CodeGen {
         //          via the accumulator (LDA & STA)
         //      Otherwise, copy it directly from the source location to the target location via a block move
 
-        std::visit([instruction, localsMap, &SNESInstructions](auto&& operand) {
-            auto destinationOffset = localsMap->getLocalEntry(instruction.pointerOperand).second;
+        std::visit([instruction, definedFunctionInfo, &SNESInstructions](auto&& operand) {
+            auto destinationOffset = definedFunctionInfo->localsMap->getLocalEntry(instruction.pointerOperand).second;
             auto bytesToTransfer = instruction.valueType->getSizeBytesCeil();
             if constexpr (std::is_base_of_v<Expressions::ExpressionLiteral, std::remove_reference_t<decltype(operand)>>) { // Value is a literal
                 Expressions::ExpressionLiteralInteger literalInteger = operand;
@@ -153,7 +158,7 @@ namespace CodeGen {
                 }
                 
             } else { // operand is an identifier.
-                auto sourceOffset = localsMap->getLocalEntry(operand).second;
+                auto sourceOffset = definedFunctionInfo->localsMap->getLocalEntry(operand).second;
                 if (bytesToTransfer > 8) { // Transfer via move block instructions
                     
                     // Load address of source value into X register:
@@ -227,20 +232,20 @@ namespace CodeGen {
 
     template <>
     std::shared_ptr<SNESAssembly::SNESAssemblySegmentInstructionChunk> CodeGenerator::convertTerminatorInstruction (
-        std::monostate nonInstruction, std::shared_ptr<LocalsMap> localsMap
+        std::monostate nonInstruction, std::shared_ptr<const DefinedFunctionInfo> definedFunctionInfo
     ) {
         throw std::runtime_error("CodeGenerator::convertTerminatorInstruction received a monostate instance.");
     }
 
     template <>
     std::shared_ptr<SNESAssembly::SNESAssemblySegmentInstructionChunk> CodeGenerator::convertTerminatorInstruction (
-        Instructions::InstructionRetValue instruction, std::shared_ptr<LocalsMap> localsMap
+        Instructions::InstructionRetValue instruction, std::shared_ptr<const DefinedFunctionInfo> definedFunctionInfo
     ) {
         
         auto SNESInstructions = std::vector<const std::shared_ptr<const SNESAssembly::SNESInstruction>>();
-        std::visit([instruction, localsMap, &SNESInstructions](auto&& operand){
+        std::visit([instruction, definedFunctionInfo, &SNESInstructions](auto&& operand){
             // Similar to the operand visitor lambda in convertNonTerminatorInstruction<InstructionStore>(...)
-            auto destinationOffset = localsMap->returnEntry.second;
+            auto destinationOffset = definedFunctionInfo->localsMap->returnEntry.second;
             auto bytesToTransfer = instruction.returnType->getSizeBytesCeil();
             if constexpr (std::is_base_of_v<Expressions::ExpressionLiteral, std::remove_reference_t<decltype(operand)>>) {
                 int literal = operand.literal;
@@ -262,7 +267,7 @@ namespace CodeGen {
                     SNESInstructions.push_back(std::make_shared<SNESAssembly::SNESInstructionResetProcessorStatusBits>(0x20));
                 }
             } else {
-                auto sourceOffset = localsMap->getLocalEntry(operand).second;
+                auto sourceOffset = definedFunctionInfo->localsMap->getLocalEntry(operand).second;
                 // FIXME see if I can merge parts of this with the duplicates in
                 //  convertNonTerminatorInstruction<InstructionStore>(...)
                 if (bytesToTransfer > 8) { // FIXME Magic number, should be moved to a constant
@@ -312,6 +317,7 @@ namespace CodeGen {
                 }
             }
         }, *((instruction.returnOperand)->operand));
+        SNESInstructions.push_back(std::make_shared<SNESAssembly::SNESInstructionJumpAbsolute>(mangleCleanupCodeBlockLabel(definedFunctionInfo)));
         // FIXME Add a jump to the cleanup label
         // int x = "fixme";
         
@@ -327,10 +333,15 @@ namespace CodeGen {
         auto generatedCode = std::make_shared<std::vector<std::string>>();
         auto functionDefinitions = this->moduleFile->functionDefinitions;
         // Compute locals/return value/parameter sizes and locations (store size/location in object)
-        auto localsMaps = std::make_shared<std::map<std::string, std::shared_ptr<LocalsMap>>>();
+        auto definedFunctionInfoMap = std::make_shared<std::map<std::string, std::shared_ptr<const DefinedFunctionInfo>>>();
+        std::optional<std::shared_ptr<const FunctionInfo>> mainFunctionInfo;
         for (auto &&functionDefinition : *(functionDefinitions)) {
             auto localsMap = computeVariableLocations(functionDefinition);
-            localsMaps->insert_or_assign(localsMap->functionName, localsMap);
+            auto functionInfo = std::make_shared<const DefinedFunctionInfo>(functionDefinition->name, localsMap);
+            definedFunctionInfoMap->insert_or_assign(localsMap->functionName, functionInfo);
+            if (functionInfo->functionName == MAIN) {
+                mainFunctionInfo = std::optional<std::shared_ptr<const FunctionInfo>>(functionInfo);
+            }
         }
 
         // TODO: Generate SNES 65c816 instructions.
@@ -338,7 +349,7 @@ namespace CodeGen {
         // TODO separate vector for special functions, like interrupt handlers & main.
         for (auto &&functionDefinition : *(functionDefinitions)) {
             auto functionName = functionDefinition->name;
-            auto localsMap = localsMaps->at(functionName);
+            auto definedFunctionInfo = definedFunctionInfoMap->at(functionName);
             auto codeBlocks = std::make_shared<std::vector<const std::shared_ptr<const SNESAssembly::SNESAssemblyCodeBlock>>>();
             
             // Generate setup instructions
@@ -359,19 +370,19 @@ namespace CodeGen {
                 
                 // FIXME function block should prepend its name to all code block labels w/in it automatically. Or something.
                 //  Also, it should do likewise for any intra-function jumps to other code blocks.
-                codeBlocks->push_back(std::make_shared<SNESAssembly::SNESAssemblyCodeBlock>(std::string("setup"), std::string("Preserve registers"), setupChunks));
+                codeBlocks->push_back(std::make_shared<SNESAssembly::SNESAssemblyCodeBlock>(mangleSetupCodeBlockLabel(definedFunctionInfo), std::string("Preserve registers"), setupChunks));
             }
 
             // TODO: Convert LLVM IR instructions to SNES 65c816 instructions
             for (auto &&codeBlock : *(functionDefinition->codeBlocks)) {
                 auto segments = std::make_shared<std::vector<const std::shared_ptr<const SNESAssembly::SNESAssemblySegment>>>();
                 for (auto &&instruction : *(codeBlock->instructions)) {
-                    auto instructionChunk = std::visit([this, localsMap](auto&& arg){return convertNonTerminatorInstruction(arg, localsMap);}, *instruction);
+                    auto instructionChunk = std::visit([this, definedFunctionInfo](auto&& arg){return convertNonTerminatorInstruction(arg, definedFunctionInfo);}, *instruction);
                     segments->push_back(instructionChunk);
                 }
-                auto instructionChunk = std::visit([this, localsMap](auto&& arg){return convertTerminatorInstruction(arg, localsMap);}, *(codeBlock->terminator));
+                auto instructionChunk = std::visit([this, definedFunctionInfo](auto&& arg){return convertTerminatorInstruction(arg, definedFunctionInfo);}, *(codeBlock->terminator));
                 segments->push_back(instructionChunk);
-                codeBlocks->push_back(std::make_shared<SNESAssembly::SNESAssemblyCodeBlock>(codeBlock->label, segments));
+                codeBlocks->push_back(std::make_shared<SNESAssembly::SNESAssemblyCodeBlock>(mangleCodeBlockLabel(definedFunctionInfo, codeBlock), segments));
             }
             
             {
@@ -394,15 +405,16 @@ namespace CodeGen {
                 auto cleanupChunks = std::make_shared<std::vector<const std::shared_ptr<const SNESAssembly::SNESAssemblySegment>>>();
                 cleanupChunks->push_back(std::make_shared<SNESAssembly::SNESAssemblySegmentInstructionChunk>(cleanupLines));
                 
-                codeBlocks->push_back(std::make_shared<SNESAssembly::SNESAssemblyCodeBlock>(std::string("cleanup"), std::string("Restore registers"), cleanupChunks));
+                codeBlocks->push_back(std::make_shared<SNESAssembly::SNESAssemblyCodeBlock>(mangleCleanupCodeBlockLabel(definedFunctionInfo), std::string("Restore registers"), cleanupChunks));
                 // FIXME missing JSR instruction. Also, might eventually need to determine if a subroutine will be called across
                 //  banks (JSL), or only w/in its own bank (JSR).
             }
-            auto function = std::make_shared<SNESAssembly::SNESAssemblyFunction>(functionDefinition->name, codeBlocks);
+            auto function = std::make_shared<SNESAssembly::SNESAssemblyFunction>(mangleFunctionLabel(definedFunctionInfo), codeBlocks);
             generatedNormalFunctions->push_back(function);
         }
+        // int x = "";
         auto generatedFunctions = std::make_shared<std::vector<const std::shared_ptr<const SNESAssembly::SNESAssemblyFunction>>>(*generatedNormalFunctions);
-        auto module = SNESAssembly::SNESAssemblyModule(generatedFunctions, true);
+        auto module = mainFunctionInfo ? SNESAssembly::SNESAssemblyModule(generatedFunctions, mangleFunctionLabel(mainFunctionInfo.value())) : SNESAssembly::SNESAssemblyModule(generatedFunctions);
             
         std::cout << "Generated code:\n";
         auto lines = module.getASMLines();

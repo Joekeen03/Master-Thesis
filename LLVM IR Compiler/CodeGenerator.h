@@ -4,13 +4,16 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <map>
 
 #include "Expressions/ExpressionFile.h"
 #include "Expressions/Instructions/Instruction.h"
-#include "CodeGen/SNESInstructions/SNESInstruction.h"
-#include "CodeGen/LocalsMap.h"
-#include "CodeGen/SNESAssemblySegmentInstructionChunk.h"
 #include "Expressions/Instructions/AllInstructions.h"
+
+#include "CodeGen/LocalsMap.h"
+#include "CodeGen/FunctionInfo.h"
+#include "CodeGen/SNESInstructions/SNESInstruction.h"
+#include "CodeGen/SNESAssemblySegmentInstructionChunk.h"
 
 namespace CodeGen {
     class CodeGenerator {
@@ -23,13 +26,13 @@ namespace CodeGen {
             // Uses a very simple memory model for the SNES 65c816 instructions, with the return value, parameters, and every
             //  LLVM IR local on the stack.
             template <typename T>
-            std::shared_ptr<SNESAssembly::SNESAssemblySegmentInstructionChunk> convertNonTerminatorInstruction(T instruction, std::shared_ptr<LocalsMap> localsMap);
+            std::shared_ptr<SNESAssembly::SNESAssemblySegmentInstructionChunk> convertNonTerminatorInstruction(T instruction, std::shared_ptr<const DefinedFunctionInfo> definedFunctionInfo);
 
             // Generates the SNES 65c816 instructions corresponding to the terminator LLVM IR instruction.
             // Uses a very simple memory model for the SNES 65c816 instructions, with the return value, parameters, and every
             //  LLVM IR local on the stack.
             template <typename T>
-            std::shared_ptr<SNESAssembly::SNESAssemblySegmentInstructionChunk> convertTerminatorInstruction(T instruction, std::shared_ptr<LocalsMap> localsMap);
+            std::shared_ptr<SNESAssembly::SNESAssemblySegmentInstructionChunk> convertTerminatorInstruction(T instruction, std::shared_ptr<const DefinedFunctionInfo> definedFunctionInfo);
         public:
             CodeGenerator(std::shared_ptr<const Expressions::ExpressionFile> moduleFileArg) : moduleFile(moduleFileArg) {}
             std::shared_ptr<const std::vector<const std::string>> generateCode();

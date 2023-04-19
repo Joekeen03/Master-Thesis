@@ -24,7 +24,7 @@ namespace SNESAssembly {
             SNESAssemblyLineInstruction(std::shared_ptr<const SNESInstruction> instructionArg) : instruction(instructionArg) {}
             SNESAssemblyLineInstruction(std::shared_ptr<const SNESInstruction> instructionArg, SNESAssemblyComment commentArg) : instruction(instructionArg), comment(commentArg) {}
             SNESAssemblyLineInstruction(std::shared_ptr<const SNESInstruction> instructionArg, std::string rawComment) : instruction(instructionArg), comment(SNESAssemblyComment(rawComment)) {}
-            virtual std::string getStringRepresentation() const {
+            virtual std::string getStringRepresentation() const override {
                 auto line = instruction->getStringRepresentation();
                 if (comment) {
                     line += " "+comment->getStringRepresentation();
