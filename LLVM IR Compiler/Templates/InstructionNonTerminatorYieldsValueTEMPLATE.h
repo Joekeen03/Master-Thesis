@@ -10,7 +10,7 @@ namespace Instructions {
         public:
             InstructionTEMPLATE(std::shared_ptr<const Expressions::ExpressionLocalIdentifier> assigneeArg) : InstructionNonTerminatorYieldsValue(assigneeArg) {}
             std::string getName() const override { return "InstructionTEMPLATE"; }
-            virtual std::shared_ptr<Types::Type> getYieldedType() const override { throw std::runtime_error("InstructionTEMPLATE::getYieldedType was not\
+            virtual std::shared_ptr<const Types::Type> getYieldedType() const override { throw std::runtime_error("InstructionTEMPLATE::getYieldedType was not\
                                                                                      implemented.");}
     };
 }

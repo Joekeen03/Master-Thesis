@@ -18,7 +18,7 @@ namespace Instructions {
                                   : inalloca(inallocaArg), allocationType(allocationTypeArg), alignment(alignmentArg),
                                     InstructionNonTerminatorYieldsValue(assigneeArg) {}
             std::string getName() const { return "InstructionAlloca"; }
-            virtual std::shared_ptr<Types::Type> getYieldedType() const {
+            virtual std::shared_ptr<const Types::Type> getYieldedType() const override {
                 // TODO needs to be tweaked if I support the optional address space parameter.
                 return std::make_shared<Types::TypePointer>(Types::LayoutAddressSpace::alloca);
             }

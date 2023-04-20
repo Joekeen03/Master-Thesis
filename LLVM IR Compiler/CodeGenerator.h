@@ -33,6 +33,7 @@ namespace CodeGen {
             //  LLVM IR local on the stack.
             template <typename T>
             std::shared_ptr<SNESAssembly::SNESAssemblySegmentInstructionChunk> convertTerminatorInstruction(T instruction, std::shared_ptr<const DefinedFunctionInfo> definedFunctionInfo);
+
         public:
             CodeGenerator(std::shared_ptr<const Expressions::ExpressionFile> moduleFileArg) : moduleFile(moduleFileArg) {}
             std::shared_ptr<const std::vector<const std::string>> generateCode();

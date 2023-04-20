@@ -32,12 +32,14 @@ TEMPLATE_LLVMIR_INSTRUCTION_TERMINATOR_YIELDS_VOID_H_FILE := $(TEMPLATE_DIR)/Ins
 TEMPLATE_SNES_INSTRUCTION_H_FILE := $(TEMPLATE_DIR)/SNESInstructionTEMPLATE.h
 TEMPLATE_GENERIC_H_FILE := $(TEMPLATE_DIR)/HeaderTEMPLATE.h
 
+CURR_TEST_FILE = simpleAddition
+
 clean:
 	-del $(subst /,\\,$(OBJECT_DIR))\\*.o
 	-del $(subst /,\\,$(OBJECT_DIR))\\*.d
 
 compiler: $(EXECUTABLE_NAME)
-	./$(BUILD_DIR)/$(EXECUTABLE_NAME) -ll Test/simpleAddition.ll -asm TestOutput/simpleAddition.asm
+	./$(BUILD_DIR)/$(EXECUTABLE_NAME) -ll Test/$(CURR_TEST_FILE).ll -asm TestOutput/$(CURR_TEST_FILE).asm
 
 info:
 	$(info $(OBJ_FILES))

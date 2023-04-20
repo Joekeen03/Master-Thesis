@@ -9,6 +9,7 @@
 #include "CodeGen/SNESAssemblySegmentInstructionChunk.h"
 #include "CodeGen/NameMangling.h"
 #include "CodeGen/FunctionInfo.h"
+#include "CodeGen/ProcessorFlags.h"
 
 #include "Expressions/Instructions/InstructionAlloca.h"
 #include "Expressions/Instructions/InstructionStore.h"
@@ -38,6 +39,50 @@
 #include "CodeGen/SNESInstructions/SNESInstructionReturn.h"
 #include "CodeGen/SNESInstructions/SNESInstructionJump.h"
 #include "CodeGen/SNESInstructions/SNESInstructionJumpToSubroutine.h"
+
+namespace {
+    void generateCopyIntegerToLocalInstructions(std::vector<const std::shared_ptr<const SNESAssembly::SNESInstruction>> &destinationVector,
+                                                const int literal, const int destinationLocalOffset, const int bytesToTransfer) {
+        unsigned int bytesTransferred = 0;
+        for (; bytesTransferred < (bytesToTransfer-1); bytesTransferred+=2) {
+            int nextBytes = (literal>>(bytesTransferred*8))&0xFFFF;
+            destinationVector.push_back(std::make_shared<const SNESAssembly::SNESInstructionLoadAccumulatorFromMemory<AddressingModes::Immediate>>(nextBytes));
+            destinationVector.push_back(std::make_shared<const SNESAssembly::SNESInstructionStoreAccumulatorToMemory<AddressingModes::StackRelative>>(destinationLocalOffset+bytesTransferred));
+        }
+        if (bytesToTransfer%1) {
+            // Switch to 8-bit accumulator
+            destinationVector.push_back(std::make_shared<SNESAssembly::SNESInstructionSetProcessorStatusBits>(CodeGen::accumulatorModeFlag));
+
+            // Transfer 1 byte.
+            int nextByte = (literal>>(bytesTransferred*8))&0xFF;
+            destinationVector.push_back(std::make_shared<const SNESAssembly::SNESInstructionLoadAccumulatorFromMemory<AddressingModes::Immediate>>(nextByte));
+            destinationVector.push_back(std::make_shared<const SNESAssembly::SNESInstructionStoreAccumulatorToMemory<AddressingModes::StackRelative>>(destinationLocalOffset+bytesTransferred));
+
+            // Switch to 16-bit accumulator
+            destinationVector.push_back(std::make_shared<SNESAssembly::SNESInstructionResetProcessorStatusBits>(CodeGen::accumulatorModeFlag));
+        }
+    }
+
+    void generateAddIntegertoLocalInstructions(std::vector<const std::shared_ptr<const SNESAssembly::SNESInstruction>> &destinationVector,
+                                                const int literal, const int sourceLocalOffset, const int destinationLocalOffset, const int bytesToTransfer) {
+        unsigned int bytesTransferred = 0;
+        destinationVector.push_back(std::make_shared<const SNESAssembly::SNESInstructionClearCarryFlag>());
+        for (; bytesTransferred < (bytesToTransfer-1); bytesTransferred++) {
+            int nextImmediateBytes = (literal>>(bytesTransferred*8))&0xFFFF;
+            destinationVector.push_back(std::make_shared<SNESAssembly::SNESInstructionLoadAccumulatorFromMemory<AddressingModes::StackRelative>>(sourceLocalOffset+bytesTransferred));
+            destinationVector.push_back(std::make_shared<SNESAssembly::SNESInstructionAddWithCarry<AddressingModes::Immediate>>(nextImmediateBytes));
+            destinationVector.push_back(std::make_shared<SNESAssembly::SNESInstructionStoreAccumulatorToMemory<AddressingModes::StackRelative>>(destinationLocalOffset+bytesTransferred));
+        }
+        if (bytesTransferred%1) {
+            int nextImmediateByte = (literal>>(bytesTransferred*8))&0xFFFF;
+            destinationVector.push_back(std::make_shared<SNESAssembly::SNESInstructionSetProcessorStatusBits>(CodeGen::accumulatorModeFlag));
+            destinationVector.push_back(std::make_shared<SNESAssembly::SNESInstructionLoadAccumulatorFromMemory<AddressingModes::StackRelative>>(sourceLocalOffset+bytesTransferred));
+            destinationVector.push_back(std::make_shared<SNESAssembly::SNESInstructionAddWithCarry<AddressingModes::Immediate>>(nextImmediateByte));
+            destinationVector.push_back(std::make_shared<SNESAssembly::SNESInstructionStoreAccumulatorToMemory<AddressingModes::StackRelative>>(destinationLocalOffset+bytesTransferred));
+            destinationVector.push_back(std::make_shared<SNESAssembly::SNESInstructionResetProcessorStatusBits>(CodeGen::accumulatorModeFlag));
+        }
+    }
+}
 
 namespace CodeGen {
     const std::string MAIN = "main";
@@ -146,7 +191,7 @@ namespace CodeGen {
                     //  automatically generates the appropriate mode-switching instructions?
 
                     // Switch to 8-bit accumulator
-                    SNESInstructions.push_back(std::make_shared<SNESAssembly::SNESInstructionSetProcessorStatusBits>(0x20));
+                    SNESInstructions.push_back(std::make_shared<SNESAssembly::SNESInstructionSetProcessorStatusBits>(CodeGen::accumulatorModeFlag));
 
                     // Transfer 1 byte.
                     unsigned int immediateByte = (val >> (8*(bytesToTransfer-1))) & 0xFF;
@@ -154,7 +199,7 @@ namespace CodeGen {
                     SNESInstructions.push_back(std::make_shared<const SNESAssembly::SNESInstructionStoreAccumulatorToMemory<AddressingModes::StackRelativeIndirectIndexed>>(destinationOffset));
 
                     // Switch to 16-bit accumulator
-                    SNESInstructions.push_back(std::make_shared<SNESAssembly::SNESInstructionResetProcessorStatusBits>(0x20));
+                    SNESInstructions.push_back(std::make_shared<SNESAssembly::SNESInstructionResetProcessorStatusBits>(CodeGen::accumulatorModeFlag));
                 }
                 
             } else { // operand is an identifier.
@@ -207,14 +252,14 @@ namespace CodeGen {
                     //  in 16-bit mode) all loads/stores transfer 16 bits.
                     if (bytesToTransfer%1) {
                         // Switch to 8-bit accumulator
-                        SNESInstructions.push_back(std::make_shared<SNESAssembly::SNESInstructionSetProcessorStatusBits>(0x20));
+                        SNESInstructions.push_back(std::make_shared<SNESAssembly::SNESInstructionSetProcessorStatusBits>(CodeGen::accumulatorModeFlag));
 
                         // Transfer 1 byte.
                         SNESInstructions.push_back(std::make_shared<const SNESAssembly::SNESInstructionLoadAccumulatorFromMemory<AddressingModes::StackRelative>>(sourceOffset));
                         SNESInstructions.push_back(std::make_shared<const SNESAssembly::SNESInstructionStoreAccumulatorToMemory<AddressingModes::StackRelativeIndirectIndexed>>(destinationOffset));
 
                         // Switch to 16-bit accumulator
-                        SNESInstructions.push_back(std::make_shared<SNESAssembly::SNESInstructionResetProcessorStatusBits>(0x20));
+                        SNESInstructions.push_back(std::make_shared<SNESAssembly::SNESInstructionResetProcessorStatusBits>(CodeGen::accumulatorModeFlag));
                     }
                 }
             }
@@ -227,6 +272,172 @@ namespace CodeGen {
 
         return std::make_shared<SNESAssembly::SNESAssemblySegmentInstructionChunk>("Store instruction", instructionLines);
     }
+
+    template <>
+    std::shared_ptr<SNESAssembly::SNESAssemblySegmentInstructionChunk> CodeGenerator::convertNonTerminatorInstruction (
+        Instructions::InstructionLoad instruction, std::shared_ptr<const DefinedFunctionInfo> definedFunctionInfo
+    ) {
+        
+        auto SNESInstructions = std::vector<const std::shared_ptr<const SNESAssembly::SNESInstruction>>();
+
+        auto destinationOffset = definedFunctionInfo->localsMap->getLocalEntry(instruction.assignee).second;
+        auto bytesToTransfer = instruction.yieldedType->getSizeBytesCeil();
+        
+        auto sourceOffset = definedFunctionInfo->localsMap->getLocalEntry(instruction.pointerOperand).second;
+        if (bytesToTransfer > 8) { // Transfer via move block instructions
+            
+            // Load address of source value into X register:
+            //  Load source variable into accumulator
+            SNESInstructions.push_back(std::make_shared<const SNESAssembly::SNESInstructionLoadAccumulatorFromMemory<AddressingModes::StackRelative>>(sourceOffset));
+            //  Transfer accumulator into Y register
+            SNESInstructions.push_back(std::make_shared<const SNESAssembly::SNESInstructionTransferAccumulatorToY>());
+
+            // Load destination address into Y register:
+            //  Transfer stack pointer to accumulator
+            SNESInstructions.push_back(std::make_shared<const SNESAssembly::SNESInstructionTransferStackToAccumulator>());
+            //  Reset carry bit
+            SNESInstructions.push_back(std::make_shared<const SNESAssembly::SNESInstructionClearCarryFlag>());
+            //  Add source address stack offset (stack grows downwards, so top of stack is at lowest address)
+            SNESInstructions.push_back(std::make_shared<const SNESAssembly::SNESInstructionAddWithCarry<AddressingModes::Immediate>>(destinationOffset));
+            //  Transfer accumulator to X register
+            SNESInstructions.push_back(std::make_shared<const SNESAssembly::SNESInstructionTransferAccumulatorToX>());
+
+            // Load # bytes to transfer into accumulator
+            SNESInstructions.push_back(std::make_shared<const SNESAssembly::SNESInstructionLoadAccumulatorFromMemory<AddressingModes::Immediate>>(bytesToTransfer-1));
+
+            // Block move instruction
+            unsigned char sourceBank = 0x7E;
+            unsigned char destinationBank = 0x7E;
+            SNESInstructions.push_back(std::make_shared<const SNESAssembly::SNESInstructionBlockMoveNegative>(sourceBank, destinationBank));
+        } else { // Transfer via LDA & STA
+            // Initialize index register to zero
+            SNESInstructions.push_back(std::make_shared<const SNESAssembly::SNESInstructionLoadYRegisterFromMemory<AddressingModes::Immediate>>(0));
+
+            // Transfer all bytes like so, except for the last one if the # of bytes is odd.
+            for (int bytesTransferred = 0; bytesTransferred < (bytesToTransfer-1); bytesTransferred+=2) {
+                // Load first two bytes of value to store (stack relative, as the stack holds the source memory).
+                SNESInstructions.push_back(std::make_shared<const SNESAssembly::SNESInstructionLoadAccumulatorFromMemory<AddressingModes::StackRelativeIndirectIndexed>>(sourceOffset+bytesTransferred));
+
+                // Store first two bytes of value to store (stack relative indirect indexed, X, as the stack holds a
+                //  pointer to the destination memory)
+                SNESInstructions.push_back(std::make_shared<const SNESAssembly::SNESInstructionStoreAccumulatorToMemory<AddressingModes::StackRelative>>(destinationOffset));
+                
+                // Increment index register twice, if we're moving more data (even if it's just one byte).
+                if ((bytesTransferred+2) < (bytesToTransfer)) {
+                    SNESInstructions.push_back(std::make_shared<const SNESAssembly::SNESInstructionIncrementIndexRegisterY>());
+                    SNESInstructions.push_back(std::make_shared<const SNESAssembly::SNESInstructionIncrementIndexRegisterY>());
+                }
+            } // Repeat
+            // If we have an odd number of bytes to transfer, we have to do the last one separately, as (assuming we're
+            //  in 16-bit mode) all loads/stores transfer 16 bits.
+            if (bytesToTransfer%1) {
+                // Switch to 8-bit accumulator
+                SNESInstructions.push_back(std::make_shared<SNESAssembly::SNESInstructionSetProcessorStatusBits>(CodeGen::accumulatorModeFlag));
+
+                // Transfer 1 byte.
+                SNESInstructions.push_back(std::make_shared<const SNESAssembly::SNESInstructionLoadAccumulatorFromMemory<AddressingModes::StackRelativeIndirectIndexed>>(sourceOffset));
+                SNESInstructions.push_back(std::make_shared<const SNESAssembly::SNESInstructionStoreAccumulatorToMemory<AddressingModes::StackRelative>>(destinationOffset));
+
+                // Switch to 16-bit accumulator
+                SNESInstructions.push_back(std::make_shared<SNESAssembly::SNESInstructionResetProcessorStatusBits>(CodeGen::accumulatorModeFlag));
+            }
+        }
+
+        auto instructionLines = std::make_shared<std::vector<const std::shared_ptr<const SNESAssembly::SNESAssemblyLineInstruction>>>();
+        for (auto &&instruction : SNESInstructions) {
+            instructionLines->push_back(std::make_shared<SNESAssembly::SNESAssemblyLineInstruction>(instruction));
+        }
+
+        return std::make_shared<SNESAssembly::SNESAssemblySegmentInstructionChunk>("Load instruction", instructionLines);
+    };
+
+    template <>
+    std::shared_ptr<SNESAssembly::SNESAssemblySegmentInstructionChunk> CodeGenerator::convertNonTerminatorInstruction (
+        Instructions::InstructionAdd instruction, std::shared_ptr<const DefinedFunctionInfo> definedFunctionInfo
+    ) {
+
+        auto SNESInstructions = std::vector<const std::shared_ptr<const SNESAssembly::SNESInstruction>>();
+
+        /**
+         * Ignoring vectors for now.
+         * Case 1: both operands are literals
+         *  -Add operands in code generator, then generate instructions to computed value into destination
+         * Case 2: one operand is a literal, one is an identifier
+         *  -Reset carry bit
+         *  -For every 2 bytes in operand type
+         *      -Load identifier operand into accumulator
+         *      -Add literal operand
+         *      -Move accumulator to destination
+         *  -If there is one byte left over
+         *      -Load identifier byte into accumulator
+         *      -Add literal operand byte
+         *      -Move accumulator to destination
+         * Case 3: both operands are identifiers
+        */
+        
+
+        std::visit([definedFunctionInfo, &SNESInstructions, instruction](auto&& leftOperand){
+            auto bytesToTransfer = instruction.getYieldedType()->getSizeBytesCeil();
+            auto assigneeOffset = definedFunctionInfo->localsMap->getLocalEntry(instruction.assignee).second;
+            if constexpr (std::is_base_of_v<Expressions::ExpressionLiteral, std::remove_reference_t<decltype(leftOperand)>>) {
+                std::visit([definedFunctionInfo, &SNESInstructions, leftOperand, bytesToTransfer, assigneeOffset](auto&& rightOperand){
+                    if constexpr (std::is_base_of_v<Expressions::ExpressionLiteral, std::remove_reference_t<decltype(rightOperand)>>) {
+                        int sum = leftOperand.literal+rightOperand.literal;
+                        generateCopyIntegerToLocalInstructions(SNESInstructions, sum, assigneeOffset, bytesToTransfer);
+                    } else if constexpr (std::is_base_of_v<Expressions::ExpressionLocalIdentifier, std::remove_reference_t<decltype(rightOperand)>>) {
+                        const int literal = leftOperand.literal;
+                        const int rightOperandOffset = definedFunctionInfo->localsMap->getLocalEntry(rightOperand).second;
+                        generateAddIntegertoLocalInstructions(SNESInstructions, literal, rightOperandOffset, assigneeOffset, bytesToTransfer);
+                    } else {
+                        throw std::runtime_error("Unhandled operand variant.");
+                    }
+                }, *(instruction.leftOperand->operand));
+            } else if constexpr (std::is_base_of_v<Expressions::ExpressionLocalIdentifier, std::remove_reference_t<decltype(leftOperand)>>) {
+                std::visit([definedFunctionInfo, &SNESInstructions, leftOperand, bytesToTransfer, assigneeOffset](auto&& rightOperand){
+                    const int leftOperandOffset = definedFunctionInfo->localsMap->getLocalEntry(leftOperand).second;
+                    if constexpr (std::is_base_of_v<Expressions::ExpressionLiteral, std::remove_reference_t<decltype(rightOperand)>>) {
+                        const int literal = rightOperand.literal;
+                        generateAddIntegertoLocalInstructions(SNESInstructions, literal, leftOperandOffset, assigneeOffset, bytesToTransfer);
+                    } else if constexpr (std::is_base_of_v<Expressions::ExpressionLocalIdentifier, std::remove_reference_t<decltype(rightOperand)>>) {
+                        const int rightOperandOffset = definedFunctionInfo->localsMap->getLocalEntry(rightOperand).second;
+                        unsigned int bytesTransferred = 0;
+                        SNESInstructions.push_back(std::make_shared<const SNESAssembly::SNESInstructionClearCarryFlag>());
+                        // Stack grows downwards, so bigger offsets refer to higher addresses
+                        // I believe that in 16-bit register loads/stores, the high byte is the upper address (effective address
+                        //  plus one); i.e. high byte of a 16-bit integer is at the upper address.
+                        // Going to treat larger integers as also working this way - the more significant the byte, the
+                        //  higher the address it's stored at.
+                        // So, bascially work through the integer in two-byte chunks, with the carry being kept between chunks.
+                        for (; bytesTransferred < (bytesToTransfer-1); bytesTransferred++) {
+                            SNESInstructions.push_back(std::make_shared<SNESAssembly::SNESInstructionLoadAccumulatorFromMemory<AddressingModes::StackRelative>>(leftOperandOffset+bytesTransferred));
+                            SNESInstructions.push_back(std::make_shared<SNESAssembly::SNESInstructionAddWithCarry<AddressingModes::StackRelative>>(rightOperandOffset+bytesTransferred));
+                            SNESInstructions.push_back(std::make_shared<SNESAssembly::SNESInstructionStoreAccumulatorToMemory<AddressingModes::StackRelative>>(assigneeOffset+bytesTransferred));
+                        }
+                        if (bytesTransferred%1) {
+                            SNESInstructions.push_back(std::make_shared<SNESAssembly::SNESInstructionSetProcessorStatusBits>(CodeGen::accumulatorModeFlag));
+                            SNESInstructions.push_back(std::make_shared<SNESAssembly::SNESInstructionLoadAccumulatorFromMemory<AddressingModes::StackRelative>>(leftOperandOffset+bytesTransferred));
+                            SNESInstructions.push_back(std::make_shared<SNESAssembly::SNESInstructionAddWithCarry<AddressingModes::StackRelative>>(rightOperandOffset+bytesTransferred));
+                            SNESInstructions.push_back(std::make_shared<SNESAssembly::SNESInstructionStoreAccumulatorToMemory<AddressingModes::StackRelative>>(assigneeOffset+bytesTransferred));
+                            SNESInstructions.push_back(std::make_shared<SNESAssembly::SNESInstructionResetProcessorStatusBits>(CodeGen::accumulatorModeFlag));
+                        }
+                    } else {
+                        throw std::runtime_error("Unhandled operand variant.");
+                    }
+                }, *(instruction.leftOperand->operand));
+            } else {
+                throw std::runtime_error("Unhandled operand variant.");
+            }
+        }, *(instruction.leftOperand->operand));
+
+        // FIXME handle poison values, such as from nsw flag
+
+        auto instructionLines = std::make_shared<std::vector<const std::shared_ptr<const SNESAssembly::SNESAssemblyLineInstruction>>>();
+        for (auto &&instruction : SNESInstructions) {
+            instructionLines->push_back(std::make_shared<SNESAssembly::SNESAssemblyLineInstruction>(instruction));
+        }
+
+        return std::make_shared<SNESAssembly::SNESAssemblySegmentInstructionChunk>("Load instruction", instructionLines);
+    };
 
     // CodeGenerator::convertTerminatorInstruction specializations
 
@@ -249,23 +460,24 @@ namespace CodeGen {
             auto bytesToTransfer = instruction.returnType->getSizeBytesCeil();
             if constexpr (std::is_base_of_v<Expressions::ExpressionLiteral, std::remove_reference_t<decltype(operand)>>) {
                 int literal = operand.literal;
-                for (int bytesTransferred = 0; bytesTransferred < (bytesToTransfer-1); bytesTransferred+=2) {
-                    auto immediateBytes = (literal >> (8*bytesTransferred)) & 0xFFFF; // Next two bytes to store. Should this be unsigned?
-                    SNESInstructions.push_back(std::make_shared<const SNESAssembly::SNESInstructionLoadAccumulatorFromMemory<AddressingModes::Immediate>>(immediateBytes));
-                    SNESInstructions.push_back(std::make_shared<const SNESAssembly::SNESInstructionStoreAccumulatorToMemory<AddressingModes::StackRelative>>(destinationOffset+bytesTransferred));
-                }
-                if (bytesToTransfer%1) {
-                    // Switch to 8-bit accumulator
-                    // FIXME magic number should be a defined constant. Maybe a constant that holds the REP/SEP instructions
-                    //  to change accumulator modes?
-                    SNESInstructions.push_back(std::make_shared<SNESAssembly::SNESInstructionSetProcessorStatusBits>(0x20));
-                    unsigned int immediateByte = (literal >> (8*(bytesToTransfer-1))) & 0xFF;
-                    SNESInstructions.push_back(std::make_shared<const SNESAssembly::SNESInstructionLoadAccumulatorFromMemory<AddressingModes::Immediate>>(immediateByte));
-                    SNESInstructions.push_back(std::make_shared<const SNESAssembly::SNESInstructionStoreAccumulatorToMemory<AddressingModes::StackRelative>>(destinationOffset+bytesToTransfer-1));
+                generateCopyIntegerToLocalInstructions(SNESInstructions, literal, destinationOffset, bytesToTransfer);
+                // for (int bytesTransferred = 0; bytesTransferred < (bytesToTransfer-1); bytesTransferred+=2) {
+                //     auto immediateBytes = (literal >> (8*bytesTransferred)) & 0xFFFF; // Next two bytes to store. Should this be unsigned?
+                //     SNESInstructions.push_back(std::make_shared<const SNESAssembly::SNESInstructionLoadAccumulatorFromMemory<AddressingModes::Immediate>>(immediateBytes));
+                //     SNESInstructions.push_back(std::make_shared<const SNESAssembly::SNESInstructionStoreAccumulatorToMemory<AddressingModes::StackRelative>>(destinationOffset+bytesTransferred));
+                // }
+                // if (bytesToTransfer%1) {
+                //     // Switch to 8-bit accumulator
+                //     // FIXME magic number should be a defined constant. Maybe a constant that holds the REP/SEP instructions
+                //     //  to change accumulator modes?
+                //     SNESInstructions.push_back(std::make_shared<SNESAssembly::SNESInstructionSetProcessorStatusBits>(CodeGen::accumulatorModeFlag));
+                //     unsigned int immediateByte = (literal >> (8*(bytesToTransfer-1))) & 0xFF;
+                //     SNESInstructions.push_back(std::make_shared<const SNESAssembly::SNESInstructionLoadAccumulatorFromMemory<AddressingModes::Immediate>>(immediateByte));
+                //     SNESInstructions.push_back(std::make_shared<const SNESAssembly::SNESInstructionStoreAccumulatorToMemory<AddressingModes::StackRelative>>(destinationOffset+bytesToTransfer-1));
 
-                    // Switch to 16-bit accumulator
-                    SNESInstructions.push_back(std::make_shared<SNESAssembly::SNESInstructionResetProcessorStatusBits>(0x20));
-                }
+                //     // Switch to 16-bit accumulator
+                //     SNESInstructions.push_back(std::make_shared<SNESAssembly::SNESInstructionResetProcessorStatusBits>(CodeGen::accumulatorModeFlag));
+                // }
             } else {
                 auto sourceOffset = definedFunctionInfo->localsMap->getLocalEntry(operand).second;
                 // FIXME see if I can merge parts of this with the duplicates in
@@ -307,12 +519,12 @@ namespace CodeGen {
                         // Switch to 8-bit accumulator
                         // FIXME magic number should be a defined constant. Maybe a constant that holds the REP/SEP instructions
                         //  to change accumulator modes?
-                        SNESInstructions.push_back(std::make_shared<SNESAssembly::SNESInstructionSetProcessorStatusBits>(0x20));
+                        SNESInstructions.push_back(std::make_shared<SNESAssembly::SNESInstructionSetProcessorStatusBits>(CodeGen::accumulatorModeFlag));
                         SNESInstructions.push_back(std::make_shared<const SNESAssembly::SNESInstructionLoadAccumulatorFromMemory<AddressingModes::StackRelative>>(sourceOffset+bytesToTransfer-1));
                         SNESInstructions.push_back(std::make_shared<const SNESAssembly::SNESInstructionStoreAccumulatorToMemory<AddressingModes::StackRelative>>(destinationOffset+bytesToTransfer-1));
 
                         // Switch to 16-bit accumulator
-                        SNESInstructions.push_back(std::make_shared<SNESAssembly::SNESInstructionResetProcessorStatusBits>(0x20));
+                        SNESInstructions.push_back(std::make_shared<SNESAssembly::SNESInstructionResetProcessorStatusBits>(CodeGen::accumulatorModeFlag));
                     }
                 }
             }
@@ -412,10 +624,9 @@ namespace CodeGen {
             auto function = std::make_shared<SNESAssembly::SNESAssemblyFunction>(mangleFunctionLabel(definedFunctionInfo), codeBlocks);
             generatedNormalFunctions->push_back(function);
         }
-        // int x = "";
         auto generatedFunctions = std::make_shared<std::vector<const std::shared_ptr<const SNESAssembly::SNESAssemblyFunction>>>(*generatedNormalFunctions);
         auto module = mainFunctionInfo ? SNESAssembly::SNESAssemblyModule(generatedFunctions, mangleFunctionLabel(mainFunctionInfo.value())) : SNESAssembly::SNESAssemblyModule(generatedFunctions);
-            
+        
         std::cout << "Generated code:\n";
         auto lines = module.getASMLines();
         for (auto &&asmLine : *(lines)) {

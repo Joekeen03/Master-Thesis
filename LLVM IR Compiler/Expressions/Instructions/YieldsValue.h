@@ -13,7 +13,7 @@ namespace Instructions {
             // Assume you can only assign to a local variable.
             const std::shared_ptr<const Expressions::ExpressionLocalIdentifier> assignee;
             YieldsValue(std::shared_ptr<const Expressions::ExpressionLocalIdentifier> assigneeArg) : assignee(assigneeArg) {}
-            virtual std::shared_ptr<Types::Type> getYieldedType() const { throw std::runtime_error("YieldsValue::getYieldedType was not\
+            virtual std::shared_ptr<const Types::Type> getYieldedType() const { throw std::runtime_error("YieldsValue::getYieldedType was not\
                                                                                      overridden in a subclass");}
     };
 }

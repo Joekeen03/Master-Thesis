@@ -29,14 +29,25 @@
 #include "Expressions/Instructions/AllInstructions.h"
 
 #include "Types/TypeSized.h"
+#include "Types/TypeInteger.h"
 
 #include "Tokenizer.h"
 #include "AttributeIDProcessor.h"
 #include "EnumRegistry.h"
 #include "Types/Type.h"
 #include "Lib/Result.h"
+#include "Lib/General.h"
 
 #define DEFAULT_ALIGNMENT 1
+
+namespace {
+    struct ParseError {
+        const unsigned int tokenPosition;
+        const std::string message;
+        ParseError(unsigned int tokenPositionArg, std::string messageArg)
+                    : tokenPosition(tokenPositionArg), message(messageArg) {}
+    };
+}
 
 namespace Parser {
     struct CodeBlockParsingResult;
@@ -58,9 +69,20 @@ namespace Parser {
             const Tokenizer::tokensArrayPointer tokens;
             const std::shared_ptr<std::vector<int>> mappings;
             const std::shared_ptr<const std::vector<const Tokenizer::tokensArray>> attributeGroups;
+            std::shared_ptr<const ParseError> error;
+            bool startedParsing = false;
+            bool finishedParsing = false;
 
             inline tokenPointer getToken(int pos) const { return (*tokens)[pos]; }
             inline void outputToken(int pos) const { std::cout << getToken(pos)->getNameAndPos() << '\n'; }
+
+            template<typename T>
+            T updateError(int pos, std::string message);
+
+            template<typename T>
+            T inline updateErrorExpectedReceived(int pos, std::string structureBeingParsed, std::string expected) {
+                return updateError<T>(pos, expectedReceivedMessage(structureBeingParsed, expected, pos));
+            }
 
             // FIXME Should I make this description more generic - remove mentions of checking if 'token' is
             //      a <T> type token?
@@ -75,6 +97,10 @@ namespace Parser {
             //      So, objects of type T must have a RegistryItem registryItem member.
             template<typename T>
             bool checkReserved(int pos, EnumRegistry::RegistryItem reserved);
+
+            // Returns true if the token at 'pos' is of type T, false otherwise.
+            template<typename T>
+            bool isTokenOfType(int pos) { return Lib::isType<T>(getToken(pos)); }
 
             // Checks if the token at 'pos' is a <T> type identifier token.
             // throws a ParsingException if that token is not a <T> type token.
@@ -115,6 +141,10 @@ namespace Parser {
             // The specified type <T> must have a boolean 'left' member.
             template<typename T>
             bool isRightToken(int pos);
+
+            std::string inline expectedReceivedMessage(std::string structureBeingParsed, std::string expected, int pos) const {
+                return "Error parsing "+structureBeingParsed+": expected "+expected+" token, received "+getToken(pos)->getName()+".";
+            }
         public:
             // Parsing for instructions that yield void
 
@@ -123,6 +153,8 @@ namespace Parser {
             // Parsing for instructions that yield a value
 
             InstructionParseResult parseInstructionAlloca(int startPos, std::shared_ptr<const Expressions::ExpressionLocalIdentifier> assignee);
+            InstructionParseResult parseInstructionLoad(int startPos, std::shared_ptr<const Expressions::ExpressionLocalIdentifier> assignee);
+            InstructionParseResult parseInstructionAdd(int startPos, std::shared_ptr<const Expressions::ExpressionLocalIdentifier> assignee);
 
             // Parsing for terminator instructions
 
@@ -132,6 +164,7 @@ namespace Parser {
 
             ParsingResult<Expressions::ExpressionIdentifier> parseIdentifier(int startPos);
             ParsingResult<Expressions::ExpressionLocalIdentifier> parseLocalIdentifier(int startPos);
+            ParsingResult<Types::TypeInteger> parseIntegerType(int startPos);
             ParsingResult<Types::Type> parseType(int startPos);
             ParsingResult<Types::TypeSized> parseSizedType(int startPos);
             ParsingResult<Types::TypeSized> parseFirstClassKnownSizeType(int startPos);

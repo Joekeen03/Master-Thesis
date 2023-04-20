@@ -39,9 +39,15 @@
 #include "Expressions/Instructions/InstructionRetValue.h"
 #include "Expressions/Instructions/YieldsValue.h"
 
-#include "Lib/General.h"
-
 namespace Parser {
+    template <typename T>
+    T Parser::updateError(int newTokenPosition, std::string message) {
+        if (error == nullptr || newTokenPosition > error->tokenPosition) {
+            error = std::make_shared<ParseError>(newTokenPosition, message);
+        }
+        return T();
+    }
+
     template <typename T>
     bool Parser::checkReserved(int pos, EnumRegistry::RegistryItem reserved) {
         auto token = (*tokens)[pos];
@@ -200,6 +206,92 @@ namespace Parser {
                         : InstructionParseResult();
     }
 
+    InstructionParseResult Parser::parseInstructionLoad(int startPos, std::shared_ptr<const Expressions::ExpressionLocalIdentifier> assignee) {
+        int currPos = startPos;
+        if (!checkReserved<Tokens::TokenKeyword>(currPos, ReservedWords::load)) {
+            return InstructionParseResult();
+        }
+
+        // Is there some way to reduce how repetitive this is?
+        currPos++;
+        auto typeResult = parseSizedType(currPos);
+        if (!typeResult.success) {
+            return InstructionParseResult();
+        }
+
+        currPos = typeResult.newPos;
+        if (!Lib::isType<Tokens::TokenComma>(getToken(currPos))) {
+            return updateErrorExpectedReceived<InstructionParseResult>(currPos, "load instruction", "comma");
+        }
+
+        currPos++;
+        if (!checkReserved<Tokens::TokenTypeReservedWord>(currPos, TypeReservedWords::typePtr)) {
+            return updateErrorExpectedReceived<InstructionParseResult>(currPos, "load instruction", "ptr");
+        }
+
+        currPos++;
+        auto pointerIdentifierResult = parseIdentifier(currPos);
+        if (!pointerIdentifierResult.success) {
+            return InstructionParseResult();
+        }
+        
+        currPos = pointerIdentifierResult.newPos;
+        int alignment = -1;
+        if (Lib::isType<Tokens::TokenComma>(getToken(currPos)) && checkReserved<Tokens::TokenKeyword>(currPos+1, ReservedWords::align)) {
+            currPos += 2;
+            alignment = extractInteger(currPos);
+            currPos++;
+        }
+        
+        auto loadInstruction = Instructions::InstructionLoad(assignee, typeResult.result, pointerIdentifierResult.result, alignment);
+        return InstructionParseResult(std::make_shared<Instructions::InstructionVariant>(loadInstruction), currPos);
+    } // parseInstructionLoad
+
+    InstructionParseResult Parser::parseInstructionAdd(int startPos, std::shared_ptr<const Expressions::ExpressionLocalIdentifier> assignee) {
+        int currPos = startPos;
+        if (!checkReserved<Tokens::TokenKeyword>(currPos, ReservedWords::add)) {
+            return updateErrorExpectedReceived<InstructionParseResult>(currPos, "add instruction", "add");
+        }
+
+        currPos++;
+        bool nuw = false;
+        bool nsw = false;
+        if (checkReserved<Tokens::TokenKeyword>(currPos, ReservedWords::nsw)) {
+            nsw = true;
+            currPos++;
+        }
+
+        std::shared_ptr<const Types::TypeSized> yieldedType;
+        if (auto integerParseResult = parseIntegerType(currPos); integerParseResult.success) {
+            yieldedType = integerParseResult.result;
+            currPos = integerParseResult.newPos;
+        } else { // FIXME add integer vectors - maybe move this stuff out into a parseIntegerOrIntegerVector(...) method.
+            // Maybe should just be return InstructionParseResult();
+            return InstructionParseResult();
+        }
+
+        auto leftOperandResult = parseOperand(currPos);
+        if (!leftOperandResult.success) {
+            return InstructionParseResult();
+        }
+        currPos = leftOperandResult.newPos;
+        
+        if (!isTokenOfType<Tokens::TokenComma>(currPos)) {
+            return updateErrorExpectedReceived<InstructionParseResult>(currPos, "add instruction", "comma");
+        }
+        currPos++;
+
+        auto rightOperandResult = parseOperand(currPos);
+        if (!rightOperandResult.success) {
+            return InstructionParseResult();
+        }
+        currPos = rightOperandResult.newPos;
+        auto instructionAdd = Instructions::InstructionAdd(assignee, nsw, nuw, yieldedType,
+                                                            leftOperandResult.result, rightOperandResult.result);
+        return InstructionParseResult(std::make_shared<Instructions::InstructionVariant>(instructionAdd), currPos);
+    } // parseInstructionAdd
+
+
     // Terminator Instructions
 
     InstructionParseResult Parser::parseInstructinRetValue(int startPos) {
@@ -260,80 +352,71 @@ namespace Parser {
         return success ? Lib::ResultPointer<Expressions::ExpressionLocalIdentifier>(identifier, nextPos)
                         : Lib::ResultPointer<Expressions::ExpressionLocalIdentifier>();
     }
+    ParsingResult<Types::TypeInteger> Parser::parseIntegerType(int startPos) {
+        int currPos = startPos;
+        auto firstToken = getToken(startPos);
+        if (!Lib::isType<Tokens::TokenTypeInteger>(firstToken)) {
+            return updateErrorExpectedReceived<ParsingResult<Types::TypeInteger>>(startPos, "integer type", "integer type");
+        }
+        currPos++;
+        auto integerType = std::make_shared<const Types::TypeInteger>(std::dynamic_pointer_cast<const Tokens::TokenTypeInteger>(firstToken)->bitWidth);
+        return Lib::ResultPointer<Types::TypeInteger>(integerType, startPos+1);
+    }
 
     Lib::ResultPointer<Types::Type> Parser::parseType(int startPos) {
-        int nextPosition=-1;
-        std::shared_ptr<const Tokens::Token> firstToken = getToken(startPos);
-        std::shared_ptr<const Types::Type> determinedType;
-        bool success = false;
-        if (Lib::isType<Tokens::TokenTypeInteger>(firstToken)) {
-            determinedType = std::make_shared<const Types::TypeInteger>(std::dynamic_pointer_cast<const Tokens::TokenTypeInteger>(firstToken)->bitWidth);
-            success = true;
-            nextPosition = startPos+1;
+        if (auto integerTypeParseResult = parseIntegerType(startPos); integerTypeParseResult.success) {
+            return Lib::ResultPointer<Types::Type>(integerTypeParseResult.result, integerTypeParseResult.newPos);
         }
-        return success ? Lib::ResultPointer<Types::Type>(determinedType, nextPosition) : Lib::ResultPointer<Types::Type>();
+        return Lib::ResultPointer<Types::Type>();
     }
 
     Lib::ResultPointer<Types::TypeSized> Parser::parseSizedType(int startPos) {
-        int nextPosition=-1;
-        std::shared_ptr<const Tokens::Token> firstToken = getToken(startPos);
-        std::shared_ptr<const Types::TypeSized> determinedType;
-        bool success = false;
-        if (Lib::isType<Tokens::TokenTypeInteger>(firstToken)) {
-            determinedType = std::make_shared<const Types::TypeInteger>(std::dynamic_pointer_cast<const Tokens::TokenTypeInteger>(firstToken)->bitWidth);
-            success = true;
-            nextPosition = startPos+1;
+        if (auto integerTypeParseResult = parseIntegerType(startPos); integerTypeParseResult.success) {
+            return Lib::ResultPointer<Types::TypeSized>(integerTypeParseResult.result, integerTypeParseResult.newPos);
         }
-        return success ? Lib::ResultPointer<Types::TypeSized>(determinedType, nextPosition) : Lib::ResultPointer<Types::TypeSized>();
+        return Lib::ResultPointer<Types::TypeSized>();
     }
 
     Lib::ResultPointer<Types::TypeSized> Parser::parseFirstClassKnownSizeType(int startPos) {
-        int nextPosition=-1;
-        std::shared_ptr<const Tokens::Token> firstToken = getToken(startPos);
-        std::shared_ptr<const Types::TypeSized> determinedType;
-        bool success = false;
-        if (Lib::isType<Tokens::TokenTypeInteger>(firstToken)) {
-            determinedType = std::make_shared<const Types::TypeInteger>(std::dynamic_pointer_cast<const Tokens::TokenTypeInteger>(firstToken)->bitWidth);
-            success = true;
-            nextPosition = startPos+1;
+        if (auto integerTypeParseResult = parseIntegerType(startPos); integerTypeParseResult.success) {
+            return Lib::ResultPointer<Types::TypeSized>(integerTypeParseResult.result, integerTypeParseResult.newPos);
         }
-        return success ? Lib::ResultPointer<Types::TypeSized>(determinedType, nextPosition) : Lib::ResultPointer<Types::TypeSized>();
+        return Lib::ResultPointer<Types::TypeSized>();
     }
 
     Lib::ResultPointer<Expressions::ExpressionOperand> Parser::parseOperand(int startPos) {
         int currPos = startPos;
         int nextPos = -1;
-        bool success = false;
-        std::shared_ptr<const Expressions::ExpressionOperand> operandExpression;
+        // Attempt to parse a literal
         auto numberResult = attemptExtractInteger(currPos);
         if (numberResult.second) {
-            success = true;
             auto operandValue = std::make_shared<const Expressions::operandVariant>(Expressions::ExpressionLiteralInteger(numberResult.first));
             // auto x = Expressions::ExpressionOperand(operandValue);
-            operandExpression = std::make_shared<const Expressions::ExpressionOperand>(operandValue);
+            auto operandExpression = std::make_shared<const Expressions::ExpressionOperand>(operandValue);
             nextPos = currPos+1;
-        } else {
-            auto identifierResult = parseIdentifier(currPos);
-            if (identifierResult.success) {
-                success = true;
-                std::shared_ptr<const Expressions::operandVariant> operandValue;
-                // FIXME change parseIdentifier's result to contain a pointer to a variant of different identifiers, rather
-                //  than a pointer to a generic identifier.
-                if (Lib::isType<Expressions::ExpressionLocalNamedIdentifier>(identifierResult.result)) {
-                    auto castIdentifier = std::dynamic_pointer_cast<const Expressions::ExpressionLocalNamedIdentifier>(identifierResult.result);
-                    operandValue = std::make_shared<const Expressions::operandVariant>(*castIdentifier);
-                } else if (Lib::isType<Expressions::ExpressionLocalUnnamedIdentifier>(identifierResult.result)) {
-                    auto castIdentifier = std::dynamic_pointer_cast<const Expressions::ExpressionLocalUnnamedIdentifier>(identifierResult.result);
-                    operandValue = std::make_shared<const Expressions::operandVariant>(*castIdentifier);
-                } else {
-                    throw std::runtime_error("Unhandled identifier type in Parser::parseOperand.");
-                }
-                operandExpression = std::make_shared<const Expressions::ExpressionOperand>(operandValue);
-                nextPos = identifierResult.newPos;
-            }
+            return Lib::ResultPointer<Expressions::ExpressionOperand>(operandExpression, nextPos);
         }
-        return success ? Lib::ResultPointer<Expressions::ExpressionOperand>(operandExpression, nextPos)
-                        : Lib::ResultPointer<Expressions::ExpressionOperand>();
+        // Attempt to parse an identifier.
+        auto identifierResult = parseIdentifier(currPos);
+        if (identifierResult.success) {
+            std::shared_ptr<const Expressions::operandVariant> operandValue;
+            // FIXME change parseIdentifier's result to contain a pointer to a variant of different identifiers, rather
+            //  than a pointer to a generic identifier.
+            if (Lib::isType<Expressions::ExpressionLocalNamedIdentifier>(identifierResult.result)) {
+                auto castIdentifier = std::dynamic_pointer_cast<const Expressions::ExpressionLocalNamedIdentifier>(identifierResult.result);
+                operandValue = std::make_shared<const Expressions::operandVariant>(*castIdentifier);
+            } else if (Lib::isType<Expressions::ExpressionLocalUnnamedIdentifier>(identifierResult.result)) {
+                auto castIdentifier = std::dynamic_pointer_cast<const Expressions::ExpressionLocalUnnamedIdentifier>(identifierResult.result);
+                operandValue = std::make_shared<const Expressions::operandVariant>(*castIdentifier);
+            } else {
+                throw std::runtime_error("Unhandled identifier type in Parser::parseOperand.");
+            }
+            auto operandExpression = std::make_shared<const Expressions::ExpressionOperand>(operandValue);
+            nextPos = identifierResult.newPos;
+            return Lib::ResultPointer<Expressions::ExpressionOperand>(operandExpression, nextPos);
+        }
+        
+        return updateError<Lib::ResultPointer<Expressions::ExpressionOperand>>(currPos, "Error parsing operand: expected a literal or identifier, received a "+getToken(currPos)->getName());
     }
 
     ParsingResult<Expressions::ExpressionSourceFile> Parser::parseSourceFile(int startPos) {
@@ -517,18 +600,15 @@ namespace Parser {
         int currPos = startPos;
         if (localIdentifierResult.success) {
             currPos = localIdentifierResult.newPos;
-            if (checkReserved<Tokens::TokenOperator>(currPos, Operators::equals)) {
-                currPos++;
-                for (int i = 0; i < nInstructionsYieldValue; i++)
-                {
-                    auto valueInstructionParser = instructionsYieldValue[i];
-                    auto result = (this->*valueInstructionParser)(currPos, localIdentifierResult.result);
-                    if (result.success) return result;
-                }
-            } else {    
-                auto currToken = getToken(currPos);
-                throw ParsingException("Expected TokenOperator(equals) at source position "+std::to_string(currToken->srcPos)
-                                        +", received "+currToken->getNameAndPos()+".", currPos);
+            if (!checkReserved<Tokens::TokenOperator>(currPos, Operators::equals)) {
+                return updateError<InstructionParseResult>(currPos, expectedReceivedMessage("Yields-value instruction", "equals", currPos));
+            }
+            currPos++;
+            for (int i = 0; i < nInstructionsYieldValue; i++)
+            {
+                auto valueInstructionParser = instructionsYieldValue[i];
+                auto result = (this->*valueInstructionParser)(currPos, localIdentifierResult.result);
+                if (result.success) return result;
             }
         } else {
             for (int i = 0; i < nInstructionsYieldVoid; i++)
@@ -538,7 +618,7 @@ namespace Parser {
                 if (result.success) return result;
             }
         }
-        return InstructionParseResult();
+        return updateError<InstructionParseResult>(currPos, expectedReceivedMessage("instruction", "instruction keyword", currPos));
     }
 
     CodeBlockParsingResult Parser::parseFunctionCodeBlock(int startPos, int startUnnamedLocal, std::shared_ptr<std::set<std::string>> localNameSet) {
@@ -675,7 +755,7 @@ namespace Parser {
     }
 
     Lib::ResultPointer<Expressions::ExpressionFunctionDefinition> Parser::parseFunctionDefinition(int startPos) {
-        bool success = false;
+        using resultType = Lib::ResultPointer<Expressions::ExpressionFunctionDefinition>;
         int currPos = startPos;
         int nextPos = -1;
 
@@ -686,43 +766,52 @@ namespace Parser {
         std::shared_ptr<const Expressions::ExpressionFunctionHeaderPostName> headerPostName;
         std::shared_ptr<const std::vector<const std::shared_ptr<const Expressions::ExpressionFunctionCodeBlock>>> codeBlocks;
 
-        if (checkReserved<Tokens::TokenKeyword>(currPos, ReservedWords::define)) {
-            currPos++;
-            auto headerPreNameResult = parseFunctionHeaderPreName(currPos);
-            if (headerPreNameResult.success) {
-                headerPreName = headerPreNameResult.result;
-                currPos = headerPreNameResult.newPos;
-                auto returnTypeResult = parseFunctionReturnType(currPos);
-                if (returnTypeResult.success) {
-                    returnType = returnTypeResult.result;
-                    currPos = returnTypeResult.newPos;
-                    // Do functions have to use named identifiers for their name?
-                    functionName = extractNamedIdentifier<Tokens::TokenGlobalNamedIdentifier>(currPos);
-                    currPos++;
-                    auto parameterListResult = parseFunctionArgumentList(currPos);
-                    if (parameterListResult.success) {
-                        parameterList = parameterListResult.result;
-                        currPos = parameterListResult.newPos;
-                        auto headerPostNameResult = parseFunctionHeaderPostName(currPos);
-                        if (headerPostNameResult.success) {
-                            headerPostName = headerPostNameResult.result;
-                            currPos = headerPostNameResult.newPos;
-                            auto codeBlocksResult = parseFunctionCodeBlocks(currPos);
-                            if (codeBlocksResult.success) {
-                                codeBlocks = codeBlocksResult.result;
-                                nextPos = codeBlocksResult.newPos;
-                                success = true;
-                                
-                                std::cout << "Parsed function definition." << '\n';
-                            }
-                        }
-                    }
-                }
-            }
+        if (!checkReserved<Tokens::TokenKeyword>(currPos, ReservedWords::define)) {
+            return updateError<resultType>(currPos, expectedReceivedMessage("function definition", "define", currPos));
         }
+
+        currPos++;
+        auto headerPreNameResult = parseFunctionHeaderPreName(currPos);
+        if (!headerPreNameResult.success) {
+            return resultType();
+        }
+
+        headerPreName = headerPreNameResult.result;
+        currPos = headerPreNameResult.newPos;
+        auto returnTypeResult = parseFunctionReturnType(currPos);
+        if (!returnTypeResult.success) {
+            return resultType();
+        }
+
+        returnType = returnTypeResult.result;
+        currPos = returnTypeResult.newPos;
+        // Do functions have to use named identifiers for their name?
+        functionName = extractNamedIdentifier<Tokens::TokenGlobalNamedIdentifier>(currPos);
+        currPos++;
+        auto parameterListResult = parseFunctionArgumentList(currPos);
+        if (!parameterListResult.success) {
+            return resultType();
+        }
+        
+        parameterList = parameterListResult.result;
+        currPos = parameterListResult.newPos;
+        auto headerPostNameResult = parseFunctionHeaderPostName(currPos);
+        if (!headerPostNameResult.success) {
+            return resultType();
+        }
+        
+        headerPostName = headerPostNameResult.result;
+        currPos = headerPostNameResult.newPos;
+        auto codeBlocksResult = parseFunctionCodeBlocks(currPos);
+        if (!codeBlocksResult.success) {
+            return resultType();
+        }
+        codeBlocks = codeBlocksResult.result;
+        nextPos = codeBlocksResult.newPos;
+        
+        std::cout << "Parsed function definition." << '\n';
         auto functionDefinition = std::make_shared<Expressions::ExpressionFunctionDefinition>(headerPreName, returnType, functionName, parameterList, headerPostName, codeBlocks);
-        return success ? Lib::ResultPointer<Expressions::ExpressionFunctionDefinition>(functionDefinition, nextPos)
-                        : Lib::ResultPointer<Expressions::ExpressionFunctionDefinition>();
+        return Lib::ResultPointer<Expressions::ExpressionFunctionDefinition>(functionDefinition, nextPos);
     }
 
     // Metadata parsing methods
@@ -924,10 +1013,18 @@ namespace Parser {
                 pos = unnamedMetadataResult.newPos;
             } else {
                 auto token = getToken(pos);
+                updateError<ParsingResult<int>>(pos, "Unrecognized module-level structure start token: "+token->getNameAndPos()+".");
                 outputToken(pos);
                 outputToken(pos+1);
                 outputToken(pos+2);
-                throw ParsingException("Unrecognized module-level structure start token: "+token->getNameAndPos()+".", pos);
+                if (error != nullptr) {
+                    // FIXME make tokenizer hold source line & position w/in line, instead of/in addition to character position.
+                    throw ParsingException("Furthest token position reached: "+std::to_string(error->tokenPosition)
+                                            +" (source position: "+std::to_string(getToken(error->tokenPosition)->srcPos)+")"
+                                            +".\nError: "+error->message, error->tokenPosition);
+                } else {
+                    throw ParsingException("Unrecognized module-level structure start token: "+token->getNameAndPos()+".", pos);
+                }
             }
         }
         
@@ -950,6 +1047,8 @@ namespace Parser {
     const int nInstructionsYieldVoid = sizeof(instructionsYieldVoid)/sizeof(instructionYieldsVoidParser);
     const instructionYieldsValueParser instructionsYieldValue[] = {
         &Parser::parseInstructionAlloca,
+        &Parser::parseInstructionLoad,
+        &Parser::parseInstructionAdd,
     };
     const int nInstructionsYieldValue = sizeof(instructionsYieldValue)/sizeof(instructionYieldsValueParser);
 }

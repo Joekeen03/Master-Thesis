@@ -12,6 +12,9 @@ namespace ReservedWords {
     const EnumRegistry::RegistryItem alloca = keywordRegistry->registerItem("alloca");
     const EnumRegistry::RegistryItem align = keywordRegistry->registerItem("align");
     const EnumRegistry::RegistryItem store = keywordRegistry->registerItem("store");
+    const EnumRegistry::RegistryItem load = keywordRegistry->registerItem("load");
+    const EnumRegistry::RegistryItem add = keywordRegistry->registerItem("add");
+    const EnumRegistry::RegistryItem nsw = keywordRegistry->registerItem("nsw");
     const EnumRegistry::RegistryItem ret = keywordRegistry->registerItem("ret");
     const EnumRegistry::RegistryItem attributes = keywordRegistry->registerItem("attributes");
     const EnumRegistry::RegistryItem noinline = keywordRegistry->registerItem("noinline");
