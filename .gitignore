@@ -2,8 +2,10 @@
 *.llvm
 *.dat
 *.exe
+*.ll
+*.prj
+
 SNES Target/Test/Generate/*
 LLVM IR Compiler/build
 llvm-project/*
-*.ll
 LLVM IR Compiler/TestOutput
