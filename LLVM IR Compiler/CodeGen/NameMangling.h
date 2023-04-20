@@ -30,8 +30,12 @@ namespace CodeGen {
         return "cb_"+codeBlock->label;
     }
 
-    std::string inline mangleSpecialCodeBlockIdentifier(const std::string codeBlockIdentifier) {
-        return "cbs_"+codeBlockIdentifier;
+    std::string inline mangleRawFunctionIdentifier(const std::string functionIdentifier) {
+        return "rf_"+functionIdentifier;
+    }
+
+    std::string inline mangleRawCodeBlockIdentifier(const std::string codeBlockIdentifier) {
+        return "rcb_"+codeBlockIdentifier;
     }
     
     MangledFunctionLabel inline mangleFunctionLabel(const std::shared_ptr<const FunctionInfo> functionInfo) {
@@ -44,18 +48,18 @@ namespace CodeGen {
                                 +mangleCodeBlockIdentifier(codeBlock)};
     }
     
-    MangledCodeBlockLabel inline mangleSpecialCodeBlockLabel(const std::shared_ptr<const FunctionInfo> functionInfo,
-                                                const std::string specialCodeBlockName) {
+    MangledCodeBlockLabel inline mangleRawCodeBlockLabel(const std::shared_ptr<const FunctionInfo> functionInfo,
+                                                const std::string rawCodeBlockName) {
         return MangledCodeBlockLabel{codeBlockPrefix+mangleFunctionIdentifier(functionInfo)+'_'
-                                +mangleSpecialCodeBlockIdentifier(specialCodeBlockName)};
+                                +mangleRawCodeBlockIdentifier(rawCodeBlockName)};
     }
 
     MangledCodeBlockLabel inline mangleSetupCodeBlockLabel(const std::shared_ptr<const FunctionInfo> functionInfo) {
-        return mangleSpecialCodeBlockLabel(functionInfo, "setup");
+        return mangleRawCodeBlockLabel(functionInfo, "setup");
     }
 
     MangledCodeBlockLabel inline mangleCleanupCodeBlockLabel(const std::shared_ptr<const FunctionInfo> functionInfo) {
-        return mangleSpecialCodeBlockLabel(functionInfo, "cleanup");
+        return mangleRawCodeBlockLabel(functionInfo, "cleanup");
     }
 }
 

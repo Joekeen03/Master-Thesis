@@ -25,9 +25,10 @@ namespace CodeGen { // FIXME use a more appropriate namespace?
     class LocalsMap {
         private:
             LocalsMap(std::string functionNameArg, std::shared_ptr<const std::map<const std::string, const LocalsMapValue>> namedLocalsArg,
-                        std::shared_ptr<const std::map<const int, const LocalsMapValue>> unnamedLocalsArg, LocalsMapValue returnEntryArg)
-                        : functionName(functionNameArg), namedLocals(namedLocalsArg),
-                        unnamedLocals(unnamedLocalsArg), returnEntry(returnEntryArg) {
+                        std::shared_ptr<const std::map<const int, const LocalsMapValue>> unnamedLocalsArg,
+                        unsigned int localsSectionSizeArg, LocalsMapValue returnEntryArg)
+                        : functionName(functionNameArg), namedLocals(namedLocalsArg), unnamedLocals(unnamedLocalsArg),
+                        localsSectionSize(localsSectionSizeArg), returnEntry(returnEntryArg) {
             }
         public:
             const std::string functionName;
@@ -40,6 +41,7 @@ namespace CodeGen { // FIXME use a more appropriate namespace?
             //      integer value counting as distinct keys
             const std::shared_ptr<const std::map<const std::string, const LocalsMapValue>> namedLocals;
             const std::shared_ptr<const std::map<const int, const LocalsMapValue>> unnamedLocals;
+            const unsigned int localsSectionSize; // How many bytes are set aside for locals
 
             LocalsMapValue getLocalEntry(std::shared_ptr<const Expressions::ExpressionIdentifier> identifier) const;
             LocalsMapValue getLocalEntry(std::shared_ptr<const Expressions::ExpressionLocalIdentifier> identifier) const;

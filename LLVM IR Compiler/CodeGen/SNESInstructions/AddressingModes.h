@@ -37,8 +37,10 @@ namespace AddressingModes {
     const char stackRelativeSuffix[] = ", s";
     const char immediateModePrefix[] = "#";
     const char leftParen[] = "(";
+    const char rightParen[] = ")";
     const char stackRelativeIndirectIndexedSuffix[] = ", s), y";
 
+    using DirectPageIndirect = AddressingMode<leftParen, rightParen, 8>;
     using AbsoluteLong = AddressingMode<empty, empty, 24>;
     using Absolute = AddressingMode<empty, empty, 16>;
     using StackRelative = AddressingMode<empty, stackRelativeSuffix, 8>;
@@ -72,6 +74,8 @@ namespace AddressingModeGroups {
     struct LDA_AddressingModes<AddressingModes::StackRelativeIndirectIndexed> {static const bool valid = true; };
     template <>
     struct LDA_AddressingModes<AddressingModes::Immediate> {static const bool valid = true; };
+    template <>
+    struct LDA_AddressingModes<AddressingModes::DirectPageIndirect> {static const bool valid = true; };
 
     // Address modes used for LDX, and possibly other instructions.
     //  Modes: Immediate; Direct Page; Absolute; DP Indexed,Y; Absolute Indexed,Y
@@ -84,7 +88,7 @@ namespace AddressingModeGroups {
     struct LDX_AddressingModes<AddressingModes::Immediate> { static const bool valid = true; };
 
     // Address modes used for LDY, and possibly other instructions.
-    //  Modes: Immediate; Direct Page; Absolute; DP Indexed,X Absolute Indexed,X
+    //  Modes: Immediate; Direct Page; Absolute; DP Indexed,X; Absolute Indexed,X
     template <typename AddressingMode>
     struct LDY_AddressingModes { static const bool valid = false; };
     
@@ -92,6 +96,14 @@ namespace AddressingModeGroups {
     struct LDY_AddressingModes<AddressingModes::Absolute> { static const bool valid = true; };
     template <>
     struct LDY_AddressingModes<AddressingModes::Immediate> { static const bool valid = true; };
+
+    // Address modes used for STZ, and possibly other instructions.
+    //  Modes: Direct Page; Absolute; DP Indexed,Y; Absolute Indexed,Y
+    template <typename AddressingMode>
+    struct STZ_AddressingModes { static const bool valid = false; };
+    
+    template <>
+    struct STZ_AddressingModes<AddressingModes::Absolute> { static const bool valid = true; };
 }
 
 #endif // LLVM_IR_COMPILER_AddressingModes_H

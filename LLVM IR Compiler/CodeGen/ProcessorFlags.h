@@ -3,8 +3,8 @@
 
 namespace CodeGen {
     // Flags for different processor status bits.
-    constexpr extern unsigned int accumulatorModeFlag = 0x20;
-    constexpr extern unsigned int indexRegisterModeFlag = 0x10;
+    const extern unsigned int accumulatorModeFlag;
+    const extern unsigned int indexRegisterModeFlag;
 }
 
 #endif // LLVM_IR_COMPILER_ProcessorFlags_H

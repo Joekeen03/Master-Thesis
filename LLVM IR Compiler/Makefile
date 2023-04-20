@@ -4,7 +4,7 @@ EXPRESSION_DIR = $(SRC_DIR)/ParseExpressions
 CODEGEN_DIR = $(SRC_DIR)/CodeGen
 SNES_INSTRUCTIONS_DIR = $(CODEGEN_DIR)/SNESInstructions
 
-BUILD_DIR = build
+BUILD_DIR = $(SRC_DIR)/build
 OBJECT_DIR = $(BUILD_DIR)/objects
 
 TEMPLATE_DIR = $(SRC_DIR)/Templates
@@ -13,7 +13,8 @@ TEST_DIR = $(SRC_DIR)/Test
 TEST_OUTPUT_DIR = $(SRC_DIR)/TestOutput
 
 EXTRA_CFLAGS = -std=c++17 
-EXECUTABLE_NAME = main
+EXECUTABLE_NAME = main.exe
+EXECUTABLE_PATH = $(BUILD_DIR)/$(EXECUTABLE_NAME)
 
 DIRS = $(SRC_DIR) $(TOKEN_DIR) $(EXPRESSION_DIR) $(CODEGEN_DIR) $(SNES_INSTRUCTION_OBJECTS)
 SRC_FILES = $(foreach dir,$(DIRS),$(wildcard $(dir)/*.cpp))
@@ -32,19 +33,16 @@ TEMPLATE_LLVMIR_INSTRUCTION_TERMINATOR_YIELDS_VOID_H_FILE := $(TEMPLATE_DIR)/Ins
 TEMPLATE_SNES_INSTRUCTION_H_FILE := $(TEMPLATE_DIR)/SNESInstructionTEMPLATE.h
 TEMPLATE_GENERIC_H_FILE := $(TEMPLATE_DIR)/HeaderTEMPLATE.h
 
-CURR_TEST_FILE = simpleAddition
-
 clean:
 	-del $(subst /,\\,$(OBJECT_DIR))\\*.o
 	-del $(subst /,\\,$(OBJECT_DIR))\\*.d
 
-compiler: $(EXECUTABLE_NAME)
-	./$(BUILD_DIR)/$(EXECUTABLE_NAME) -ll Test/$(CURR_TEST_FILE).ll -asm TestOutput/$(CURR_TEST_FILE).asm
+compiler: $(EXECUTABLE_PATH)
 
 info:
 	$(info $(OBJ_FILES))
 
-$(EXECUTABLE_NAME): $(OBJ_FILES)
+$(EXECUTABLE_PATH): $(OBJ_FILES)
 	$(CXX) $(CFLAGS) $(EXTRA_CFLAGS) $(OBJ_FILES) $(LDFLAGS) -o $(BUILD_DIR)/$(EXECUTABLE_NAME)
 
 NewToken%: h_data := $(file <$(subst /,\\,$(TEMPLATE_TOKEN_H_FILE)))
@@ -79,7 +77,12 @@ NewHeader%: | $(TEMPLATE_RESULT_DIR)/
 
 %.ll : %.cpp ; $(CXX) $(CFLAGS) -c $< -o $(TEST_DIR)/$(subst .cpp,.ll,$(<F)) -S -emit-llvm
 
-$(TEST_OUTPUT_DIR)/%.asm : $(TEST_OUTPUT_DIR)/%.smc ; $(TEST_OUTPUT_DIR)/wla.bat %
+mainOnly: $(EXECUTABLE_PATH) $(TEST_OUTPUT_DIR)/mainOnly.asm
+simpleAddition: $(EXECUTABLE_PATH) $(TEST_OUTPUT_DIR)/simpleAddition.asm
+simpleIf: $(EXECUTABLE_PATH) $(TEST_OUTPUT_DIR)/simpleIf.asm
+
+$(TEST_OUTPUT_DIR)/%.asm : $(TEST_DIR)/%.ll
+	./$(EXECUTABLE_PATH) -ll $< -asm $@
 
 prepareTests: $(TEST_LL_FILES)
 
@@ -98,5 +101,7 @@ testing: $(OBJECT_DIR)/Tokens/HelperFunctionsTokens.o
 	$(info $(TEST_LL_FILES))
 
 .PHONY: testing
+
+.SECONDARY:
 
 -include $(DEP_FILES)

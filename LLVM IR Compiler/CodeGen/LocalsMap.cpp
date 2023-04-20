@@ -36,7 +36,9 @@ namespace CodeGen {
                                                         LocalsTypeListConstPtr instructionLocals, std::shared_ptr<const Types::Type> returnType) {
         auto namedLocals = std::make_shared<std::map<const std::string, const LocalsMapValue>>();
         auto unnamedLocals = std::make_shared<std::map<const int, const LocalsMapValue>>();
-        int nextLocalPosition = 1; // First local is at one above the stack pointer.
+        const int localStartPosition = 1;
+        int nextLocalPosition = localStartPosition; // First local is at one above the stack pointer.
+        // Locals are ordered so the last local in the list is at the top of the stack
         for (auto instructionLocalsIterator = instructionLocals->rbegin(); instructionLocalsIterator != instructionLocals->rend() ; instructionLocalsIterator++) {
             auto instructionLocal = *instructionLocalsIterator;
             if (Lib::isType<Expressions::ExpressionLocalNamedIdentifier>(instructionLocal.first)) {
@@ -54,6 +56,19 @@ namespace CodeGen {
                                             +instructionLocal.first->getName());
             }
         }
+        
+        const unsigned int localsSectionSize = nextLocalPosition-localStartPosition;
+        // Skip 16-bit return address
+        nextLocalPosition += 2;
+        // Skip alloca stack pointer pushed onto stack
+        nextLocalPosition += 2;
+        // Four CPU registers pushed onto stack; skip these
+        nextLocalPosition += 2;
+        nextLocalPosition += 2;
+        nextLocalPosition += 2;
+        nextLocalPosition += 2;
+        // Parameters are ordered so the last local in the list is at the top of the stack (so the caller would
+        //  push the first parameter on, then the second parameter, and so on.
         for (auto paramLocalsIterator = paramLocals->rbegin(); paramLocalsIterator != paramLocals->rend() ; paramLocalsIterator++) {
             auto paramLocal = *paramLocalsIterator;
             if (Lib::isType<Expressions::ExpressionLocalNamedIdentifier>(paramLocal.first)) {
@@ -74,7 +89,7 @@ namespace CodeGen {
         LocalsMapValue returnEntry = LocalsMapValue(returnType, nextLocalPosition);
         // This constructor is private, so we have to initialize it, then have std::make_shared use the public
         //  copy-constructor.
-        auto localsMap = LocalsMap(functionName, namedLocals, unnamedLocals, returnEntry);
+        auto localsMap = LocalsMap(functionName, namedLocals, unnamedLocals, localsSectionSize, returnEntry);
         return std::make_shared<LocalsMap>(localsMap);
     }
     // TODO: Add ability to query parameters' types and caller positions; i.e. information the calling function might need
