@@ -19,7 +19,8 @@ namespace Tokens {
         public:
             const EnumRegistry::RegistryItem registryItem;
             explicit TokenTypeReservedWord(EnumRegistry::RegistryItem registryItemArg, int srcPosArg) : registryItem(registryItemArg), TokenType(srcPosArg) {}
-            std::string getName() const {return "TokenTypeReservedWord"; }
+            std::string getName() const {return "TokenTypeReservedWord(id:"+std::to_string(registryItem.ID)
+                                                +"; keyword:"+registryItem.str+")"; ; }
             // Maybe store the token's minimum/maximum lengths, as well as the valid starting character(s)?
             //  To perhaps optimize how the tokenizer iterates through them.
     };

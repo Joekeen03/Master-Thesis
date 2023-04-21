@@ -3,28 +3,39 @@
 
 #include <variant>
 
-#include "InstructionAlloca.h"
-#include "InstructionRetValue.h"
 #include "InstructionStore.h"
+
+#include "InstructionAlloca.h"
 #include "InstructionLoad.h"
 #include "InstructionAdd.h"
+#include "InstructionTruncate.h"
+
+#include "InstructionRetValue.h"
+#include "InstructionBranchConditional.h"
+#include "InstructionBranchUnconditional.h"
 
 namespace Instructions {
     using InstructionVariant = std::variant<std::monostate,
-                                            // Terminators
-                                            InstructionRetValue,
+
                                             // Non-terminators that yield a value
-                                            InstructionAlloca, InstructionLoad, InstructionAdd,
+                                            InstructionAlloca, InstructionLoad, InstructionAdd, InstructionTruncate,
+                                            
                                             // Non-terminators that yield void
-                                            InstructionStore>;
+                                            InstructionStore,
+
+                                            // Terminators
+                                            InstructionRetValue, InstructionBranchConditional, InstructionBranchUnconditional>;
 
     using NonTerminators = std::variant<std::monostate,
+
                                         // Yields a value
-                                        InstructionAlloca, InstructionLoad, InstructionAdd,
+                                        InstructionAlloca, InstructionLoad, InstructionAdd, InstructionTruncate,
+
                                         // Yields void
                                         InstructionStore>;
 
-    using Terminators = std::variant<std::monostate, InstructionRetValue>;
+    using Terminators = std::variant<std::monostate,
+                                     InstructionRetValue, InstructionBranchConditional, InstructionBranchUnconditional>;
 }
 
 #endif // LLVM_IR_COMPILER_AllInstructions_H

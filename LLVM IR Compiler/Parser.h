@@ -5,6 +5,8 @@
 #include <utility>
 #include <set>
 
+#include "Parsing/LocalsParsingInfo.h"
+
 #include "Expressions/Expression.h"
 #include "Expressions/ExpressionFunctionDefinition.h"
 #include "Expressions/ExpressionReturnType.h"
@@ -50,7 +52,6 @@ namespace {
 }
 
 namespace Parser {
-    struct CodeBlockParsingResult;
 
     using Tokenizer::tokensArrayPointer;
     using stringExtractResult = std::pair<std::string, bool>;
@@ -155,19 +156,26 @@ namespace Parser {
             InstructionParseResult parseInstructionAlloca(int startPos, std::shared_ptr<const Expressions::ExpressionLocalIdentifier> assignee);
             InstructionParseResult parseInstructionLoad(int startPos, std::shared_ptr<const Expressions::ExpressionLocalIdentifier> assignee);
             InstructionParseResult parseInstructionAdd(int startPos, std::shared_ptr<const Expressions::ExpressionLocalIdentifier> assignee);
+            InstructionParseResult parseInstructionTruncate(int startPos, std::shared_ptr<const Expressions::ExpressionLocalIdentifier> assignee);
 
             // Parsing for terminator instructions
 
-            InstructionParseResult parseInstructinRetValue(int startPos);
+            InstructionParseResult parseInstructionReturnValue(int startPos);
+            InstructionParseResult parseInstructionBranchConditional(int startPos);
+            InstructionParseResult parseInstructionBranchUnconditional(int startPos);
 
             // General parsing
 
             ParsingResult<Expressions::ExpressionIdentifier> parseIdentifier(int startPos);
             ParsingResult<Expressions::ExpressionLocalIdentifier> parseLocalIdentifier(int startPos);
+            ParsingResult<Expressions::ExpressionLocalIdentifier> parseLocalIdentifierAsLabel(int startPos);
+
             ParsingResult<Types::TypeInteger> parseIntegerType(int startPos);
+            ParsingResult<Types::TypeInteger> parse_i1BooleanType(int startPos);
             ParsingResult<Types::Type> parseType(int startPos);
             ParsingResult<Types::TypeSized> parseSizedType(int startPos);
             ParsingResult<Types::TypeSized> parseFirstClassKnownSizeType(int startPos);
+
             ParsingResult<Expressions::ExpressionOperand> parseOperand(int startPos);
 
             ParsingResult<Expressions::ExpressionSourceFile> parseSourceFile(int startPos);
@@ -178,11 +186,14 @@ namespace Parser {
 
             ParsingResult<Expressions::ExpressionFunctionHeaderPreName> parseFunctionHeaderPreName(int startPos);
             ParsingResult<Expressions::ExpressionReturnType> parseFunctionReturnType(int startPos);
-            ParsingResult<Expressions::ExpressionArgumentList> parseFunctionArgumentList(int startPos);
+            // Can modify localsInfo
+            ParsingResult<Expressions::ExpressionArgumentList> parseFunctionArgumentList(int startPos, std::shared_ptr<LocalsParsingInfo> localsInfo);
             ParsingResult<Expressions::ExpressionFunctionHeaderPostName> parseFunctionHeaderPostName(int startPos);
             InstructionParseResult parseInstruction(int startPos);
-            CodeBlockParsingResult parseFunctionCodeBlock(int startPos, int startUnnamedLocal, std::shared_ptr<std::set<std::string>> localNameSet);
-            ParsingResult<std::vector<const std::shared_ptr<const Expressions::ExpressionFunctionCodeBlock>>> parseFunctionCodeBlocks(int startPos);
+            // Can modify localsInfo
+            ParsingResult<Expressions::ExpressionFunctionCodeBlock> parseFunctionCodeBlock(int startPos, std::shared_ptr<LocalsParsingInfo> localsInfo);
+            // Can modify localsInfo
+            ParsingResult<std::vector<const std::shared_ptr<const Expressions::ExpressionFunctionCodeBlock>>> parseFunctionCodeBlocks(int startPos, std::shared_ptr<LocalsParsingInfo> localsInfo);
             ParsingResult<Expressions::ExpressionFunctionDefinition> parseFunctionDefinition(int startPos);
 
             // Metadata Parsing Methods
@@ -195,15 +206,6 @@ namespace Parser {
             std::shared_ptr<const Expressions::ExpressionFile> parse();
             Parser(AttributeIDProcessor::SubstitutedTokens substitutedTokens)
                 : tokens(substitutedTokens.tokens), mappings(substitutedTokens.mappings), attributeGroups(substitutedTokens.attributeGroups) {}
-    };
-
-    struct CodeBlockParsingResult : public ParsingResult<Expressions::ExpressionFunctionCodeBlock> {
-        const int nextUnnamedLocal;
-        const std::shared_ptr<std::set<std::string>> localNameSet;
-        CodeBlockParsingResult() : nextUnnamedLocal(-1), ResultConstMembers() {}
-        CodeBlockParsingResult(std::shared_ptr<Expressions::ExpressionFunctionCodeBlock> expressionArg, newTokenPos newPosArg,
-                                int nextUnnamedLocalArg, std::shared_ptr<std::set<std::string>> localNameSetArg)
-                                : nextUnnamedLocal(nextUnnamedLocalArg), localNameSet(localNameSetArg), ResultConstMembers(expressionArg, newPosArg) {}
     };
 
     // Indicates if the parser has encountered a issue and cannot progress.

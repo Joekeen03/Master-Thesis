@@ -22,6 +22,7 @@
 #include "Tokens/TokenUnnamedMetadata.h"
 #include "Tokens/TokenMetadataNodeStart.h"
 #include "Tokens/TokenMetadataString.h"
+#include "Tokens/TokenUnnamedCodeLabel.h"
 #include "Tokens/TokenEOF.h"
 
 #include "Types/TypeInteger.h"
@@ -42,7 +43,7 @@
 namespace Parser {
     template <typename T>
     T Parser::updateError(int newTokenPosition, std::string message) {
-        if (error == nullptr || newTokenPosition > error->tokenPosition) {
+        if (error == nullptr || newTokenPosition >= error->tokenPosition) {
             error = std::make_shared<ParseError>(newTokenPosition, message);
         }
         return T();
@@ -291,10 +292,44 @@ namespace Parser {
         return InstructionParseResult(std::make_shared<Instructions::InstructionVariant>(instructionAdd), currPos);
     } // parseInstructionAdd
 
+    InstructionParseResult Parser::parseInstructionTruncate(int startPos, std::shared_ptr<const Expressions::ExpressionLocalIdentifier> assignee) {
+        int currPos = startPos;
+        if (!checkReserved<Tokens::TokenKeyword>(currPos, ReservedWords::trunc)) {
+            return updateErrorExpectedReceived<InstructionParseResult>(currPos, "truncate instruction", "truncate keyword");
+        }
+        
+        currPos++;
+        auto operandTypeParseResult = parseIntegerType(currPos);
+        if (!operandTypeParseResult.success) {
+            return InstructionParseResult();
+        }
+
+        currPos = operandTypeParseResult.newPos;
+        auto operandParseResult = parseOperand(currPos);
+        if (!operandParseResult.success) {
+            return InstructionParseResult();
+        }
+        
+        currPos = operandParseResult.newPos;
+        if (!checkReserved<Tokens::TokenKeyword>(currPos, ReservedWords::to)) {
+            return updateErrorExpectedReceived<InstructionParseResult>(currPos, "truncate instruction", "'to' keyword");
+        }
+
+        currPos++;
+        auto yieldedTypeParseResult = parseIntegerType(currPos);
+        if (!yieldedTypeParseResult.success) {
+            return InstructionParseResult();
+        }
+
+        currPos = yieldedTypeParseResult.newPos;
+        auto instruction = Instructions::InstructionTruncate(assignee, operandTypeParseResult.result,
+                                                            operandParseResult.result, yieldedTypeParseResult.result);
+        return InstructionParseResult(std::make_shared<const Instructions::InstructionVariant>(instruction), currPos);
+    } // parseInstructionTruncate
 
     // Terminator Instructions
 
-    InstructionParseResult Parser::parseInstructinRetValue(int startPos) {
+    InstructionParseResult Parser::parseInstructionReturnValue(int startPos) {
         bool success = false;
         int currPos = startPos;
         int nextPos = -1;
@@ -318,7 +353,71 @@ namespace Parser {
         auto instruction = Instructions::InstructionRetValue(retType, retVal);
         return success ? InstructionParseResult(std::make_shared<Instructions::InstructionVariant>(instruction), nextPos)
                         : InstructionParseResult();
-    }
+    } // parseInstructionReturnValue
+
+    InstructionParseResult Parser::parseInstructionBranchConditional(int startPos) {
+        int currPos = startPos;
+        if (!checkReserved<Tokens::TokenKeyword>(currPos, ReservedWords::br)) {
+            return updateErrorExpectedReceived<InstructionParseResult>(currPos, "conditional branch instruction", "'br' keyword");
+        }
+
+        currPos++;
+        if (!parse_i1BooleanType(currPos).success) {
+            return updateErrorExpectedReceived<InstructionParseResult>(currPos, "conditional branch instruction", "i1 integer type");
+        }
+
+        currPos++;
+        auto conditionParseResult = parseLocalIdentifier(currPos);
+        if (!conditionParseResult.success) {
+            return InstructionParseResult();
+        }
+
+        currPos = conditionParseResult.newPos;
+        if (!isTokenOfType<Tokens::TokenComma>(currPos)) {
+            return updateErrorExpectedReceived<InstructionParseResult>(currPos, "conditional branch instruction", "comma");
+        }
+
+        currPos++;
+        auto ifFalseLabelParseResult = parseLocalIdentifierAsLabel(currPos);
+        if (!ifFalseLabelParseResult.success) {
+            return InstructionParseResult();
+        }
+
+        currPos = ifFalseLabelParseResult.newPos;
+        if (!isTokenOfType<Tokens::TokenComma>(currPos)) {
+            return updateErrorExpectedReceived<InstructionParseResult>(currPos, "conditional branch instruction", "comma");
+        }
+
+        currPos++;
+        auto ifTrueLabelParseResult = parseLocalIdentifierAsLabel(currPos);
+        if (!ifTrueLabelParseResult.success) {
+            return InstructionParseResult();
+        }
+
+        currPos = ifTrueLabelParseResult.newPos;
+        auto instruction = Instructions::InstructionBranchConditional(conditionParseResult.result, ifFalseLabelParseResult.result,
+                                                                      ifTrueLabelParseResult.result);
+        return InstructionParseResult(std::make_shared<Instructions::InstructionVariant>(instruction), currPos);
+    } // parseInstructionBranchConditional
+
+    InstructionParseResult Parser::parseInstructionBranchUnconditional(int startPos) {
+        int currPos = startPos;
+        if (!checkReserved<Tokens::TokenKeyword>(currPos, ReservedWords::br)) {
+            return updateErrorExpectedReceived<InstructionParseResult>(currPos, "unconditional branch instruction", "'br' keyword");
+        }
+
+        currPos++;
+        auto destinationLabel = parseLocalIdentifierAsLabel(currPos);
+        if (!destinationLabel.success) {
+            return InstructionParseResult();
+        }
+
+        currPos = destinationLabel.newPos;
+        auto instruction = Instructions::InstructionBranchUnconditional(destinationLabel.result);
+        return InstructionParseResult(std::make_shared<Instructions::InstructionVariant>(instruction), currPos);
+    } // parseInstructionBranchUnconditional
+
+
 
     /** GENERAL PARSE METHODS **/
 
@@ -334,7 +433,7 @@ namespace Parser {
         }
         return success ? Lib::ResultConstMembersPointer<Expressions::ExpressionIdentifier>(identifier, nextPos)
                         : Lib::ResultConstMembersPointer<Expressions::ExpressionIdentifier>();
-    }
+    } // parseIdentifier
 
     Lib::ResultConstMembersPointer<Expressions::ExpressionLocalIdentifier> Parser::parseLocalIdentifier(int startPos) {
         tokenPointer token = getToken(startPos);
@@ -351,7 +450,25 @@ namespace Parser {
         }
         return success ? Lib::ResultConstMembersPointer<Expressions::ExpressionLocalIdentifier>(identifier, nextPos)
                         : Lib::ResultConstMembersPointer<Expressions::ExpressionLocalIdentifier>();
+    } // parseLocalIdentifier
+
+    ParsingResult<Expressions::ExpressionLocalIdentifier> Parser::parseLocalIdentifierAsLabel(int startPos) {
+        int currPos = startPos;
+        if (!checkReserved<Tokens::TokenTypeReservedWord>(currPos, TypeReservedWords::typeLabel)) {
+            return updateErrorExpectedReceived<ParsingResult<Expressions::ExpressionLocalIdentifier>>(currPos, "local identifier as code block label", "label type");
+        }
+
+        currPos++;
+        auto labelParseResult = parseLocalIdentifier(currPos);
+        if (!labelParseResult.success) {
+            return updateErrorExpectedReceived<ParsingResult<Expressions::ExpressionLocalIdentifier>>(currPos, "local identifier as code block label", "local identifier");
+        }
+
+        return labelParseResult;
     }
+
+
+
     ParsingResult<Types::TypeInteger> Parser::parseIntegerType(int startPos) {
         int currPos = startPos;
         auto firstToken = getToken(startPos);
@@ -361,7 +478,15 @@ namespace Parser {
         currPos++;
         auto integerType = std::make_shared<const Types::TypeInteger>(std::dynamic_pointer_cast<const Tokens::TokenTypeInteger>(firstToken)->bitWidth);
         return Lib::ResultConstMembersPointer<Types::TypeInteger>(integerType, startPos+1);
-    }
+    } // parseIntegerType
+
+    ParsingResult<Types::TypeInteger> Parser::parse_i1BooleanType(int startPos) {
+        auto integerTypeParseResult = parseIntegerType(startPos);
+        if (integerTypeParseResult.success && integerTypeParseResult.result->bits == 1) {
+            return integerTypeParseResult;
+        }
+        return updateErrorExpectedReceived<ParsingResult<Types::TypeInteger>>(startPos, "boolean", "i1 integer type");
+    } // parse_i1BooleanType
 
     Lib::ResultConstMembersPointer<Types::Type> Parser::parseType(int startPos) {
         if (auto integerTypeParseResult = parseIntegerType(startPos); integerTypeParseResult.success) {
@@ -525,7 +650,7 @@ namespace Parser {
                         : ParsingResult<Expressions::ExpressionReturnType>();
     }
 
-    ParsingResult<Expressions::ExpressionArgumentList> Parser::parseFunctionArgumentList(int startPos) {
+    ParsingResult<Expressions::ExpressionArgumentList> Parser::parseFunctionArgumentList(int startPos, std::shared_ptr<LocalsParsingInfo> localsInfo) {
         // FIXME Unnamed function parameters should count towards unnamed temporary numbering (e.g. first unnamed parameter
         //  should be %0)
         bool success = false;
@@ -621,22 +746,30 @@ namespace Parser {
         return updateError<InstructionParseResult>(currPos, expectedReceivedMessage("instruction", "instruction keyword", currPos));
     }
 
-    CodeBlockParsingResult Parser::parseFunctionCodeBlock(int startPos, int startUnnamedLocal, std::shared_ptr<std::set<std::string>> localNameSet) {
+    ParsingResult<Expressions::ExpressionFunctionCodeBlock> Parser::parseFunctionCodeBlock(int startPos, std::shared_ptr<LocalsParsingInfo> localsInfo) {
         // FIXME: move stuff regarding identifier validation, out of this (environment object that manages that, or even a second
         //  pass)
-        int nextUnnamedLocal = startUnnamedLocal;
         int currPos = startPos;
         std::string label;
-        auto newLocalNameSet = std::make_shared<std::set<std::string>>();
-        std::copy(newLocalNameSet->begin(), newLocalNameSet->end(), std::inserter(*localNameSet, localNameSet->begin()));
         auto instructions = std::make_shared<std::vector<const std::shared_ptr<const Instructions::NonTerminators>>>();
         std::shared_ptr<const Instructions::Terminators> terminator;
         
-        if (false) {
-
+        
+        if (auto nextToken = getToken(currPos); Lib::isType<const Tokens::TokenUnnamedCodeLabel>(nextToken)) {
+            auto castToken = std::dynamic_pointer_cast<const Tokens::TokenUnnamedCodeLabel>(nextToken);
+            int ID = castToken->ID;
+            if (localsInfo->validateAndAddNewUnnamedLocalIdentifier(ID)) {
+                label = std::to_string(ID);
+                currPos++;
+            } else {
+                std::string error = "Error parsing code block: Encountered code block with an unnamed label,"\
+                                    " but label was not the next one in the unnamed locals identifiers sequence. Expected: "
+                                    +std::to_string(localsInfo->peekNewUnnamedLocalIdentifier())
+                                    +"; received: "+std::to_string(ID)+".";
+                return updateError<ParsingResult<Expressions::ExpressionFunctionCodeBlock>>(currPos, error);
+            }
         } else { // No label
-            label = std::to_string(nextUnnamedLocal);
-            nextUnnamedLocal++;
+            label = std::to_string(localsInfo->getNewUnnamedLocalIdentifier());
         }
         
         // Parse code
@@ -646,6 +779,30 @@ namespace Parser {
         do {
             auto instructionResult = parseInstruction(currPos);
             if (instructionResult.success) {
+                // Validate assignee, if any.
+                const std::optional<int> invalidAssignee = std::visit([&localsInfo](auto&& instruction) -> std::optional<int> {
+                    if constexpr (std::is_base_of_v<Instructions::YieldsValue, std::remove_reference_t<decltype(instruction)>>) {
+                        const std::shared_ptr<const Expressions::ExpressionLocalIdentifier> assignee = instruction.assignee;
+                        if (Lib::isType<const Expressions::ExpressionLocalUnnamedIdentifier>(assignee)) {
+                            auto castAssignee = std::dynamic_pointer_cast<const Expressions::ExpressionLocalUnnamedIdentifier>(assignee);
+                            int ID = castAssignee->ID;
+                            bool isValidAssignee = localsInfo->validateAndAddNewUnnamedLocalIdentifier(ID);
+                            if (!isValidAssignee) {
+                                return ID;
+                            }
+                        } else {
+                            throw std::runtime_error("NYI: validation for local named identifiers.");
+                        }
+                    }
+                    return std::optional<int>();
+                }, *instructionResult.result);
+                if (invalidAssignee) {
+                    std::string error = "Error parsing code block: Encountered instruction which assignes to an unnamed local,"\
+                                        " but label was not the next one in the integer locals identifiers sequence. Expected: "
+                                        +std::to_string(localsInfo->peekNewUnnamedLocalIdentifier())
+                                        +"; received: "+std::to_string(invalidAssignee.value())+".";
+                    return updateError<ParsingResult<Expressions::ExpressionFunctionCodeBlock>>(currPos, error);
+                }
 
                 // FIXME Move into separate method
                 // if (Lib::isType<Instructions::YieldsValue>(instructionResult.result)) {
@@ -679,13 +836,13 @@ namespace Parser {
                 //  std::monostate()?
                 // This is far more succint, so that would seem to be preferable for now.
                 // std:: visit(overloaded {})
-                std::visit([&terminator, &parseInstructions, &foundTerminator, instructions](auto&& arg) mutable {
-                    if constexpr (std::is_base_of_v<Instructions::InstructionTerminator, std::remove_reference_t<decltype(arg)>>) {
-                        terminator = std::make_shared<Instructions::Terminators>(arg);
+                std::visit([&terminator, &parseInstructions, &foundTerminator, instructions](auto&& instruction) mutable {
+                    if constexpr (std::is_base_of_v<Instructions::InstructionTerminator, std::remove_reference_t<decltype(instruction)>>) {
+                        terminator = std::make_shared<Instructions::Terminators>(instruction);
                         parseInstructions = false;
                         foundTerminator = true;
                     } else { // Should explicitly check for InstructionNonTerminator?
-                        instructions->push_back(std::make_shared<Instructions::NonTerminators>(arg));
+                        instructions->push_back(std::make_shared<Instructions::NonTerminators>(instruction));
                     }
                 }, *(instructionResult.result));
 
@@ -715,28 +872,23 @@ namespace Parser {
 
         } while (parseInstructions);
         
-        return foundTerminator ? CodeBlockParsingResult(std::make_shared<Expressions::ExpressionFunctionCodeBlock>(label, instructions, terminator),
-                                                        currPos, nextUnnamedLocal, newLocalNameSet)
-                                : CodeBlockParsingResult();
+        return foundTerminator ? ParsingResult<Expressions::ExpressionFunctionCodeBlock>(std::make_shared<Expressions::ExpressionFunctionCodeBlock>(label, instructions, terminator), currPos)
+                                : ParsingResult<Expressions::ExpressionFunctionCodeBlock>();
     }
 
-    Lib::ResultConstMembersPointer<std::vector<const std::shared_ptr<const Expressions::ExpressionFunctionCodeBlock>>> Parser::parseFunctionCodeBlocks(int startPos) {
+    Lib::ResultConstMembersPointer<std::vector<const std::shared_ptr<const Expressions::ExpressionFunctionCodeBlock>>> Parser::parseFunctionCodeBlocks(int startPos, std::shared_ptr<LocalsParsingInfo> localsInfo) {
         int currPos = startPos;
         bool success = false;
         auto codeBlocks = std::make_shared<std::vector<const std::shared_ptr<const Expressions::ExpressionFunctionCodeBlock>>>();
-        auto localNameSet = std::make_shared<std::set<std::string>>();
         if (isLeftToken<Tokens::TokenCurlyBrace>(currPos)) { // Function code section should open with a '{'
             currPos++;
-            int currUnnamedLocal = 0;
             bool parseBlocks = true;
             bool notEmpty = false;
             do { // Build list of code blocks
-                auto parseResult = parseFunctionCodeBlock(currPos, currUnnamedLocal, localNameSet);
+                auto parseResult = parseFunctionCodeBlock(currPos, localsInfo);
                 if (parseResult.success) {
                     codeBlocks->push_back(parseResult.result);
                     currPos = parseResult.newPos;
-                    currUnnamedLocal = parseResult.nextUnnamedLocal;
-                    localNameSet = parseResult.localNameSet;
                     notEmpty = true;
                 } else {
                     parseBlocks = false;
@@ -758,6 +910,7 @@ namespace Parser {
         using resultType = Lib::ResultConstMembersPointer<Expressions::ExpressionFunctionDefinition>;
         int currPos = startPos;
         int nextPos = -1;
+        auto localsInfo = std::make_shared<LocalsParsingInfo>();
 
         std::shared_ptr<const Expressions::ExpressionFunctionHeaderPreName> headerPreName;
         std::shared_ptr<const Expressions::ExpressionReturnType> returnType;
@@ -788,7 +941,7 @@ namespace Parser {
         // Do functions have to use named identifiers for their name?
         functionName = extractNamedIdentifier<Tokens::TokenGlobalNamedIdentifier>(currPos);
         currPos++;
-        auto parameterListResult = parseFunctionArgumentList(currPos);
+        auto parameterListResult = parseFunctionArgumentList(currPos, localsInfo);
         if (!parameterListResult.success) {
             return resultType();
         }
@@ -802,7 +955,7 @@ namespace Parser {
         
         headerPostName = headerPostNameResult.result;
         currPos = headerPostNameResult.newPos;
-        auto codeBlocksResult = parseFunctionCodeBlocks(currPos);
+        auto codeBlocksResult = parseFunctionCodeBlocks(currPos, localsInfo);
         if (!codeBlocksResult.success) {
             return resultType();
         }
@@ -1039,7 +1192,9 @@ namespace Parser {
 
     const instructionYieldsVoidParser instructionsYieldVoid[] = {
         // Terminator Instructions:
-        &Parser::parseInstructinRetValue,
+        &Parser::parseInstructionReturnValue,
+        &Parser::parseInstructionBranchConditional,
+        &Parser::parseInstructionBranchUnconditional,
 
         // Normal Instructions:
         &Parser::parseInstructionStore,
@@ -1049,6 +1204,7 @@ namespace Parser {
         &Parser::parseInstructionAlloca,
         &Parser::parseInstructionLoad,
         &Parser::parseInstructionAdd,
+        &Parser::parseInstructionTruncate,
     };
     const int nInstructionsYieldValue = sizeof(instructionsYieldValue)/sizeof(instructionYieldsValueParser);
 }

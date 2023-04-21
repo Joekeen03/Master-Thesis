@@ -423,7 +423,16 @@ namespace CodeGen {
         }
 
         return std::make_shared<SNESAssembly::SNESAssemblySegmentInstructionChunk>("Add with carry instruction", instructionLines);
-    };
+    } // convertNonTerminatorInstruction<Instructions::InstructionAdd>
+    
+    template <>
+    std::shared_ptr<SNESAssembly::SNESAssemblySegmentInstructionChunk> CodeGenerator::convertNonTerminatorInstruction (
+        Instructions::InstructionTruncate instruction, std::shared_ptr<const DefinedFunctionInfo> definedFunctionInfo
+    ) {
+            throw std::runtime_error("[ERROR] NYI: CodeGenerator::convertNonTerminatorInstruction<InstructionTruncate>");
+    } // convertNonTerminatorInstruction<InstructionTruncate>
+
+
 
     // CodeGenerator::convertTerminatorInstruction specializations
 
@@ -432,7 +441,7 @@ namespace CodeGen {
         std::monostate nonInstruction, std::shared_ptr<const DefinedFunctionInfo> definedFunctionInfo
     ) {
         throw std::runtime_error("CodeGenerator::convertTerminatorInstruction received a monostate instance.");
-    }
+    } // convertTerminatorInstruction<std::monostate>
 
     template <>
     std::shared_ptr<SNESAssembly::SNESAssemblySegmentInstructionChunk> CodeGenerator::convertTerminatorInstruction (
@@ -526,7 +535,21 @@ namespace CodeGen {
         }
 
         return std::make_shared<SNESAssembly::SNESAssemblySegmentInstructionChunk>("Return value instruction", instructionLines);
-    }
+    } // convertTerminatorInstruction<Instructions::InstructionRetValue>
+
+    template <>
+    std::shared_ptr<SNESAssembly::SNESAssemblySegmentInstructionChunk> CodeGenerator::convertTerminatorInstruction (
+        Instructions::InstructionBranchConditional instruction, std::shared_ptr<const DefinedFunctionInfo> definedFunctionInfo
+    ) {
+        throw std::runtime_error("[ERROR] NYI: CodeGenerator::convertTerminatorInstruction<Instructions::InstructionBranchConditional>");
+    } // convertTerminatorInstruction<Instructions::InstructionBranchConditional>
+
+    template <>
+    std::shared_ptr<SNESAssembly::SNESAssemblySegmentInstructionChunk> CodeGenerator::convertTerminatorInstruction (
+        Instructions::InstructionBranchUnconditional instruction, std::shared_ptr<const DefinedFunctionInfo> definedFunctionInfo
+    ) {
+        throw std::runtime_error("[ERROR] NYI: CodeGenerator::convertTerminatorInstruction<Instructions::InstructionBranchUnconditional>");
+    } // convertTerminatorInstruction<Instructions::InstructionBranchUnConditional>
 
     std::shared_ptr<const std::vector<const std::string>> CodeGenerator::generateCode() {
         auto generatedCode = std::make_shared<std::vector<std::string>>();
@@ -639,7 +662,7 @@ namespace CodeGen {
         auto returnType = function->returnType->returnType;
         // TODO handle parameters
         auto paramLocals = std::make_shared<LocalsTypeList>();
-        std::cout << "NYI: function parameters are not included in the locals memory map." << '\n';
+        std::cout << "[WARNING] NYI: function parameters are not included in the locals memory map." << '\n';
 
         // FIXME would handling parameters and locals be easier if they were "resolved"? Meaning, you locate all identifier objects
         //  which are equivalent (i.e. they refer to the same variable), and make them all point to the same object? So instead of
