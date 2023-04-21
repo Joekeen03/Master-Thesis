@@ -4,21 +4,22 @@
 #include <iostream>
 
 namespace TokenLib {
-    const numberParseResult numberParseFAILED(0, -1);
-    const stringParseResult stringParseFAILED("", -1);
+    const unsignedIntegerParseResult unsignedIntegerParseFAILED = unsignedIntegerParseResult();
+    const signedIntegerParseResult signedIntegerParseFAILED = signedIntegerParseResult();
+    const stringParseResult stringParseFAILED = stringParseResult();
 
     bool isNamedIdentifierStartChar(char c) {
         return std::isalpha(c) || c == '-' || c == '$' || c == '.' || c == '_';
     }
 
-    numberParseResult extractNumber(BasicArray::BasicCharArray *fileData, int startPos) {
+    unsignedIntegerParseResult extractUnsignedInteger(BasicArray::BasicCharArray *fileData, int startPos) {
         // FIXME is it safe to assume it's a valid token regardless of what character terminated the tokenization? I.e. would encountering
         //  an 'a' immediately after the identifier not invalidate the tokenization itself?\
         result = TokenizeResult(TokenGlobalIdentifier(identifier), currPos);
         std::string numberRaw = "";
         bool success = false;
         int currPos = startPos;
-        int firstCharAfterNumber = currPos;
+        unsigned int firstCharAfterNumber = currPos;
         try {
             bool tokenize = true;
             char currChar;
@@ -36,21 +37,44 @@ namespace TokenLib {
         } catch (...) { // Out of bounds on array.
 
         }
-        return success ? numberParseResult((numberLiteral)std::stoi(numberRaw), (nextPosition)firstCharAfterNumber)
-                            : numberParseFAILED;
+        return success ? unsignedIntegerParseResult((unsigned int)std::stoi(numberRaw), firstCharAfterNumber)
+                            : unsignedIntegerParseFAILED;
     }
 
-    numberParseResult extractPrefixedNumber(BasicArray::BasicCharArray *fileData, int startPos, char prefix) {
-        numberParseResult result = numberParseFAILED;
+    signedIntegerParseResult extractSignedInteger(BasicArray::BasicCharArray *fileData, int startPos) {
+        // FIXME is it safe to assume it's a valid token regardless of what character terminated the tokenization? I.e. would encountering
+        //  an 'a' immediately after the identifier not invalidate the tokenization itself?\
+        result = TokenizeResult(TokenGlobalIdentifier(identifier), currPos);
+        bool success = false;
+        int currPos = startPos;
+        bool sign = 1;
+        auto unsignedResult = unsignedIntegerParseFAILED;
+        try {
+            char currChar = (*fileData)[currPos];
+            if (currChar == '-') {
+                sign = -1;
+                currPos++;
+            }
+            unsignedResult = extractUnsignedInteger(fileData, currPos);
+            success = unsignedResult.success;
+        } catch (...) { // Out of bounds on array.
+
+        }
+        return success ? signedIntegerParseResult{sign*((int)unsignedResult.result), unsignedResult.newPosition}
+                            : signedIntegerParseFAILED;
+    }
+
+    unsignedIntegerParseResult extractPrefixedNumber(BasicArray::BasicCharArray *fileData, int startPos, char prefix) {
+        unsignedIntegerParseResult result = unsignedIntegerParseFAILED;
         if (fileData->positionInBounds(startPos) && (*fileData)[startPos] == prefix) {
-            result = TokenLib::extractNumber(fileData, startPos+1);
+            result = TokenLib::extractUnsignedInteger(fileData, startPos+1);
         }
         return result;
     }
 
     stringParseResult extractQuotedString(BasicArray::BasicCharArray *fileData, int startPos) {
-        int currPos = startPos;
-        int nextPosAfterString;
+        unsigned int currPos = startPos;
+        unsigned int nextPosAfterString;
         bool success = false;
         std::string str = "";
         try {
@@ -73,13 +97,13 @@ namespace TokenLib {
         } catch (...) { // Out of bounds on array
 
         }
-        return success ? stringParseResult(str, nextPosAfterString) : stringParseFAILED;
+        return success ? stringParseResult(str, (int)nextPosAfterString) : stringParseFAILED;
     }
 
     Tokens::TokenizeResult lexUnnamedIdentifier(BasicArray::BasicCharArray* fileData, int startPos, char identiferStartChar,
                                                         std::shared_ptr<Tokens::Token> (*tokenCtor)(int ID, int srcPos)) {
-        numberParseResult result = extractPrefixedNumber(fileData, startPos, identiferStartChar);
-        return result != TokenLib::numberParseFAILED ? Tokens::TokenizeResult(tokenCtor(result.first, startPos), result.second)
+        auto unsignedIntegerResult = extractPrefixedNumber(fileData, startPos, identiferStartChar);
+        return unsignedIntegerResult.newPosition != -1 ? Tokens::TokenizeResult(tokenCtor(unsignedIntegerResult.result, startPos), unsignedIntegerResult.newPosition)
                                                         : Tokens::TokenizeResult();
     }
 
@@ -99,10 +123,10 @@ namespace TokenLib {
             if ((*fileData)[currPos] == identiferStartChar) {
                 currPos++;
                 if ((*fileData)[currPos] == '"') { // Double-quoted named identifier
-                    TokenLib::stringParseResult result = TokenLib::extractQuotedString(fileData, currPos);
-                    if (result.second != -1) {
-                        identifier = result.first;
-                        firstCharAfterToken = result.second;
+                    TokenLib::stringParseResult stringResult = TokenLib::extractQuotedString(fileData, currPos);
+                    if (stringResult.newPosition != -1) {
+                        identifier = stringResult.result;
+                        firstCharAfterToken = stringResult.newPosition;
                         succeeded = true;
                     }
                 } else { // Unquoted identifier

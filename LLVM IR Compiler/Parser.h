@@ -60,9 +60,9 @@ namespace Parser {
     using newTokenPos = int;
 
     template <typename T>
-    using ParsingResult = Lib::ResultPointer<T>;
+    using ParsingResult = Lib::ResultConstMembersPointer<T>;
 
-    using InstructionParseResult = Lib::ResultPointer<Instructions::InstructionVariant>;
+    using InstructionParseResult = Lib::ResultConstMembersPointer<Instructions::InstructionVariant>;
 
     class Parser {
         private:
@@ -200,10 +200,10 @@ namespace Parser {
     struct CodeBlockParsingResult : public ParsingResult<Expressions::ExpressionFunctionCodeBlock> {
         const int nextUnnamedLocal;
         const std::shared_ptr<std::set<std::string>> localNameSet;
-        CodeBlockParsingResult() : nextUnnamedLocal(-1), Result() {}
+        CodeBlockParsingResult() : nextUnnamedLocal(-1), ResultConstMembers() {}
         CodeBlockParsingResult(std::shared_ptr<Expressions::ExpressionFunctionCodeBlock> expressionArg, newTokenPos newPosArg,
                                 int nextUnnamedLocalArg, std::shared_ptr<std::set<std::string>> localNameSetArg)
-                                : nextUnnamedLocal(nextUnnamedLocalArg), localNameSet(localNameSetArg), Result(expressionArg, newPosArg) {}
+                                : nextUnnamedLocal(nextUnnamedLocalArg), localNameSet(localNameSetArg), ResultConstMembers(expressionArg, newPosArg) {}
     };
 
     // Indicates if the parser has encountered a issue and cannot progress.

@@ -4,7 +4,7 @@
 
 namespace Tokens {
     TokenizeResult TokenStringConstructor::tokenize(BasicArray::BasicCharArray* fileData, int startPos) {
-        TokenLib::stringParseResult result = TokenLib::extractQuotedString(fileData, startPos);
-        return result.second != -1 ? TokenizeResult(std::make_shared<TokenString>(result.first, startPos), result.second) : TokenizeResult();
+        TokenLib::stringParseResult stringResult = TokenLib::extractQuotedString(fileData, startPos);
+        return stringResult.success ? TokenizeResult(std::make_shared<TokenString>(stringResult.result, startPos), stringResult.newPosition) : TokenizeResult();
     }
 }

@@ -13,6 +13,13 @@ constexpr auto llArgKey = "-ll";
 constexpr auto asmArgKey = "-asm";
 constexpr int filePathArgStartIndex = 1;
 
+void outputTokens(std::shared_ptr<Tokenizer::tokensArray> tokens) {
+    std::cout << "Tokens array:" << '\n';
+    for (auto &&token : *tokens) {
+        std::cout << "\t"+token->getNameAndPos() << '\n';
+    }
+}
+
 int main(int argc, char* argv[]) {
     if (argc != (filePathArgStartIndex+4)) {
         std::cout << "Usage: -ll <inputFilePath> -asm <outputFilePath>" << '\n';
@@ -36,6 +43,7 @@ int main(int argc, char* argv[]) {
     std::string outputFileName = "TestOutput/mainOnly.asm";
     try {
         std::shared_ptr<Tokenizer::tokensArray> tokens = tokenizer.tokenize(inputFilePath);
+        // outputTokens(tokens);
         AttributeIDProcessor::SubstitutedTokens substitutedTokens = attributeProcessor.substituteAttributeGroups(tokens);
         Parser::Parser parser(substitutedTokens);
         std::cout << "Attempting to parse source_filename." << '\n';

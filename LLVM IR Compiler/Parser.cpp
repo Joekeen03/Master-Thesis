@@ -182,7 +182,7 @@ namespace Parser {
             // Try parsing an 'inalloca' token
             // TODO
 
-            Lib::ResultPointer<Types::TypeSized> typeResult = parseSizedType(currPos);
+            Lib::ResultConstMembersPointer<Types::TypeSized> typeResult = parseSizedType(currPos);
             if (typeResult.success) {
                 currPos++;
                 allocationType = typeResult.result;
@@ -322,7 +322,7 @@ namespace Parser {
 
     /** GENERAL PARSE METHODS **/
 
-    Lib::ResultPointer<Expressions::ExpressionIdentifier> Parser::parseIdentifier(int startPos) {
+    Lib::ResultConstMembersPointer<Expressions::ExpressionIdentifier> Parser::parseIdentifier(int startPos) {
         bool success = false;
         std::shared_ptr<const Expressions::ExpressionIdentifier> identifier;
         int nextPos;
@@ -332,11 +332,11 @@ namespace Parser {
             nextPos = localIdentifierResult.newPos;
             success = true;
         }
-        return success ? Lib::ResultPointer<Expressions::ExpressionIdentifier>(identifier, nextPos)
-                        : Lib::ResultPointer<Expressions::ExpressionIdentifier>();
+        return success ? Lib::ResultConstMembersPointer<Expressions::ExpressionIdentifier>(identifier, nextPos)
+                        : Lib::ResultConstMembersPointer<Expressions::ExpressionIdentifier>();
     }
 
-    Lib::ResultPointer<Expressions::ExpressionLocalIdentifier> Parser::parseLocalIdentifier(int startPos) {
+    Lib::ResultConstMembersPointer<Expressions::ExpressionLocalIdentifier> Parser::parseLocalIdentifier(int startPos) {
         tokenPointer token = getToken(startPos);
         int nextPos = startPos+1;
         bool success = false;
@@ -349,8 +349,8 @@ namespace Parser {
             identifier = std::make_shared<const Expressions::ExpressionLocalNamedIdentifier>(std::dynamic_pointer_cast<const Tokens::TokenLocalNamedIdentifier>(token)->name);
             success = true;
         }
-        return success ? Lib::ResultPointer<Expressions::ExpressionLocalIdentifier>(identifier, nextPos)
-                        : Lib::ResultPointer<Expressions::ExpressionLocalIdentifier>();
+        return success ? Lib::ResultConstMembersPointer<Expressions::ExpressionLocalIdentifier>(identifier, nextPos)
+                        : Lib::ResultConstMembersPointer<Expressions::ExpressionLocalIdentifier>();
     }
     ParsingResult<Types::TypeInteger> Parser::parseIntegerType(int startPos) {
         int currPos = startPos;
@@ -360,31 +360,31 @@ namespace Parser {
         }
         currPos++;
         auto integerType = std::make_shared<const Types::TypeInteger>(std::dynamic_pointer_cast<const Tokens::TokenTypeInteger>(firstToken)->bitWidth);
-        return Lib::ResultPointer<Types::TypeInteger>(integerType, startPos+1);
+        return Lib::ResultConstMembersPointer<Types::TypeInteger>(integerType, startPos+1);
     }
 
-    Lib::ResultPointer<Types::Type> Parser::parseType(int startPos) {
+    Lib::ResultConstMembersPointer<Types::Type> Parser::parseType(int startPos) {
         if (auto integerTypeParseResult = parseIntegerType(startPos); integerTypeParseResult.success) {
-            return Lib::ResultPointer<Types::Type>(integerTypeParseResult.result, integerTypeParseResult.newPos);
+            return Lib::ResultConstMembersPointer<Types::Type>(integerTypeParseResult.result, integerTypeParseResult.newPos);
         }
-        return Lib::ResultPointer<Types::Type>();
+        return Lib::ResultConstMembersPointer<Types::Type>();
     }
 
-    Lib::ResultPointer<Types::TypeSized> Parser::parseSizedType(int startPos) {
+    Lib::ResultConstMembersPointer<Types::TypeSized> Parser::parseSizedType(int startPos) {
         if (auto integerTypeParseResult = parseIntegerType(startPos); integerTypeParseResult.success) {
-            return Lib::ResultPointer<Types::TypeSized>(integerTypeParseResult.result, integerTypeParseResult.newPos);
+            return Lib::ResultConstMembersPointer<Types::TypeSized>(integerTypeParseResult.result, integerTypeParseResult.newPos);
         }
-        return Lib::ResultPointer<Types::TypeSized>();
+        return Lib::ResultConstMembersPointer<Types::TypeSized>();
     }
 
-    Lib::ResultPointer<Types::TypeSized> Parser::parseFirstClassKnownSizeType(int startPos) {
+    Lib::ResultConstMembersPointer<Types::TypeSized> Parser::parseFirstClassKnownSizeType(int startPos) {
         if (auto integerTypeParseResult = parseIntegerType(startPos); integerTypeParseResult.success) {
-            return Lib::ResultPointer<Types::TypeSized>(integerTypeParseResult.result, integerTypeParseResult.newPos);
+            return Lib::ResultConstMembersPointer<Types::TypeSized>(integerTypeParseResult.result, integerTypeParseResult.newPos);
         }
-        return Lib::ResultPointer<Types::TypeSized>();
+        return Lib::ResultConstMembersPointer<Types::TypeSized>();
     }
 
-    Lib::ResultPointer<Expressions::ExpressionOperand> Parser::parseOperand(int startPos) {
+    Lib::ResultConstMembersPointer<Expressions::ExpressionOperand> Parser::parseOperand(int startPos) {
         int currPos = startPos;
         int nextPos = -1;
         // Attempt to parse a literal
@@ -394,7 +394,7 @@ namespace Parser {
             // auto x = Expressions::ExpressionOperand(operandValue);
             auto operandExpression = std::make_shared<const Expressions::ExpressionOperand>(operandValue);
             nextPos = currPos+1;
-            return Lib::ResultPointer<Expressions::ExpressionOperand>(operandExpression, nextPos);
+            return Lib::ResultConstMembersPointer<Expressions::ExpressionOperand>(operandExpression, nextPos);
         }
         // Attempt to parse an identifier.
         auto identifierResult = parseIdentifier(currPos);
@@ -413,10 +413,10 @@ namespace Parser {
             }
             auto operandExpression = std::make_shared<const Expressions::ExpressionOperand>(operandValue);
             nextPos = identifierResult.newPos;
-            return Lib::ResultPointer<Expressions::ExpressionOperand>(operandExpression, nextPos);
+            return Lib::ResultConstMembersPointer<Expressions::ExpressionOperand>(operandExpression, nextPos);
         }
         
-        return updateError<Lib::ResultPointer<Expressions::ExpressionOperand>>(currPos, "Error parsing operand: expected a literal or identifier, received a "+getToken(currPos)->getName());
+        return updateError<Lib::ResultConstMembersPointer<Expressions::ExpressionOperand>>(currPos, "Error parsing operand: expected a literal or identifier, received a "+getToken(currPos)->getName());
     }
 
     ParsingResult<Expressions::ExpressionSourceFile> Parser::parseSourceFile(int startPos) {
@@ -720,7 +720,7 @@ namespace Parser {
                                 : CodeBlockParsingResult();
     }
 
-    Lib::ResultPointer<std::vector<const std::shared_ptr<const Expressions::ExpressionFunctionCodeBlock>>> Parser::parseFunctionCodeBlocks(int startPos) {
+    Lib::ResultConstMembersPointer<std::vector<const std::shared_ptr<const Expressions::ExpressionFunctionCodeBlock>>> Parser::parseFunctionCodeBlocks(int startPos) {
         int currPos = startPos;
         bool success = false;
         auto codeBlocks = std::make_shared<std::vector<const std::shared_ptr<const Expressions::ExpressionFunctionCodeBlock>>>();
@@ -750,12 +750,12 @@ namespace Parser {
                 }
             }
         }
-        return success ? Lib::ResultPointer<std::vector<const std::shared_ptr<const Expressions::ExpressionFunctionCodeBlock>>>(codeBlocks, currPos)
-                        : Lib::ResultPointer<std::vector<const std::shared_ptr<const Expressions::ExpressionFunctionCodeBlock>>>();
+        return success ? Lib::ResultConstMembersPointer<std::vector<const std::shared_ptr<const Expressions::ExpressionFunctionCodeBlock>>>(codeBlocks, currPos)
+                        : Lib::ResultConstMembersPointer<std::vector<const std::shared_ptr<const Expressions::ExpressionFunctionCodeBlock>>>();
     }
 
-    Lib::ResultPointer<Expressions::ExpressionFunctionDefinition> Parser::parseFunctionDefinition(int startPos) {
-        using resultType = Lib::ResultPointer<Expressions::ExpressionFunctionDefinition>;
+    Lib::ResultConstMembersPointer<Expressions::ExpressionFunctionDefinition> Parser::parseFunctionDefinition(int startPos) {
+        using resultType = Lib::ResultConstMembersPointer<Expressions::ExpressionFunctionDefinition>;
         int currPos = startPos;
         int nextPos = -1;
 
@@ -811,7 +811,7 @@ namespace Parser {
         
         std::cout << "Parsed function definition." << '\n';
         auto functionDefinition = std::make_shared<Expressions::ExpressionFunctionDefinition>(headerPreName, returnType, functionName, parameterList, headerPostName, codeBlocks);
-        return Lib::ResultPointer<Expressions::ExpressionFunctionDefinition>(functionDefinition, nextPos);
+        return Lib::ResultConstMembersPointer<Expressions::ExpressionFunctionDefinition>(functionDefinition, nextPos);
     }
 
     // Metadata parsing methods

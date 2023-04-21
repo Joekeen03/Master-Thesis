@@ -9,7 +9,7 @@
 
 namespace Tokens {
     class Token;
-    using TokenizeResult = Lib::ResultPointer<Token>;
+    using TokenizeResult = Lib::ResultConstMembersPointer<Token>;
 
     class Token {
         public:
