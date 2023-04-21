@@ -17,13 +17,8 @@ namespace ReservedWords {
     extern const EnumRegistry::RegistryItem define;
     extern const EnumRegistry::RegistryItem dso_local;
     extern const EnumRegistry::RegistryItem noundef;
-    extern const EnumRegistry::RegistryItem alloca;
     extern const EnumRegistry::RegistryItem align;
-    extern const EnumRegistry::RegistryItem store;
-    extern const EnumRegistry::RegistryItem load;
-    extern const EnumRegistry::RegistryItem add;
     extern const EnumRegistry::RegistryItem nsw;
-    extern const EnumRegistry::RegistryItem ret;
     extern const EnumRegistry::RegistryItem attributes;
     extern const EnumRegistry::RegistryItem noinline;
     extern const EnumRegistry::RegistryItem mustprogress;
@@ -31,6 +26,18 @@ namespace ReservedWords {
     extern const EnumRegistry::RegistryItem nounwind;
     extern const EnumRegistry::RegistryItem optnone;
     extern const EnumRegistry::RegistryItem uwtable;
+    extern const EnumRegistry::RegistryItem to;
+    
+    // Non-terminator instruction keywords
+    extern const EnumRegistry::RegistryItem alloca;
+    extern const EnumRegistry::RegistryItem store;
+    extern const EnumRegistry::RegistryItem load;
+    extern const EnumRegistry::RegistryItem add;
+    extern const EnumRegistry::RegistryItem trunc;
+    
+    // Terminator instruction keywords
+    extern const EnumRegistry::RegistryItem ret;
+    extern const EnumRegistry::RegistryItem br;
     extern const int nKeywords;
 }
 

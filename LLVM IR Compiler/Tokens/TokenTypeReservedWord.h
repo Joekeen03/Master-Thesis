@@ -10,6 +10,7 @@ namespace TypeReservedWords {
     extern std::shared_ptr<EnumRegistry::EnumRegistry> typeReservedWordRegistry;
     extern const EnumRegistry::RegistryItem typeVoid;
     extern const EnumRegistry::RegistryItem typePtr;
+    extern const EnumRegistry::RegistryItem typeLabel;
     extern const int nTypeReservedWords;
 }
 

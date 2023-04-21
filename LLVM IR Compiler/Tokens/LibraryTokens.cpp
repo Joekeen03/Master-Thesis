@@ -19,6 +19,7 @@
 #include "TokenTypeInteger.h"
 #include "TokenTypeReservedWord.h"
 #include "TokenUnnamedMetadata.h"
+#include "TokenUnnamedCodeLabel.h"
 
 namespace TokenLibrary {
     std::unique_ptr<Tokens::TokenConstructor> tokenConstructors[] = {
@@ -34,6 +35,7 @@ namespace TokenLibrary {
         std::make_unique<Tokens::TokenAttributeIDConstructor>(),
         std::make_unique<Tokens::TokenCurlyBraceConstructor>(),
         std::make_unique<Tokens::TokenNamedMetadataConstructor>(),
+        std::make_unique<Tokens::TokenUnnamedCodeLabelConstructor>(),
         std::make_unique<Tokens::TokenNumberLiteralConstructor>(),
         std::make_unique<Tokens::TokenMetadataNodeStartConstructor>(),
         std::make_unique<Tokens::TokenMetadataStringConstructor>(),
