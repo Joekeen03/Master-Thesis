@@ -86,6 +86,9 @@ $(TEST_OUTPUT_DIR)/%.asm : $(TEST_DIR)/%.ll
 
 prepareTests: $(TEST_LL_FILES)
 
+cleanTests:
+	-del $(subst /,\\,$(TEST_LL_FILES))
+
 $(OBJECT_DIR)/%.o: %.cpp | $(@D)/
 	$(CXX) -MMD -MP -I. $(EXTRA_CFLAGS) $(CFLAGS) $(LDFLAGS) -c $< -o $@
 
