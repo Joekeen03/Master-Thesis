@@ -12,6 +12,9 @@ namespace Instructions {
             std::string getName() const override { return "InstructionTEMPLATE"; }
             virtual std::shared_ptr<const Types::Type> getYieldedType() const override { throw std::runtime_error("InstructionTEMPLATE::getYieldedType was not\
                                                                                      implemented.");}
+            virtual std::string getStringRepresentation() const override {
+                throw std::runtime_error("InstructionTEMPLATE::getStringRepresentation was not implemented.");
+            }
     };
 }
 

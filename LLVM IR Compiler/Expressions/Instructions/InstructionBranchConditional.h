@@ -11,11 +11,11 @@ namespace Instructions {
     class InstructionBranchConditional : public InstructionTerminatorYieldsVoid {
         public:
             const std::shared_ptr<const Expressions::ExpressionLocalIdentifier> condition;
-            const std::shared_ptr<const Expressions::ExpressionLocalIdentifier> ifFalseLabel;
             const std::shared_ptr<const Expressions::ExpressionLocalIdentifier> ifTrueLabel;
+            const std::shared_ptr<const Expressions::ExpressionLocalIdentifier> ifFalseLabel;
             InstructionBranchConditional(std::shared_ptr<const Expressions::ExpressionLocalIdentifier> conditionArg,
-                                         std::shared_ptr<const Expressions::ExpressionLocalIdentifier> ifFalseLabelArg,
-                                         std::shared_ptr<const Expressions::ExpressionLocalIdentifier> ifTrueLabelArg)
+                                         std::shared_ptr<const Expressions::ExpressionLocalIdentifier> ifTrueLabelArg,
+                                         std::shared_ptr<const Expressions::ExpressionLocalIdentifier> ifFalseLabelArg)
                                              : condition(conditionArg), ifFalseLabel(ifFalseLabelArg),
                                                ifTrueLabel(ifTrueLabelArg) {}
             std::string getName() const override { return "InstructionBranchConditional"; }

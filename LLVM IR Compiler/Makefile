@@ -77,11 +77,11 @@ NewHeader%: | $(TEMPLATE_RESULT_DIR)/
 
 %.ll : %.cpp ; $(CXX) $(CFLAGS) -c $< -o $(TEST_DIR)/$(subst .cpp,.ll,$(<F)) -S -emit-llvm
 
-mainOnly: $(EXECUTABLE_PATH) $(TEST_OUTPUT_DIR)/mainOnly.asm
-simpleAddition: $(EXECUTABLE_PATH) $(TEST_OUTPUT_DIR)/simpleAddition.asm
-simpleIf: $(EXECUTABLE_PATH) $(TEST_OUTPUT_DIR)/simpleIf.asm
+mainOnly: $(TEST_OUTPUT_DIR)/mainOnly.asm
+simpleAddition: $(TEST_OUTPUT_DIR)/simpleAddition.asm
+simpleIf: $(TEST_OUTPUT_DIR)/simpleIf.asm
 
-$(TEST_OUTPUT_DIR)/%.asm : $(TEST_DIR)/%.ll
+$(TEST_OUTPUT_DIR)/%.asm : $(TEST_DIR)/%.ll compiler
 	./$(EXECUTABLE_PATH) -ll $< -asm $@
 
 prepareTests: $(TEST_LL_FILES)

@@ -10,6 +10,9 @@ namespace Instructions {
         public:
             InstructionTEMPLATE() {}
             std::string getName() const override { return "InstructionTEMPLATE"; }
+            virtual std::string getStringRepresentation() const override {
+                throw std::runtime_error("InstructionTEMPLATE::getStringRepresentation was not implemented.");
+            }
     };
 }
 

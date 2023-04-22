@@ -21,6 +21,7 @@ namespace CodeGen {
             const std::shared_ptr<const Expressions::ExpressionFile> moduleFile;
 
             std::shared_ptr<LocalsMap> computeVariableLocations(std::shared_ptr<const Expressions::ExpressionFunctionDefinition> function);
+            std::shared_ptr<const CodeBlockMap> generateCodeBlockMap(std::shared_ptr<const Expressions::ExpressionFunctionDefinition> functionDefinition);
             
             // Generates the SNES 65c816 instructions corresponding to the non-terminator LLVM IR instruction.
             // Uses a very simple memory model for the SNES 65c816 instructions, with the return value, parameters, and every

@@ -47,7 +47,7 @@ namespace TokenLib {
         result = TokenizeResult(TokenGlobalIdentifier(identifier), currPos);
         bool success = false;
         int currPos = startPos;
-        bool sign = 1;
+        char sign = 1;
         auto unsignedResult = unsignedIntegerParseFAILED;
         try {
             char currChar = (*fileData)[currPos];

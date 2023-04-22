@@ -5,19 +5,23 @@
 #include <memory>
 
 #include "LocalsMap.h"
+#include "CodeBlockMap.h"
 
 namespace CodeGen {
     class FunctionInfo {
         public:
             const std::string functionName;
-            FunctionInfo(std::string functionNameArg) : functionName(functionNameArg) {}
+            FunctionInfo(std::string functionNameArg)
+                            : functionName(functionNameArg){}
     };
     
     class DefinedFunctionInfo : public FunctionInfo {
         public:
             const std::shared_ptr<const LocalsMap> localsMap;
-            DefinedFunctionInfo(std::string functionName, std::shared_ptr<const LocalsMap> localsMapArg)
-                                : FunctionInfo(functionName), localsMap(localsMapArg) {}
+            const std::shared_ptr<const CodeBlockMap> codeBlocksMap;
+            DefinedFunctionInfo(std::string functionName, std::shared_ptr<const LocalsMap> localsMapArg,
+                                const std::shared_ptr<const CodeBlockMap> codeBlocksMapArg)
+                                    : FunctionInfo(functionName), localsMap(localsMapArg), codeBlocksMap(codeBlocksMapArg)  {}
     };
 }
 

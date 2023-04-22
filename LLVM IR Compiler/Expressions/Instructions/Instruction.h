@@ -9,7 +9,10 @@
 namespace Instructions {
     class Instruction : public Expressions::Expression {
         public:
-            virtual std::string getName() const { return "Base Instruction"; }
+            virtual std::string getName() const { return "Base LLVM IR Instruction"; }
+            virtual std::string getStringRepresentation() const {
+                throw std::runtime_error("Instruction::getStringRepresentation was not overridden in a subclass.");
+            }
     };
 }
 

@@ -4,8 +4,8 @@
 #include <string>
 #include <memory>
 
+#include "CodeBlockMap.h"
 #include "FunctionInfo.h"
-#include "../Expressions/ExpressionFunctionCodeBlock.h"
 
 namespace {
     const char* functionPrefix = "Function__";
@@ -26,7 +26,7 @@ namespace CodeGen {
         return "f_"+functionInfo->functionName;
     }
 
-    std::string inline mangleCodeBlockIdentifier(const std::shared_ptr<const Expressions::ExpressionFunctionCodeBlock> codeBlock) {
+    std::string inline mangleCodeBlockIdentifier(const std::shared_ptr<const CodeBlockInfo> codeBlock) {
         return "cb_"+codeBlock->label;
     }
 
@@ -43,7 +43,7 @@ namespace CodeGen {
     }
     
     MangledCodeBlockLabel inline mangleCodeBlockLabel(const std::shared_ptr<const FunctionInfo> functionInfo,
-                                        const std::shared_ptr<const Expressions::ExpressionFunctionCodeBlock> codeBlock) {
+                                        const std::shared_ptr<const CodeBlockInfo> codeBlock) {
         return MangledCodeBlockLabel{codeBlockPrefix+mangleFunctionIdentifier(functionInfo)+'_'
                                 +mangleCodeBlockIdentifier(codeBlock)};
     }

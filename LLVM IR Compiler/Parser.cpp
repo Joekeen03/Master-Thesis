@@ -293,6 +293,7 @@ namespace Parser {
     } // parseInstructionAdd
 
     InstructionParseResult Parser::parseInstructionTruncate(int startPos, std::shared_ptr<const Expressions::ExpressionLocalIdentifier> assignee) {
+        // FIXME should validate the final type's size is smaller than the initial type's size.
         int currPos = startPos;
         if (!checkReserved<Tokens::TokenKeyword>(currPos, ReservedWords::trunc)) {
             return updateErrorExpectedReceived<InstructionParseResult>(currPos, "truncate instruction", "truncate keyword");
@@ -378,25 +379,25 @@ namespace Parser {
         }
 
         currPos++;
-        auto ifFalseLabelParseResult = parseLocalIdentifierAsLabel(currPos);
-        if (!ifFalseLabelParseResult.success) {
-            return InstructionParseResult();
-        }
-
-        currPos = ifFalseLabelParseResult.newPos;
-        if (!isTokenOfType<Tokens::TokenComma>(currPos)) {
-            return updateErrorExpectedReceived<InstructionParseResult>(currPos, "conditional branch instruction", "comma");
-        }
-
-        currPos++;
         auto ifTrueLabelParseResult = parseLocalIdentifierAsLabel(currPos);
         if (!ifTrueLabelParseResult.success) {
             return InstructionParseResult();
         }
 
         currPos = ifTrueLabelParseResult.newPos;
-        auto instruction = Instructions::InstructionBranchConditional(conditionParseResult.result, ifFalseLabelParseResult.result,
-                                                                      ifTrueLabelParseResult.result);
+        if (!isTokenOfType<Tokens::TokenComma>(currPos)) {
+            return updateErrorExpectedReceived<InstructionParseResult>(currPos, "conditional branch instruction", "comma");
+        }
+
+        currPos++;
+        auto ifFalseLabelParseResult = parseLocalIdentifierAsLabel(currPos);
+        if (!ifFalseLabelParseResult.success) {
+            return InstructionParseResult();
+        }
+
+        currPos = ifFalseLabelParseResult.newPos;
+        auto instruction = Instructions::InstructionBranchConditional(conditionParseResult.result, ifTrueLabelParseResult.result,
+                                                                      ifFalseLabelParseResult.result);
         return InstructionParseResult(std::make_shared<Instructions::InstructionVariant>(instruction), currPos);
     } // parseInstructionBranchConditional
 
