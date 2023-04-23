@@ -132,5 +132,6 @@
         "__memory": "cpp",
         "memory_resource": "cpp"
     },
-    "cmake.configureOnOpen": false
+    "cmake.configureOnOpen": false,
+    "terminal.integrated.cwd":"./LLVM IR Compiler",
 }
