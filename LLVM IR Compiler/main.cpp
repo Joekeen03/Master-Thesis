@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
             outputFile << line << '\n';
         }
         outputFile.close();
-        
+        return 0;
     } catch (const Tokenizer::TokenizationException& e) {
         std::cout << "Tokenization Exception:\n" << e.what() << '\n';
     } catch (const Parser::ParsingException& e) {
@@ -75,5 +75,5 @@ int main(int argc, char* argv[]) {
         std::cout << e.what() << '\n';
     }
     
-    return 0;
+    return -1;
 }

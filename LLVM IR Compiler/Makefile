@@ -9,10 +9,22 @@ OBJECT_DIR = $(BUILD_DIR)/objects
 
 TEMPLATE_DIR = $(SRC_DIR)/Templates
 TEMPLATE_RESULT_DIR = $(SRC_DIR)/TemplateResult
-TEST_DIR = $(SRC_DIR)/Test
-TEST_OUTPUT_DIR = $(SRC_DIR)/TestOutput
 
-EXTRA_CFLAGS = -std=c++17 
+TEST_DIR = $(SRC_DIR)/Test
+TEST_SRC_DIR = $(TEST_DIR)/cpp
+TEST_LL_DIR = $(TEST_DIR)/ll
+TEST_ASM_DIR = $(TEST_DIR)/asm
+TEST_SMC_DIR = $(TEST_DIR)/smc
+TEST_TEMP_DIR = $(TEST_DIR)/temp
+TEST_INCLUDES_DIR = $(TEST_DIR)/includes
+
+
+
+WLA_65c816 = wla-65816
+WLA_LINKER = wlalink
+
+EXTRA_CFLAGS = -std=c++17
+
 EXECUTABLE_NAME = main.exe
 EXECUTABLE_PATH = $(BUILD_DIR)/$(EXECUTABLE_NAME)
 
@@ -21,8 +33,8 @@ SRC_FILES = $(foreach dir,$(DIRS),$(wildcard $(dir)/*.cpp))
 OBJ_FILES = $(SRC_FILES:$(SRC_DIR)%.cpp=$(OBJECT_DIR)%.o)
 DEP_FILES = $(OBJ_FILES:.o=.d)
 
-TEST_CPP_FILES = $(wildcard $(TEST_DIR)/*.cpp)
-TEST_LL_FILES = $(TEST_CPP_FILES:%.cpp=%.ll)
+TEST_CPP_FILES = $(wildcard $(TEST_SRC_DIR)/*.cpp)
+TEST_LL_FILES = $(TEST_CPP_FILES:$(TEST_SRC_DIR)%.cpp=$(TEST_LL_DIR)%.ll)
 
 TEMPLATE_TOKEN_H_FILE := $(TEMPLATE_DIR)/TokenTEMPLATE.h
 TEMPLATE_TOKEN_CPP_FILE := $(TEMPLATE_DIR)/TokenTEMPLATE.cpp
@@ -36,6 +48,7 @@ TEMPLATE_GENERIC_H_FILE := $(TEMPLATE_DIR)/HeaderTEMPLATE.h
 clean:
 	-del $(subst /,\\,$(OBJECT_DIR))\\*.o
 	-del $(subst /,\\,$(OBJECT_DIR))\\*.d
+	-del $(subst /,\\,$(TEST_DIR))\\*.ll
 
 compiler: $(EXECUTABLE_PATH)
 
@@ -75,14 +88,23 @@ NewHeader%: h_data := $(file <$(subst /,\\,$(TEMPLATE_GENERIC_H_FILE)))
 NewHeader%: | $(TEMPLATE_RESULT_DIR)/
 	$(file >$(subst /,\\,$(TEMPLATE_RESULT_DIR)/$(subst NewHeader,,$@).h),$(subst TEMPLATE,$(subst NewHeader,,$@),$(h_data)))
 
-%.ll : %.cpp ; $(CXX) $(CFLAGS) -c $< -o $(TEST_DIR)/$(subst .cpp,.ll,$(<F)) -S -emit-llvm
+$(TEST_LL_DIR)%.ll : $(TEST_SRC_DIR)/%.cpp $(TEST_LL_DIR)/ ; $(CXX) $(CFLAGS) -c $< -o $@ -S -emit-llvm
 
-mainOnly: $(TEST_OUTPUT_DIR)/mainOnly.asm
-simpleAddition: $(TEST_OUTPUT_DIR)/simpleAddition.asm
-simpleIf: $(TEST_OUTPUT_DIR)/simpleIf.asm
+mainOnly: $(TEST_SMC_DIR)/mainOnly.smc
+simpleAddition: $(TEST_SMC_DIR)/simpleAddition.smc
+simpleIf: $(TEST_SMC_DIR)/simpleIf.smc
+simpleChar: $(TEST_SMC_DIR)/simpleChar.smc
+simpleLongLong: $(TEST_SMC_DIR)/simpleLongLong.smc
 
-$(TEST_OUTPUT_DIR)/%.asm : $(TEST_DIR)/%.ll compiler
+$(TEST_ASM_DIR)/%.asm : $(TEST_LL_DIR)/%.ll $(TEST_ASM_DIR)/ compiler
 	./$(EXECUTABLE_PATH) -ll $< -asm $@
+
+$(TEST_SMC_DIR)/%.smc : $(TEST_ASM_DIR)/%.asm  $(TEST_TEMP_DIR)/ $(TEST_SMC_DIR)/ compiler
+	$(file > $(TEST_TEMP_DIR)/$*.prj,[objects])
+	$(file >> $(TEST_TEMP_DIR)/$*.prj,$(TEST_TEMP_DIR)/$*.obj)
+	$(WLA_65c816) -I $(TEST_INCLUDES_DIR)/ -o $(TEST_TEMP_DIR)/$*.obj $<
+	$(WLA_LINKER) $(TEST_TEMP_DIR)/$*.prj $@
+	-rmdir /S /Q $(subst /,\\,$(TEST_TEMP_DIR))
 
 prepareTests: $(TEST_LL_FILES)
 
@@ -93,7 +115,6 @@ $(OBJECT_DIR)/%.o: %.cpp | $(@D)/
 	$(CXX) -MMD -MP -I. $(EXTRA_CFLAGS) $(CFLAGS) $(LDFLAGS) -c $< -o $@
 
 %/:
-	$(info $@)
 	mkdir $(subst /,\\,$@)
 
 testing: $(OBJECT_DIR)/Tokens/HelperFunctionsTokens.o
