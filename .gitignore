@@ -9,3 +9,4 @@ SNES Target/Test/Generate/*
 LLVM IR Compiler/build
 llvm-project/*
 LLVM IR Compiler/TestOutput
+LLVM IR Compiler/ComputerSpecific.mak

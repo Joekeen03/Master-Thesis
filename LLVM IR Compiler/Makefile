@@ -20,14 +20,6 @@ TEST_INCLUDES_DIR = $(TEST_DIR)/includes
 
 
 
-WLA_65c816 = wla-65816
-WLA_LINKER = wlalink
-
-EXTRA_CFLAGS = -std=c++17
-
-EXECUTABLE_NAME = main.exe
-EXECUTABLE_PATH = $(BUILD_DIR)/$(EXECUTABLE_NAME)
-
 DIRS = $(SRC_DIR) $(TOKEN_DIR) $(EXPRESSION_DIR) $(CODEGEN_DIR) $(SNES_INSTRUCTION_OBJECTS)
 SRC_FILES = $(foreach dir,$(DIRS),$(wildcard $(dir)/*.cpp))
 OBJ_FILES = $(SRC_FILES:$(SRC_DIR)%.cpp=$(OBJECT_DIR)%.o)
@@ -44,6 +36,15 @@ TEMPLATE_LLVMIR_INSTRUCTION_NORMAL_YIELDS_VOID_H_FILE := $(TEMPLATE_DIR)/Instruc
 TEMPLATE_LLVMIR_INSTRUCTION_TERMINATOR_YIELDS_VOID_H_FILE := $(TEMPLATE_DIR)/InstructionTerminatorYieldsVoidTEMPLATE.h
 TEMPLATE_SNES_INSTRUCTION_H_FILE := $(TEMPLATE_DIR)/SNESInstructionTEMPLATE.h
 TEMPLATE_GENERIC_H_FILE := $(TEMPLATE_DIR)/HeaderTEMPLATE.h
+
+
+
+EXTRA_CFLAGS = -std=c++17
+
+EXECUTABLE_NAME = main.exe
+EXECUTABLE_PATH = $(BUILD_DIR)/$(EXECUTABLE_NAME)
+
+COMPUTER_SPECIFIC_MAKEFILE = ComputerSpecific.mak
 
 clean:
 	-del $(subst /,\\,$(OBJECT_DIR))\\*.o
@@ -95,6 +96,9 @@ simpleAddition: $(TEST_SMC_DIR)/simpleAddition.smc
 simpleIf: $(TEST_SMC_DIR)/simpleIf.smc
 simpleChar: $(TEST_SMC_DIR)/simpleChar.smc
 simpleLongLong: $(TEST_SMC_DIR)/simpleLongLong.smc
+test_%: $(TEST_SMC_DIR)/%.smc
+	$(EMULATOR) $(TEST_SMC_DIR)/$*.smc
+
 
 $(TEST_ASM_DIR)/%.asm : $(TEST_LL_DIR)/%.ll $(TEST_ASM_DIR)/ compiler
 	./$(EXECUTABLE_PATH) -ll $< -asm $@
@@ -124,8 +128,9 @@ testing: $(OBJECT_DIR)/Tokens/HelperFunctionsTokens.o
 	$(info $(TEST_CPP_FILES))
 	$(info $(TEST_LL_FILES))
 
-.PHONY: testing
+.PHONY: testing mainOnly simpleAddition simpleChar simpleIf simpleLongLong
 
 .SECONDARY:
 
 -include $(DEP_FILES)
+-include $(COMPUTER_SPECIFIC_MAKEFILE)
