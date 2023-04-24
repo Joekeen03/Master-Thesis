@@ -7,29 +7,35 @@ namespace ReservedWords {
     const EnumRegistry::RegistryItem datalayout = keywordRegistry->registerItem("datalayout");
     const EnumRegistry::RegistryItem triple = keywordRegistry->registerItem("triple");
     const EnumRegistry::RegistryItem define = keywordRegistry->registerItem("define");
-    const EnumRegistry::RegistryItem dso_local = keywordRegistry->registerItem("dso_local");
     const EnumRegistry::RegistryItem noundef = keywordRegistry->registerItem("noundef");
     const EnumRegistry::RegistryItem align = keywordRegistry->registerItem("align");
     const EnumRegistry::RegistryItem nsw = keywordRegistry->registerItem("nsw");
     const EnumRegistry::RegistryItem attributes = keywordRegistry->registerItem("attributes");
-    const EnumRegistry::RegistryItem noinline = keywordRegistry->registerItem("noinline");
+    const EnumRegistry::RegistryItem to = keywordRegistry->registerItem("to");
+
+    // Function attributes
+    const EnumRegistry::RegistryItem dso_local = keywordRegistry->registerItem("dso_local"); // ?
     const EnumRegistry::RegistryItem mustprogress = keywordRegistry->registerItem("mustprogress");
+    const EnumRegistry::RegistryItem noinline = keywordRegistry->registerItem("noinline");
     const EnumRegistry::RegistryItem norecurse = keywordRegistry->registerItem("norecurse");
     const EnumRegistry::RegistryItem nounwind = keywordRegistry->registerItem("nounwind");
     const EnumRegistry::RegistryItem optnone = keywordRegistry->registerItem("optnone");
     const EnumRegistry::RegistryItem uwtable = keywordRegistry->registerItem("uwtable");
-    const EnumRegistry::RegistryItem to = keywordRegistry->registerItem("to");
 
-    // Non-terminator instruction keywords
-    const EnumRegistry::RegistryItem alloca = keywordRegistry->registerItem("alloca");
+    // Non-terminator yields-void instruction keywords
     const EnumRegistry::RegistryItem store = keywordRegistry->registerItem("store");
-    const EnumRegistry::RegistryItem load = keywordRegistry->registerItem("load");
+
+    // Non-terminator yields-value instruction keywords
     const EnumRegistry::RegistryItem add = keywordRegistry->registerItem("add");
+    const EnumRegistry::RegistryItem alloca = keywordRegistry->registerItem("alloca");
+    const EnumRegistry::RegistryItem call = keywordRegistry->registerItem("call");
+    const EnumRegistry::RegistryItem load = keywordRegistry->registerItem("load");
     const EnumRegistry::RegistryItem trunc = keywordRegistry->registerItem("trunc");
 
     // Terminator instruction keywords
-    const EnumRegistry::RegistryItem ret = keywordRegistry->registerItem("ret");
     const EnumRegistry::RegistryItem br = keywordRegistry->registerItem("br");
+    const EnumRegistry::RegistryItem ret = keywordRegistry->registerItem("ret");
+
     const int nKeywords = keywordRegistry->finalize();
 }
 
