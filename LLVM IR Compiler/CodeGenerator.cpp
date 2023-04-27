@@ -512,9 +512,22 @@ namespace CodeGen {
             instructionLines->push_back(std::make_shared<SNESAssembly::SNESAssemblyLineInstruction>(instruction));
         }
         return std::make_shared<SNESAssembly::SNESAssemblySegmentInstructionChunk>("Truncate instruction", instructionLines);
-        throw std::runtime_error("[ERROR] NYI: CodeGenerator::convertNonTerminatorInstruction<InstructionTruncate>");
     } // convertNonTerminatorInstruction<InstructionTruncate>
 
+    template <>
+    std::shared_ptr<SNESAssembly::SNESAssemblySegmentInstructionChunk> CodeGenerator::convertNonTerminatorInstruction (
+        Instructions::InstructionCallReturnValue instruction, std::shared_ptr<const DefinedFunctionInfo> definedFunctionInfo
+    ) {
+        // NOTE - Ignoring vectors for now.
+        throw std::runtime_error("[ERROR] NYI: CodeGenerator::convertNonTerminatorInstruction<InstructionCallReturnValue>");
+        auto SNESInstructions = std::vector<const std::shared_ptr<const SNESAssembly::SNESInstruction>>();
+
+        auto instructionLines = std::make_shared<std::vector<const std::shared_ptr<const SNESAssembly::SNESAssemblyLineInstruction>>>();
+        for (auto &&instruction : SNESInstructions) {
+            instructionLines->push_back(std::make_shared<SNESAssembly::SNESAssemblyLineInstruction>(instruction));
+        }
+        return std::make_shared<SNESAssembly::SNESAssemblySegmentInstructionChunk>("Call yields value instruction", instructionLines);
+    } // convertNonTerminatorInstruction<InstructionCallReturnValue>
 
 
     // CodeGenerator::convertTerminatorInstruction specializations

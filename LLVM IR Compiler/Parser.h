@@ -157,6 +157,7 @@ namespace Parser {
             InstructionParseResult parseInstructionLoad(int startPos, std::shared_ptr<const Expressions::ExpressionLocalIdentifier> assignee);
             InstructionParseResult parseInstructionAdd(int startPos, std::shared_ptr<const Expressions::ExpressionLocalIdentifier> assignee);
             InstructionParseResult parseInstructionTruncate(int startPos, std::shared_ptr<const Expressions::ExpressionLocalIdentifier> assignee);
+            InstructionParseResult parseInstructionCallReturnValue(int startPos, std::shared_ptr<const Expressions::ExpressionLocalIdentifier> assignee);
 
             // Parsing for terminator instructions
 
@@ -169,6 +170,11 @@ namespace Parser {
             ParsingResult<Expressions::ExpressionIdentifier> parseIdentifier(int startPos);
             ParsingResult<Expressions::ExpressionLocalIdentifier> parseLocalIdentifier(int startPos);
             ParsingResult<Expressions::ExpressionLocalIdentifier> parseLocalIdentifierAsLabel(int startPos);
+
+            // Attempts to parse a named identifier token of type T; returns the token's name and the next position
+            //  if successful, an unsuccessful result (ResultConstMembersNoPointer()) otherwise.
+            template <typename T>
+            Lib::ResultConstMembersNoPointer<std::string> parseNamedIdentifier(int startPos);
 
             ParsingResult<Types::TypeInteger> parseIntegerType(int startPos);
             ParsingResult<Types::TypeInteger> parse_i1BooleanType(int startPos);

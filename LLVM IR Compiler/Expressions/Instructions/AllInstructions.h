@@ -9,6 +9,7 @@
 #include "InstructionLoad.h"
 #include "InstructionAdd.h"
 #include "InstructionTruncate.h"
+#include "InstructionCallReturnValue.h"
 
 #include "InstructionRetValue.h"
 #include "InstructionBranchConditional.h"
@@ -19,6 +20,7 @@ namespace Instructions {
 
                                             // Non-terminators that yield a value
                                             InstructionAlloca, InstructionLoad, InstructionAdd, InstructionTruncate,
+                                            InstructionCallReturnValue,
                                             
                                             // Non-terminators that yield void
                                             InstructionStore,
@@ -30,6 +32,7 @@ namespace Instructions {
 
                                         // Yields a value
                                         InstructionAlloca, InstructionLoad, InstructionAdd, InstructionTruncate,
+                                        InstructionCallReturnValue,
 
                                         // Yields void
                                         InstructionStore>;

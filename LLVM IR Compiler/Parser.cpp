@@ -55,16 +55,6 @@ namespace Parser {
         return ((typeid(*token) == typeid(T))
                 && (std::dynamic_pointer_cast<const T>(token)->registryItem == reserved));
     }
-    
-    template<typename T>
-    std::string Parser::extractNamedIdentifier(int pos) {
-        tokenPointer token = (*tokens)[pos];
-        if (typeid(*token) == typeid(T)) {
-            return std::dynamic_pointer_cast<const T>(token)->name;
-        } else {
-            throw ParsingException("Received incorrect identifier type at source position "+std::to_string(token->srcPos)+".", pos);
-        }
-    }
 
     stringExtractResult Parser::attemptExtractString(int pos) {
         auto token = getToken(pos);
@@ -328,6 +318,31 @@ namespace Parser {
         return InstructionParseResult(std::make_shared<const Instructions::InstructionVariant>(instruction), currPos);
     } // parseInstructionTruncate
 
+    InstructionParseResult Parser::parseInstructionCallReturnValue(int startPos, std::shared_ptr<const Expressions::ExpressionLocalIdentifier> assignee) {
+        int currPos = startPos;
+        if (!checkReserved<Tokens::TokenKeyword>(currPos, ReservedWords::call)) {
+            return updateErrorExpectedReceived<InstructionParseResult>(currPos, "call (return value) instruction", "call keyword");
+        }
+
+        currPos++;
+        auto parseReturnTypeResult = parseFunctionReturnType(currPos);
+        if (!parseReturnTypeResult.success) {
+            return InstructionParseResult();
+        }
+
+        auto returnType = parseReturnTypeResult.result;
+        currPos = parseReturnTypeResult.newPos;
+        // Do functions have to use named identifiers for their name?
+        auto parseFunctionNameResult = parseNamedIdentifier<Tokens::TokenGlobalNamedIdentifier>(currPos);
+        if (!parseFunctionNameResult.success) {
+            return updateErrorExpectedReceived<InstructionParseResult>(currPos, "call (return value) instruction", "named global identifier");
+        }
+        
+        currPos = parseFunctionNameResult.newPos;
+        auto instruction = Instructions::InstructionCallReturnValue(assignee, parseFunctionNameResult.result, parseReturnTypeResult.result);
+        return InstructionParseResult(std::make_shared<Instructions::InstructionVariant>(instruction), currPos);
+    } // parseInstructionCallReturnValue
+
     // Terminator Instructions
 
     InstructionParseResult Parser::parseInstructionReturnValue(int startPos) {
@@ -466,8 +481,20 @@ namespace Parser {
         }
 
         return labelParseResult;
-    }
+    } // parseLocalIdentifierAsLabel
 
+    template<typename T>
+    Lib::ResultConstMembersNoPointer<std::string> Parser::parseNamedIdentifier(int startPos) {
+        int currPos = startPos;
+        auto token = getToken(currPos);
+        if (!Lib::isType<T>(token)) {
+            return updateErrorExpectedReceived<Lib::ResultConstMembersNoPointer<std::string>>(currPos, "named identifier", "");
+        }
+
+        currPos++;
+        auto castToken = std::dynamic_pointer_cast<const T>(token);
+        return Lib::ResultConstMembersNoPointer<std::string>(castToken->name, currPos);
+    } // parseNamedIdentifier
 
 
     ParsingResult<Types::TypeInteger> Parser::parseIntegerType(int startPos) {
@@ -913,13 +940,6 @@ namespace Parser {
         int nextPos = -1;
         auto localsInfo = std::make_shared<LocalsParsingInfo>();
 
-        std::shared_ptr<const Expressions::ExpressionFunctionHeaderPreName> headerPreName;
-        std::shared_ptr<const Expressions::ExpressionReturnType> returnType;
-        std::string functionName;
-        std::shared_ptr<const Expressions::ExpressionArgumentList> parameterList;
-        std::shared_ptr<const Expressions::ExpressionFunctionHeaderPostName> headerPostName;
-        std::shared_ptr<const std::vector<const std::shared_ptr<const Expressions::ExpressionFunctionCodeBlock>>> codeBlocks;
-
         if (!checkReserved<Tokens::TokenKeyword>(currPos, ReservedWords::define)) {
             return updateError<resultType>(currPos, expectedReceivedMessage("function definition", "define", currPos));
         }
@@ -930,41 +950,46 @@ namespace Parser {
             return resultType();
         }
 
-        headerPreName = headerPreNameResult.result;
         currPos = headerPreNameResult.newPos;
         auto returnTypeResult = parseFunctionReturnType(currPos);
         if (!returnTypeResult.success) {
             return resultType();
         }
 
-        returnType = returnTypeResult.result;
         currPos = returnTypeResult.newPos;
         // Do functions have to use named identifiers for their name?
-        functionName = extractNamedIdentifier<Tokens::TokenGlobalNamedIdentifier>(currPos);
-        currPos++;
+        
+        auto parseFunctionNameResult = parseNamedIdentifier<Tokens::TokenGlobalNamedIdentifier>(currPos);
+        if (!parseFunctionNameResult.success) {
+            return updateErrorExpectedReceived<resultType>(currPos, "function definition", "named global identifier");
+        }
+        
+        currPos = parseFunctionNameResult.newPos;
         auto parameterListResult = parseFunctionArgumentList(currPos, localsInfo);
         if (!parameterListResult.success) {
             return resultType();
         }
         
-        parameterList = parameterListResult.result;
         currPos = parameterListResult.newPos;
         auto headerPostNameResult = parseFunctionHeaderPostName(currPos);
         if (!headerPostNameResult.success) {
             return resultType();
         }
         
-        headerPostName = headerPostNameResult.result;
         currPos = headerPostNameResult.newPos;
         auto codeBlocksResult = parseFunctionCodeBlocks(currPos, localsInfo);
         if (!codeBlocksResult.success) {
             return resultType();
         }
-        codeBlocks = codeBlocksResult.result;
         nextPos = codeBlocksResult.newPos;
         
         std::cout << "Parsed function definition." << '\n';
-        auto functionDefinition = std::make_shared<Expressions::ExpressionFunctionDefinition>(headerPreName, returnType, functionName, parameterList, headerPostName, codeBlocks);
+        auto functionDefinition = std::make_shared<Expressions::ExpressionFunctionDefinition>(headerPreNameResult.result,
+                                                                                              returnTypeResult.result,
+                                                                                              parseFunctionNameResult.result,
+                                                                                              parameterListResult.result,
+                                                                                              headerPostNameResult.result,
+                                                                                              codeBlocksResult.result);
         return Lib::ResultConstMembersPointer<Expressions::ExpressionFunctionDefinition>(functionDefinition, nextPos);
     }
 
