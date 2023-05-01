@@ -96,6 +96,8 @@ simpleAddition: $(TEST_SMC_DIR)/simpleAddition.smc
 simpleIf: $(TEST_SMC_DIR)/simpleIf.smc
 simpleChar: $(TEST_SMC_DIR)/simpleChar.smc
 simpleLongLong: $(TEST_SMC_DIR)/simpleLongLong.smc
+demonstration: test_demonstration
+demonstrateCompilation: $(TEST_ASM_DIR)/demonstration.asm
 test_%: $(TEST_SMC_DIR)/%.smc
 	$(EMULATOR) $(TEST_SMC_DIR)/$*.smc
 
@@ -119,7 +121,7 @@ $(OBJECT_DIR)/%.o: %.cpp | $(@D)/
 	$(CXX) -MMD -MP -I. $(EXTRA_CFLAGS) $(CFLAGS) $(LDFLAGS) -c $< -o $@
 
 %/:
-	mkdir $(subst /,\\,$@)
+	-mkdir $(subst /,\\,$@)
 
 testing: $(OBJECT_DIR)/Tokens/HelperFunctionsTokens.o
 	$(info Testing)

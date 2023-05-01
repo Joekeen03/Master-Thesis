@@ -453,7 +453,7 @@ namespace CodeGen {
                         auto processor = [rightOperandOffset](rawInstructionVector &instructionVector, unsigned int bytesTransferred) {
                             instructionVector.push_back(std::make_shared<SNESAssembly::SNESInstructionAddWithCarry<AddressingModes::StackRelative>>(rightOperandOffset+bytesTransferred));
                         };
-                        generateLoadSR_Process_StoreSR_Instructions(SNESInstructions, processor, yieldedType, leftOperandOffset, rightOperandOffset);
+                        generateLoadSR_Process_StoreSR_Instructions(SNESInstructions, processor, yieldedType, leftOperandOffset, assigneeOffset);
                     } else {
                         throw std::runtime_error("Unhandled operand variant.");
                     }
